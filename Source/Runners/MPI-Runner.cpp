@@ -34,6 +34,7 @@
 #include <mpi.h>
 
 #include "Blocks/Block.hpp"
+#include "Blocks/DimensionalSplitting.h"
 #include "Blocks/WavePropagationBlock.hpp"
 #include "Scenarios/BathymetryDamBreakScenario.hpp"
 #include "Scenarios/RadialDamBreakScenario.hpp"
@@ -179,7 +180,8 @@ int main(int argc, char** argv) {
                        / numberOfGridCellsY;
   Tools::Logger::logger.printCellSize(cellSizeX, cellSizeY);
 
-  auto waveBlock = Blocks::Block::getBlockInstance(nXLocal, nYLocal, cellSizeX, cellSizeY);
+  auto waveBlock = new Blocks::DimensionalSplitting(nXLocal, nYLocal, cellSizeX, cellSizeY);
+  //auto waveBlock = Blocks::Block::getBlockInstance(nXLocal, nYLocal, cellSizeX, cellSizeY);
 
   // Get the origin from the scenario
   RealType originX = scenario.getBoundaryPos(BoundaryEdge::Left) + blockPositionX * nXNormal * cellSizeX;
