@@ -1,6 +1,6 @@
 #pragma once
 #include "Block.hpp"
-#include "FWaveSolver.hpp"
+#include "Solvers/FWaveSolver.h"
 namespace Blocks {
   class DimensionalSplitting: public Block {
   private:
@@ -20,7 +20,7 @@ namespace Blocks {
     Tools::Float2D<RealType> hvNetUpdatesYLeft_;
     Tools::Float2D<RealType> hvNetUpdatesYRight_;
 
-    Solvers::FWaveSolver<RealType> fWaveSolver_;
+    Solvers::FWaveSolver fWaveSolver_;
 
   public:
     DimensionalSplitting(int nx, int ny, RealType dx, RealType dy);
