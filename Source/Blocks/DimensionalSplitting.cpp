@@ -24,7 +24,7 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
    * Q0,0   Q1,0   Q2,0   Q3,0   Q4,0  updates = |
    */
 
-  for (int i = 1; i < nx_; ++i) {
+  for (int i = 0; i <= nx_; ++i) {
     for (int j = 1; j < ny_; ++j) {
       RealType maxEdgeSpeed{0.0};
 
@@ -61,7 +61,7 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
    */
 
   for (int i = 1; i < nx_; ++i) {
-    for (int j = 0; j < ny_; ++j) {
+    for (int j = 0; j <= ny_; ++j) {
       RealType maxEdgeSpeed{0.0};
 
       fWaveSolver_.computeNetUpdates(
