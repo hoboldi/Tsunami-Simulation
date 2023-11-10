@@ -12,7 +12,8 @@ Blocks::DimensionalSplitting::DimensionalSplitting(int nx, int ny, RealType dx, 
   hvNetUpdatesYRight_(nx, ny + 1) {}
 
 void Blocks::DimensionalSplitting::computeNumericalFluxes() {
-  RealType maxWaveSpeed{0.0};
+  RealType maxWaveSpeedX{0.0};
+  RealType maxWaveSpeedY{0.0};
 
   /** Calculate the net-updates for the x-stride by iterating over the cells on the x-stride
    * Cells on the boundary are ghost cells and are not updated, but one net update is needed for the neighbouring cell.
@@ -42,7 +43,7 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
         maxEdgeSpeed
       );
 
-      maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
+      maxWaveSpeedX = std::max(maxWaveSpeedX, maxEdgeSpeed);
     }
   }
 
@@ -78,30 +79,37 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
         maxEdgeSpeed
       );
 
-      maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
+      maxWaveSpeedY = std::max(maxWaveSpeedY, maxEdgeSpeed);
     }
   }
 
   // Compute the time step width
-  maxTimeStep_ = std::min(dx_ / maxWaveSpeed, dy_ / maxWaveSpeed);
+  maxTimeStep_ = dx_ / maxWaveSpeedX;
 
   // Reduce maximum time step size by "safety factor"
   maxTimeStep_ *= RealType(0.4); // CFL-number = 0.5
+
+  // Debug only check if CFL condition is satisfied for the y-sweep (dt < dy /  (2* maxWaveSpeed))
+#ifndef NDEBUG
+  if (maxTimeStep_ >= ((dy_ /  maxWaveSpeedY) * 0.5)) {
+    std::printf("Warning: CFL condition not satisfied for y-sweep! dt = %f >= %f\n", maxTimeStep_, 0.5*(dy_ /  maxWaveSpeedY));
+  }
+#endif
 }
 
 void Blocks::DimensionalSplitting::updateUnknowns(RealType dt) {
 
-  for (int i = 1; i < nx_; ++i) {
+  for (int i = 1; i <= nx_; ++i) {
     for (int j = 1; j < ny_; ++j) {
-      h_[i][j] -= dt / dx_ * (hNetUpdatesXRight_[i -1][j] + hNetUpdatesXLeft_[i][j]);
-      hu_[i][j] -= dt / dx_ * (huNetUpdatesXRight_[i -1][j] + huNetUpdatesXLeft_[i][j]);
+      h_[i][j] -= dt / dx_ * (hNetUpdatesXRight_[i - 1][j] + hNetUpdatesXLeft_[i][j]);
+      hu_[i][j] -= dt / dx_ * (huNetUpdatesXRight_[i - 1][j] + huNetUpdatesXLeft_[i][j]);
     }
   }
 
   for (int i = 1; i < nx_; ++i) {
-    for (int j = 1; j < ny_; ++j) {
-      h_[i][j] -= dt / dy_ * (hNetUpdatesYRight_[i][j -1] + hNetUpdatesYLeft_[i][j]);
-      hv_[i][j] -= dt / dy_ * (hvNetUpdatesYRight_[i][j -1] + hvNetUpdatesYLeft_[i][j]);
+    for (int j = 1; j <= ny_; ++j) {
+      h_[i][j] -= dt / dy_ * (hNetUpdatesYRight_[i][j - 1] + hNetUpdatesYLeft_[i][j]);
+      hv_[i][j] -= dt / dy_ * (hvNetUpdatesYRight_[i][j - 1] + hvNetUpdatesYLeft_[i][j]);
     }
   }
 }
