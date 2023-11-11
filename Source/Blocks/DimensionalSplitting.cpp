@@ -92,7 +92,7 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
   // Debug only check if CFL condition is satisfied for the y-sweep (dt < dy /  (2* maxWaveSpeed))
 #ifndef NDEBUG
   if (maxTimeStep_ >= ((dy_ /  maxWaveSpeedY) * 0.5)) {
-    std::printf("Warning: CFL condition not satisfied for y-sweep! dt = %f >= %f\n", maxTimeStep_, 0.5*(dy_ /  maxWaveSpeedY));
+    std::fprintf(stderr,"Warning: CFL condition not satisfied for y-sweep! dt = %f >= %f\n", maxTimeStep_, 0.5*(dy_ /  maxWaveSpeedY));
   }
 #endif
 }
