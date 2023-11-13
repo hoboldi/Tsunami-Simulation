@@ -1,6 +1,7 @@
 #include "FWaveSolver.h"
 
 #include <cassert>
+#include <iostream>
 
 void Solvers::FWaveSolver::computeNetUpdates(
   const RealType& hLeft,
@@ -15,12 +16,13 @@ void Solvers::FWaveSolver::computeNetUpdates(
   RealType&       o_huUpdateRight,
   RealType&       o_maxWaveSpeed
 ) {
-  std::vector<RealType>              leftState          = {hLeft, huLeft};
-  std::vector<RealType>              rightState         = {hRight, huRight};
+  std::vector<RealType> leftState  = {hLeft, huLeft};
+  std::vector<RealType> rightState = {hRight, huRight};
+
   std::vector<RealType>              eigenvalues        = calculateEigenvalues(leftState, rightState);
-  std::vector<RealType>              alphas             = calculateAlphas(eigenvalues, leftState, rightState);
   std::vector<RealType>              effectOfBathymetry = calculateEffectOfBathymetry(leftState, rightState, bLeft, bRight);
-  std::vector<std::vector<RealType>> netUpdates         = calculateNetUpdate(alphas, eigenvalues, effectOfBathymetry);
+  std::vector<RealType>              alphas             = calculateAlphas(eigenvalues, leftState, rightState, effectOfBathymetry);
+  std::vector<std::vector<RealType>> netUpdates         = calculateNetUpdate(alphas, eigenvalues);
   if (eigenvalues[0] < 0 && eigenvalues[1] < 0) {
     eigenvalues[0] = 0;
   } else if (eigenvalues[0] > 0 && eigenvalues[1] > 0) {
@@ -38,9 +40,6 @@ RealType Solvers::FWaveSolver::calculateHRoe(std::vector<RealType> leftState, st
 RealType Solvers::FWaveSolver::calculateURoe(std::vector<RealType> leftState, std::vector<RealType> rightState) {
   RealType uL = leftState[1] / leftState[0];
   RealType uR = rightState[1] / rightState[0];
-  // Heights cant be negative
-  assert(leftState[0] >= 0);
-  assert(rightState[0] >= 0);
   return (uL * sqrt(leftState[0]) + uR * sqrt(rightState[0])) / (sqrt(leftState[0]) + sqrt(rightState[0]));
 }
 
@@ -50,11 +49,6 @@ std::vector<RealType> Solvers::FWaveSolver::calculateEigenvalues(std::vector<Rea
   std::vector<RealType> eigenvalues = {0, 0};
   eigenvalues[0]                    = uRoe - sqrt(g * hRoe);
   eigenvalues[1]                    = uRoe + sqrt(g * hRoe);
-  if (eigenvalues[0] < 0 && eigenvalues[1] < 0) {
-    eigenvalues[0] = 0;
-  } else if (eigenvalues[0] > 0 && eigenvalues[1] > 0) {
-    eigenvalues[1] = 0;
-  }
   return eigenvalues;
 }
 
@@ -90,13 +84,16 @@ std::vector<RealType> Solvers::FWaveSolver::subtractVectors(std::vector<RealType
   return first;
 }
 
-std::vector<RealType> Solvers::FWaveSolver::calculateAlphas(std::vector<RealType> eigenvalues, std::vector<RealType> leftState, std::vector<RealType> rightState) {
-  std::vector<RealType>              deltaFlux = subtractVectors(evaluateFluxFunction(rightState), evaluateFluxFunction(leftState));
-  std::vector<RealType>              alphas    = {0, 0};
-  std::vector<std::vector<RealType>> matrix    = {{1, 1}, eigenvalues};
-  matrix                                       = invert2x2Matrix(matrix);
-  alphas[0]                                    = matrix[0][0] * deltaFlux[0] + matrix[0][1] * deltaFlux[1];
-  alphas[1]                                    = matrix[1][0] * deltaFlux[0] + matrix[1][1] * deltaFlux[1];
+std::vector<RealType> Solvers::FWaveSolver::calculateAlphas(
+  std::vector<RealType> eigenvalues, std::vector<RealType> leftState, std::vector<RealType> rightState, std::vector<RealType> effectOfBathymetry
+) {
+  std::vector<RealType> deltaFlux           = subtractVectors(evaluateFluxFunction(rightState), evaluateFluxFunction(leftState));
+  deltaFlux                                 = subtractVectors(deltaFlux, effectOfBathymetry);
+  std::vector<RealType>              alphas = {0, 0};
+  std::vector<std::vector<RealType>> matrix = {{1, 1}, eigenvalues};
+  matrix                                    = invert2x2Matrix(matrix);
+  alphas[0]                                 = matrix[0][0] * deltaFlux[0] + matrix[0][1] * deltaFlux[1];
+  alphas[1]                                 = matrix[1][0] * deltaFlux[0] + matrix[1][1] * deltaFlux[1];
   return alphas;
 }
 
@@ -109,11 +106,7 @@ std::vector<RealType> Solvers::FWaveSolver::calculateEffectOfBathymetry(
 }
 
 
-std::vector<std::vector<RealType>> Solvers::FWaveSolver::calculateNetUpdate(
-  std::vector<RealType> alphas, std::vector<RealType> eigenvalues, std::vector<RealType> effectOfBathymetry
-) {
-  // Eigenvalues cant be zero
-  assert(eigenvalues[0] != 0 && eigenvalues[1] != 0);
+std::vector<std::vector<RealType>> Solvers::FWaveSolver::calculateNetUpdate(std::vector<RealType> alphas, std::vector<RealType> eigenvalues) {
 
   std::vector<RealType> netUpdateLeft  = {0, 0};
   std::vector<RealType> netUpdateRight = {0, 0};
@@ -130,8 +123,6 @@ std::vector<std::vector<RealType>> Solvers::FWaveSolver::calculateNetUpdate(
     netUpdateRight[0] += alphas[1] * 1;
     netUpdateRight[1] += alphas[1] * eigenvalues[1];
   }
-  netUpdateLeft  = subtractVectors(netUpdateLeft, effectOfBathymetry);
-  netUpdateRight = subtractVectors(netUpdateRight, effectOfBathymetry);
 
   return {netUpdateLeft, netUpdateRight};
 }

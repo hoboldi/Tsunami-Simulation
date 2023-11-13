@@ -11,6 +11,7 @@ Blocks::DimensionalSplitting::DimensionalSplitting(int nx, int ny, RealType dx, 
   hvNetUpdatesYLeft_(nx, ny + 1),
   hvNetUpdatesYRight_(nx, ny + 1) {}
 
+
 void Blocks::DimensionalSplitting::computeNumericalFluxes() {
   RealType maxWaveSpeedX{0.0};
   RealType maxWaveSpeedY{0.0};
@@ -26,7 +27,7 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
    */
 
   for (int i = 0; i <= nx_; ++i) {
-    for (int j = 1; j < ny_; ++j) {
+    for (int j = 1; j <= ny_; ++j) {
       RealType maxEdgeSpeed{0.0};
 
       fWaveSolver_.computeNetUpdates(
@@ -91,8 +92,8 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
 
   // Debug only check if CFL condition is satisfied for the y-sweep (dt < dy /  (2* maxWaveSpeed))
 #ifndef NDEBUG
-  if (maxTimeStep_ >= ((dy_ /  maxWaveSpeedY) * 0.5)) {
-    std::fprintf(stderr,"Warning: CFL condition not satisfied for y-sweep! dt = %f >= %f\n", maxTimeStep_, 0.5*(dy_ /  maxWaveSpeedY));
+  if (maxTimeStep_ >= ((dy_ / maxWaveSpeedY) * 0.5)) {
+    std::fprintf(stderr, "Warning: CFL condition not satisfied for y-sweep! dt = %f >= %f\n", maxTimeStep_, 0.5 * (dy_ / maxWaveSpeedY));
   }
 #endif
 }
@@ -113,3 +114,7 @@ void Blocks::DimensionalSplitting::updateUnknowns(RealType dt) {
     }
   }
 }
+void Blocks::DimensionalSplitting::setHu(const Tools::Float2D<RealType>& hu) { hu_ = hu; }
+void Blocks::DimensionalSplitting::setHv(const Tools::Float2D<RealType>& hv) { hv_ = hv; }
+void Blocks::DimensionalSplitting::setB(const Tools::Float2D<RealType>& b) { b_ = b; }
+void Blocks::DimensionalSplitting::setH(const Tools::Float2D<RealType>& h) { h_ = h; }

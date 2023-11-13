@@ -29,6 +29,11 @@ namespace Blocks {
     void computeNumericalFluxes() override;
 
     void updateUnknowns(RealType dt) override;
+    // needed for the tests
+    void setHv(const Tools::Float2D<RealType>& hv);
+    void setHu(const Tools::Float2D<RealType>& hu);
+    void setB(const Tools::Float2D<RealType>& b);
+    void setH(const Tools::Float2D<RealType>& h);
   };
 
 
