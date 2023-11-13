@@ -1,0 +1,7 @@
+file(GLOB_RECURSE ${META_PROJECT_NAME}_TEST_SOURCES "*.cpp")
+add_library(${META_PROJECT_NAME}_test ${${META_PROJECT_NAME}_TEST_SOURCES})
+target_link_libraries(${META_PROJECT_NAME}_test ${META_PROJECT_NAME})
+target_include_directories(${META_PROJECT_NAME}_test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+
+

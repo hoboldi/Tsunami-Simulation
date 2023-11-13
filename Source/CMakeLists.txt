@@ -100,6 +100,12 @@ elseif(WITH_SOLVER STREQUAL "Rusanov")
     target_compile_definitions(${META_PROJECT_NAME} PUBLIC WITH_SOLVER_RUSANOV)
 endif()
 
+option(ENABLE_DIMENSIONAL_SPLITTING "Enable dimensional splitting for the Riemann solver." ON)
+if(ENABLE_DIMENSIONAL_SPLITTING)
+    add_executable(${META_PROJECT_NAME}-DimSplitRunner Runners/DimensionalSplitting-Runner.cpp)
+    target_link_libraries(${META_PROJECT_NAME}-DimSplitRunner PRIVATE ${META_PROJECT_NAME})
+endif()
+
 if(ENABLE_MPI)
     add_executable(${META_PROJECT_NAME}-MPI-Runner Runners/MPI-Runner.cpp)
     target_link_libraries(${META_PROJECT_NAME}-MPI-Runner PRIVATE ${META_PROJECT_NAME})

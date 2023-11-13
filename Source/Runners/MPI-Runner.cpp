@@ -34,6 +34,7 @@
 #include <mpi.h>
 
 #include "Blocks/Block.hpp"
+#include "Blocks/DimensionalSplitting.h"
 #include "Blocks/WavePropagationBlock.hpp"
 #include "Scenarios/BathymetryDamBreakScenario.hpp"
 #include "Scenarios/RadialDamBreakScenario.hpp"
