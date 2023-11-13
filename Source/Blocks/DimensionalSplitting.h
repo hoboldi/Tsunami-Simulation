@@ -23,11 +23,24 @@ namespace Blocks {
     Solvers::FWaveSolver fWaveSolver_;
 
   public:
+    /**
+     * @brief Construct a new Dimensional Splitting object
+     * @param nx cell count in x-direction
+     * @param ny cell count in y-direction
+     * @param dx cell size in x-direction
+     * @param dy cell size in y-direction
+     */
     DimensionalSplitting(int nx, int ny, RealType dx, RealType dy);
     ~DimensionalSplitting() override = default;
 
+    /**
+     * @brief Compute the net-updates for the x- and y-stride.
+     */
     void computeNumericalFluxes() override;
-
+    /**
+     * @brief Update the unknowns with the net-updates.
+     * @param dt maximum time step size
+     */
     void updateUnknowns(RealType dt) override;
     // needed for the tests
     void setHv(const Tools::Float2D<RealType>& hv);
