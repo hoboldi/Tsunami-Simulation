@@ -1,0 +1,4 @@
+[submodule "Tests/SWE1D"]
+	path = Tests/SWE1D
+	url = git@gitlab.lrz.de:mkaroui/SWE1D.git
+	branch = master
