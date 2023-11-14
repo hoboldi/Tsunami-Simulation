@@ -19,6 +19,35 @@ void Solvers::FWaveSolver::computeNetUpdates(
   std::vector<RealType> leftState  = {hLeft, huLeft};
   std::vector<RealType> rightState = {hRight, huRight};
 
+  //Left cell dry, right cell wet
+  if(bLeft >= 0 && bRight < 0) {
+    hLeft_       = hRight_;
+    huLeft_      = -huRight_;
+    bLeft_       = bRight_;
+  }
+  //Left cell wet, right cell dry
+  else if(bLeft < 0 && bRight >= 0) {
+    hRight_      = hLeft_;
+    huRight_     = -huLeft_;
+    bRight_      = bLeft_;
+  }
+  else if(bLeft >= 0 && bRight >= 0) {
+    hLeft_       = 0;
+    huLeft_      = 0;
+    bLeft_       = 0;
+    hRight_      = 0;
+    huRight_     = 0;
+    bRight_      = 0;
+  }
+  else if(bLeft >= 0 && bRight >= 0) {
+    o_hUpdateLeft   = 0;
+    o_huUpdateLeft  = 0;
+    o_hUpdateRight  = 0;
+    o_huUpdateRight = 0;
+    o_maxWaveSpeed  = 0;
+    return;
+  }
+
   std::vector<RealType>              eigenvalues        = calculateEigenvalues(leftState, rightState);
   std::vector<RealType>              effectOfBathymetry = calculateEffectOfBathymetry(leftState, rightState, bLeft, bRight);
   std::vector<RealType>              alphas             = calculateAlphas(eigenvalues, leftState, rightState, effectOfBathymetry);

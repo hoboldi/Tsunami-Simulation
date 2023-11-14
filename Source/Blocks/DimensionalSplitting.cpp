@@ -1,120 +1,183 @@
+
+
 #include "DimensionalSplitting.h"
 
-Blocks::DimensionalSplitting::DimensionalSplitting(int nx, int ny, RealType dx, RealType dy):
-  Block(nx, ny, dx, dy),
-  hNetUpdatesXLeft_(nx + 1, ny),
-  hNetUpdatesXRight_(nx + 1, ny),
-  huNetUpdatesXLeft_(nx + 1, ny),
-  huNetUpdatesXRight_(nx + 1, ny),
-  hNetUpdatesYLeft_(nx, ny + 1),
-  hNetUpdatesYRight_(nx, ny + 1),
-  hvNetUpdatesYLeft_(nx, ny + 1),
-  hvNetUpdatesYRight_(nx, ny + 1) {}
-
-
-void Blocks::DimensionalSplitting::computeNumericalFluxes() {
-  RealType maxWaveSpeedX{0.0};
-  RealType maxWaveSpeedY{0.0};
-
-  /** Calculate the net-updates for the x-stride by iterating over the cells on the x-stride
-   * Cells on the boundary are ghost cells and are not updated, but one net update is needed for the neighbouring cell.
-   * Layout
-   * Q0,4   Q1,4   Q2,4   Q3,4   Q4,4
-   * Q0,3 | Q1,3 | Q2,3 | Q3,3 | Q4,3
-   * Q0,2 | Q1,2 | Q2,2 | Q3,2 | Q4,2
-   * Q0,1 | Q1,1 | Q2,1 | Q3,1 | Q4,1  Qi,j
-   * Q0,0   Q1,0   Q2,0   Q3,0   Q4,0  updates = |
-   */
-
-  for (int i = 0; i <= nx_; ++i) {
-    for (int j = 1; j <= ny_; ++j) {
-      RealType maxEdgeSpeed{0.0};
-
-      fWaveSolver_.computeNetUpdates(
-        h_[i][j],
-        h_[i + 1][j],
-        hu_[i][j],
-        hu_[i + 1][j],
-        b_[i][j],
-        b_[i + 1][j],
-        hNetUpdatesXLeft_[i][j],
-        hNetUpdatesXRight_[i][j],
-        huNetUpdatesXLeft_[i][j],
-        huNetUpdatesXRight_[i][j],
-        maxEdgeSpeed
-      );
-
-      maxWaveSpeedX = std::max(maxWaveSpeedX, maxEdgeSpeed);
-    }
-  }
-
-  /** Calculate the net-updates for the y-stride by iterating over the cells on the y-stride
-   * Cells on the boundary are ghost cells and are not updated, but one net update is needed for the neighbouring cell.
-   * Layout
-   * Q0,4 Q1,4 Q2,4 Q3,4 Q4,4
-   *      --------------
-   * Q0,3 Q1,3 Q2,3 Q3,3 Q4,3
-   *      --------------
-   * Q0,2 Q1,2 Q2,2 Q3,2 Q4,2
-   *      --------------
-   * Q0,1 Q1,1 Q2,1 Q3,1 Q4,1
-   *      --------------       Qi,j
-   * Q0,0 Q1,0 Q2,0 Q3,0 Q4,0  updates = --------------
-   */
-
-  for (int i = 1; i < nx_; ++i) {
-    for (int j = 0; j <= ny_; ++j) {
-      RealType maxEdgeSpeed{0.0};
-
-      fWaveSolver_.computeNetUpdates(
-        h_[i][j],
-        h_[i][j + 1],
-        hv_[i][j],
-        hv_[i][j + 1],
-        b_[i][j],
-        b_[i][j + 1],
-        hNetUpdatesYLeft_[i][j],
-        hNetUpdatesYRight_[i][j],
-        hvNetUpdatesYLeft_[i][j],
-        hvNetUpdatesYRight_[i][j],
-        maxEdgeSpeed
-      );
-
-      maxWaveSpeedY = std::max(maxWaveSpeedY, maxEdgeSpeed);
-    }
-  }
-
-  // Compute the time step width
-  maxTimeStep_ = dx_ / maxWaveSpeedX;
-
-  // Reduce maximum time step size by "safety factor"
-  maxTimeStep_ *= RealType(0.4); // CFL-number = 0.5
-
-  // Debug only check if CFL condition is satisfied for the y-sweep (dt < dy /  (2* maxWaveSpeed))
-#ifndef NDEBUG
-  if (maxTimeStep_ >= ((dy_ / maxWaveSpeedY) * 0.5)) {
-    std::fprintf(stderr, "Warning: CFL condition not satisfied for y-sweep! dt = %f >= %f\n", maxTimeStep_, 0.5 * (dy_ / maxWaveSpeedY));
-  }
+#ifdef ENABLE_OPENMP
+#include <omp.h>
 #endif
+
+#include <iostream>
+
+Blocks::WaveAccumulationBlock::WaveAccumulationBlock(int nx, int ny, RealType dx, RealType dy):
+  Block(nx, ny, dx, dy),
+  hNetUpdates_(nx + 2, ny + 2),
+  huNetUpdates_(nx + 2, ny + 2),
+  hvNetUpdates_(nx + 2, ny + 2) {}
+
+void Blocks::WaveAccumulationBlock::computeNumericalFluxes() {
+  RealType dxInv = RealType(1.0) / dx_;
+  RealType dyInv = RealType(1.0) / dy_;
+
+  // Maximum (linearized) wave speed within one iteration
+  RealType maxWaveSpeed = RealType(0.0);
+
+#ifdef ENABLE_OPENMP
+#pragma omp parallel
+  {
+    // Thread-local maximum wave speed:
+    RealType maxWaveSpeedLocal = RealType(0.0);
+
+    // Use OpenMP for the outer loop
+#pragma omp for
+#endif
+    // Compute the net-updates for the vertical edges
+    for (int i = 1; i < nx_ + 2; i++) {
+      const int nyEnd = ny_ + 1; // Compiler might refuse to vectorize j-loop without this ...
+#if defined(ENABLE_VECTORIZATION) && defined(ENABLE_OPENMP) // Vectorize the inner loop
+#pragma omp simd reduction(max : maxWaveSpeedLocal)
+#elif defined(ENABLE_OPENMP)
+#pragma omp reduction(max : maxWaveSpeedLocal)
+#elif defined(ENABLE_VECTORIZATION)
+#pragma omp simd reduction(max : maxWaveSpeed)
+#endif
+      for (int j = 1; j < nyEnd; j++) {
+        RealType maxEdgeSpeed = RealType(0.0);
+        RealType hNetUpLeft = 0.0, hNetUpRight = 0.0;
+        RealType huNetUpLeft = 0.0, huNetUpRight = 0.0;
+        wavePropagationSolver_.computeNetUpdates(
+          h_[i - 1][j],
+          h_[i][j],
+          hu_[i - 1][j],
+          hu_[i][j],
+          b_[i - 1][j],
+          b_[i][j],
+          hNetUpLeft,
+          hNetUpRight,
+          huNetUpLeft,
+          huNetUpRight,
+          maxEdgeSpeed
+        );
+
+        // Accumulate net updates to cell-wise net updates for h and hu
+        hNetUpdates_[i - 1][j] += dxInv * hNetUpLeft;
+        huNetUpdates_[i - 1][j] += dxInv * huNetUpLeft;
+        hNetUpdates_[i][j] += dxInv * hNetUpRight;
+        huNetUpdates_[i][j] += dxInv * huNetUpRight;
+
+#ifdef ENABLE_OPENMP
+        // Update the thread-local maximum wave speed
+        maxWaveSpeedLocal = std::max(maxWaveSpeed, maxEdgeSpeed);
+#else
+      // Update the maximum wave speed
+      maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
+#endif
+      }
+    }
+
+#ifdef ENABLE_OPENMP
+#pragma omp for
+#endif
+    // Compute the net-updates for the horizontal edges
+    for (int i = 1; i < nx_ + 1; i++) {
+      const int nyEnd = ny_ + 2;
+#if defined(ENABLE_VECTORIZATION) && defined(ENABLE_OPENMP)
+#pragma omp simd reduction(max : maxWaveSpeedLocal)
+#elif defined(ENABLE_OPENMP)
+#pragma omp reduction(max : maxWaveSpeedLocal)
+#elif defined(ENABLE_VECTORIZATION)
+#pragma omp simd reduction(max : maxWaveSpeed)
+#endif
+      for (int j = 1; j < nyEnd; j++) {
+        RealType maxEdgeSpeed = 0.0;
+        RealType hNetUpDow = 0.0, hNetUpUpw = 0.0;
+        RealType hvNetUpDow = 0.0, hvNetUpUpw = 0.0;
+        wavePropagationSolver_.computeNetUpdates(
+          h_[i][j - 1],
+          h_[i][j],
+          hv_[i][j - 1],
+          hv_[i][j],
+          b_[i][j - 1],
+          b_[i][j],
+          hNetUpDow,
+          hNetUpUpw,
+          hvNetUpDow,
+          hvNetUpUpw,
+          maxEdgeSpeed
+        );
+
+        // Accumulate net updates to cell-wise net updates for h and hu
+        hNetUpdates_[i][j - 1] += dyInv * hNetUpDow;
+        hvNetUpdates_[i][j - 1] += dyInv * hvNetUpDow;
+        hNetUpdates_[i][j] += dyInv * hNetUpUpw;
+        hvNetUpdates_[i][j] += dyInv * hvNetUpUpw;
+
+#ifdef ENABLE_OPENMP
+        // Update the thread-local maximum wave speed
+        maxWaveSpeedLocal = std::max(maxWaveSpeed, maxEdgeSpeed);
+#else
+      // Update the maximum wave speed
+      maxWaveSpeed = std::max(maxWaveSpeed, maxEdgeSpeed);
+#endif
+      }
+    }
+
+#ifdef ENABLE_OPENMP
+#pragma omp critical
+    { maxWaveSpeed = std::max(maxWaveSpeedLocal, maxWaveSpeed); }
+
+  } // #pragma omp parallel
+#endif
+
+  if (maxWaveSpeed > 0.00001) {
+    // Compute the time step width
+    maxTimeStep_ = std::min(dx_ / maxWaveSpeed, dy_ / maxWaveSpeed);
+
+    // Reduce maximum time step size by "safety factor"
+    maxTimeStep_ *= RealType(0.4); // CFL-number = 0.5
+  } else {
+    // Might happen in dry cells
+    maxTimeStep_ = std::numeric_limits<float>::max();
+  }
 }
 
-void Blocks::DimensionalSplitting::updateUnknowns(RealType dt) {
+void Blocks::WaveAccumulationBlock::updateUnknowns(RealType dt) {
+  // Update cell averages with the net-updates
 
-  for (int i = 1; i <= nx_; ++i) {
-    for (int j = 1; j < ny_; ++j) {
-      h_[i][j] -= dt / dx_ * (hNetUpdatesXRight_[i - 1][j] + hNetUpdatesXLeft_[i][j]);
-      hu_[i][j] -= dt / dx_ * (huNetUpdatesXRight_[i - 1][j] + huNetUpdatesXLeft_[i][j]);
-    }
-  }
+#ifdef SWE_USE_OPENMP
+#pragma omp parallel for
+#endif
+  for (int i = 1; i < nx_ + 1; i++) {
+    const int nyEnd = ny_ + 1;
+#ifdef ENABLE_VECTORIZATION
+    // Tell the compiler that he can safely ignore all dependencies in this loop
+#pragma omp simd
+#endif
+    for (int j = 1; j < nyEnd; j++) {
+      h_[i][j] -= dt * hNetUpdates_[i][j];
+      hu_[i][j] -= dt * huNetUpdates_[i][j];
+      hv_[i][j] -= dt * hvNetUpdates_[i][j];
 
-  for (int i = 1; i < nx_; ++i) {
-    for (int j = 1; j <= ny_; ++j) {
-      h_[i][j] -= dt / dy_ * (hNetUpdatesYRight_[i][j - 1] + hNetUpdatesYLeft_[i][j]);
-      hv_[i][j] -= dt / dy_ * (hvNetUpdatesYRight_[i][j - 1] + hvNetUpdatesYLeft_[i][j]);
+      hNetUpdates_[i][j]  = RealType(0.0);
+      huNetUpdates_[i][j] = RealType(0.0);
+      hvNetUpdates_[i][j] = RealType(0.0);
+
+      if (h_[i][j] < 0.1) {                    // dryTol
+        hu_[i][j] = hv_[i][j] = RealType(0.0); // No water, no speed!
+      }
+
+      if (h_[i][j] < 0) {
+#ifndef NDEBUG
+        // Only print this warning when debug is enabled
+        // Otherwise we cannot vectorize this loop
+        if (h_[i][j] < -0.1) {
+          std::cerr << "Warning, negative height: (i,j)=(" << i << "," << j << ")=" << h_[i][j] << std::endl;
+          std::cerr << "         b: " << b_[i][j] << std::endl;
+        }
+#endif
+
+        // Zero (small) negative depths
+        h_[i][j] = RealType(0.0);
+      }
     }
   }
 }
-void Blocks::DimensionalSplitting::setHu(const Tools::Float2D<RealType>& hu) { hu_ = hu; }
-void Blocks::DimensionalSplitting::setHv(const Tools::Float2D<RealType>& hv) { hv_ = hv; }
-void Blocks::DimensionalSplitting::setB(const Tools::Float2D<RealType>& b) { b_ = b; }
-void Blocks::DimensionalSplitting::setH(const Tools::Float2D<RealType>& h) { h_ = h; }

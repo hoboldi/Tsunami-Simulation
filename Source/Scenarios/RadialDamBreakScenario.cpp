@@ -37,7 +37,12 @@ RealType Scenarios::RadialDamBreakScenario::getWaterHeight(RealType x, RealType 
 
 RealType Scenarios::RadialDamBreakScenario::getBathymetry([[maybe_unused]] RealType x, [[maybe_unused]] RealType y)
   const {
-  return RealType(0.0);
+  if(x >= 250 && x <= 300 && y >= 250 && y <= 300) {
+    return RealType(1);
+  }
+  else{
+    return RealType(-20);
+  }
 }
 
 double Scenarios::RadialDamBreakScenario::getEndSimulationTime() const { return double(15); }

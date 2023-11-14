@@ -1,53 +1,51 @@
+
+
 #pragma once
+
 #include "Block.hpp"
-#include "Solvers/FWaveSolver.h"
+
 namespace Blocks {
-  class DimensionalSplitting: public Block {
-  private:
-    //! net-updates for the heights of the cells on the x-stride.
-    Tools::Float2D<RealType> hNetUpdatesXLeft_;
-    Tools::Float2D<RealType> hNetUpdatesXRight_;
 
-    //! net-updates for the x-momentums of the cells on the x-stride.
-    Tools::Float2D<RealType> huNetUpdatesXLeft_;
-    Tools::Float2D<RealType> huNetUpdatesXRight_;
+ class DimensionalSplitting: public Block {
 
-    //! net-updates for the heights of the cells on the y-stride.
-    Tools::Float2D<RealType> hNetUpdatesYLeft_;
-    Tools::Float2D<RealType> hNetUpdatesYRight_;
+   //! net-updates for the heights of the cells (for accumulation)
+   Tools::Float2D<RealType> hNetUpdates_;
 
-    //! net-updates for the y-momentums of the cells on the y-stride.
-    Tools::Float2D<RealType> hvNetUpdatesYLeft_;
-    Tools::Float2D<RealType> hvNetUpdatesYRight_;
+   //! net-updates for the x-momentums of the cells (for accumulation)
+   Tools::Float2D<RealType> huNetUpdates_;
 
-    Solvers::FWaveSolver fWaveSolver_;
+   //! net-updates for the y-momentums of the cells (for accumulation)
+   Tools::Float2D<RealType> hvNetUpdates_;
 
-  public:
-    /**
-     * @brief Construct a new Dimensional Splitting object
-     * @param nx cell count in x-direction
-     * @param ny cell count in y-direction
-     * @param dx cell size in x-direction
-     * @param dy cell size in y-direction
-     */
-    DimensionalSplitting(int nx, int ny, RealType dx, RealType dy);
-    ~DimensionalSplitting() override = default;
+ public:
+   /**
+    * Constructor of a Blocks::WaveAccumulationBlock.
+    *
+    * Allocates the variables for the simulation:
+    *   unknowns h,hu,hv,b are defined on grid indices [0,..,nx+1]*[0,..,ny+1] (-> Abstract class Blocks::Block)
+    *     -> computational domain is [1,..,nx]*[1,..,ny]
+    *     -> plus ghost cell layer
+    *
+    * Similar, all net-updates are defined as cell-local variables with indices [0,..,nx+1]*[0,..,ny+1],
+    * however, only values on [1,..,nx]*[1,..,ny] are used (i.e., ghost layers are not accessed).
+    * Net updates are intended to hold the accumulated(!) net updates computed on the edges.
+    */
+   DimensionalSplitting(int nx, int ny, RealType dx, RealType dy);
+   ~DimensionalSplitting() override = default;
 
-    /**
-     * @brief Compute the net-updates for the x- and y-stride.
-     */
-    void computeNumericalFluxes() override;
-    /**
-     * @brief Update the unknowns with the net-updates.
-     * @param dt maximum time step size
-     */
-    void updateUnknowns(RealType dt) override;
-    // needed for the tests
-    void setHv(const Tools::Float2D<RealType>& hv);
-    void setHu(const Tools::Float2D<RealType>& hu);
-    void setB(const Tools::Float2D<RealType>& b);
-    void setH(const Tools::Float2D<RealType>& h);
-  };
+   /**
+    * Compute net updates for the block.
+    * The member variable #maxTimestep will be updated with the
+    * maximum allowed time step size
+    */
+   void computeNumericalFluxes() override;
 
+   /**
+    * Updates the unknowns with the already computed net-updates.
+    *
+    * @param dt time step width used in the update.
+    */
+   void updateUnknowns(RealType dt) override;
+ };
 
 } // namespace Blocks
