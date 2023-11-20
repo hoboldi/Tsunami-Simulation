@@ -4,6 +4,7 @@
 #include "Blocks/DimensionalSplitting.h"
 #include "BoundaryEdge.hpp"
 #include "Scenarios/RadialDamBreakScenario.hpp"
+#include "Scenarios/ArtificialTsunamiScenario.h"
 #include "Tools/Args.hpp"
 #include "Tools/Logger.hpp"
 #include "Tools/ProgressBar.hpp"
@@ -34,7 +35,7 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
 
   // Create the scenario
-  Scenarios::RadialDamBreakScenario scenario;
+  Scenarios::ArtificialTsunamiScenario scenario;
 
   // Compute the size of a single cell
   RealType cellSizeX = (scenario.getBoundaryPos(BoundaryEdge::Right) - scenario.getBoundaryPos(BoundaryEdge::Left)) / numberOfGridCellsX;
