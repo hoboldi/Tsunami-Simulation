@@ -15,6 +15,8 @@ int main(int argc, char** argv) {
   args.addOption("grid-size-y", 'y', "Number of cells in y direction");
   args.addOption("output-basepath", 'o', "Output base file name");
   args.addOption("number-of-checkpoints", 'n', "Number of checkpoints to write output files");
+  args.addOption("simulation-time", 't', "Simulation time in seconds");
+  args.addOption("boundary-conditions", 'b', "Boundary conditions (0: Outflow, 1: Reflective)");
 
   Tools::Args::Result ret = args.parse(argc, argv);
   if (ret == Tools::Args::Result::Help) {
@@ -24,18 +26,22 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  // Create the scenario
+  Scenarios::ArtificialTsunamiScenario scenario;
+
   int         numberOfGridCellsX = args.getArgument<int>("grid-size-x", 16);
   int         numberOfGridCellsY = args.getArgument<int>("grid-size-y", 16);
   std::string baseName           = args.getArgument<std::string>("output-basepath", "SWE");
   int numberOfCheckPoints = args.getArgument<int>("number-of-checkpoints", 20); //! Number of checkpoints for visualization (at each checkpoint in time, an output file is written).
+  double endSimulationTime = args.getArgument<double>("simulation-time", scenario.getEndSimulationTime());
+  int boundaryConditions = args.getArgument<int>("boundary-conditions", 0); //Default is 0: Outflow
 
   Tools::Logger::logger.printWelcomeMessage();
 
   // Print information about the grid
   Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
 
-  // Create the scenario
-  Scenarios::ArtificialTsunamiScenario scenario;
+
 
   // Compute the size of a single cell
   RealType cellSizeX = (scenario.getBoundaryPos(BoundaryEdge::Right) - scenario.getBoundaryPos(BoundaryEdge::Left)) / numberOfGridCellsX;
@@ -44,7 +50,7 @@ int main(int argc, char** argv) {
   auto waveBlock = new Blocks::DimensionalSplitting(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY);
   waveBlock->initialiseScenario(0, 0, scenario);
 
-  double endSimulationTime = scenario.getEndSimulationTime();
+  //double endSimulationTime = scenario.getEndSimulationTime();
 
   double* checkPoints = new double[numberOfCheckPoints + 1];
 
