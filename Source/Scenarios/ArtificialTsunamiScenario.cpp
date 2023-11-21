@@ -14,7 +14,9 @@ RealType Scenarios::ArtificialTsunamiScenario::getBathymetry([[maybe_unused]] Re
 
   // calculate displacement in 1km square around epicenter
   if (x >= 4500 && x <= 5500 && y >= 4500 && y <= 5500) {
-    RealType BathymetryAfterEarthquake = -100 + calculateDisplacement(x, y);
+    RealType x_Displacement = x - 5000;
+    RealType y_Displacement = y - 5000;
+    RealType BathymetryAfterEarthquake = -100 + calculateDisplacement(x_Displacement, y_Displacement);
 
     // No Bathymetry values between -20 and 20
     if (BathymetryAfterEarthquake > -20 && BathymetryAfterEarthquake <= 0) {
@@ -35,7 +37,7 @@ RealType Scenarios::ArtificialTsunamiScenario::calculateDisplacement(RealType x,
   return 5 * d_x * d_y;
 }
 
-double Scenarios::ArtificialTsunamiScenario::getEndSimulationTime() const { return double(8); }
+double Scenarios::ArtificialTsunamiScenario::getEndSimulationTime() const { return double(100); }
 
 BoundaryType Scenarios::ArtificialTsunamiScenario::getBoundaryType([[maybe_unused]] BoundaryEdge edge) const { return BoundaryType::Wall; }
 
