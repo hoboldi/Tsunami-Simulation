@@ -21,9 +21,11 @@ RealType Scenarios::ArtificialTsunamiScenario::getBathymetry([[maybe_unused]] Re
       return -20;
     } else if (BathymetryAfterEarthquake > 0 && BathymetryAfterEarthquake < 20) {
       return 20;
+    } else {
+      return BathymetryAfterEarthquake;
     }
   } else {
-    return RealType(-100);
+    return -100;
   }
 }
 
@@ -33,7 +35,7 @@ RealType Scenarios::ArtificialTsunamiScenario::calculateDisplacement(RealType x,
   return 5 * d_x * d_y;
 }
 
-double Scenarios::ArtificialTsunamiScenario::getEndSimulationTime() const { return double(15); }
+double Scenarios::ArtificialTsunamiScenario::getEndSimulationTime() const { return double(20); }
 
 BoundaryType Scenarios::ArtificialTsunamiScenario::getBoundaryType([[maybe_unused]] BoundaryEdge edge) const { return BoundaryType::Outflow; }
 
