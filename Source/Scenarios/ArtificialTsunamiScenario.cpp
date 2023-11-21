@@ -35,9 +35,9 @@ RealType Scenarios::ArtificialTsunamiScenario::calculateDisplacement(RealType x,
   return 5 * d_x * d_y;
 }
 
-double Scenarios::ArtificialTsunamiScenario::getEndSimulationTime() const { return double(20); }
+double Scenarios::ArtificialTsunamiScenario::getEndSimulationTime() const { return double(8); }
 
-BoundaryType Scenarios::ArtificialTsunamiScenario::getBoundaryType([[maybe_unused]] BoundaryEdge edge) const { return BoundaryType::Outflow; }
+BoundaryType Scenarios::ArtificialTsunamiScenario::getBoundaryType([[maybe_unused]] BoundaryEdge edge) const { return BoundaryType::Wall; }
 
 RealType Scenarios::ArtificialTsunamiScenario::getBoundaryPos(BoundaryEdge edge) const {
   if (edge == BoundaryEdge::Left) {

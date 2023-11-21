@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
   args.addOption("output-basepath", 'o', "Output base file name");
   args.addOption("number-of-checkpoints", 'n', "Number of checkpoints to write output files");
   args.addOption("simulation-time", 't', "Simulation time in seconds");
-  args.addOption("boundary-conditions", 'b', "Boundary conditions (0: Outflow, 1: Reflective)");
+  args.addOption("boundary-conditions", 'b', "Boundary conditions (0: Outflow, 1: Wall)");
 
   Tools::Args::Result ret = args.parse(argc, argv);
   if (ret == Tools::Args::Result::Help) {
