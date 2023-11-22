@@ -4,7 +4,9 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <netcdf.h>
 #include <netcdf>
+#include <netcdfcpp.h>
 #include <iostream>
 #include <cassert>
 #include <algorithm>

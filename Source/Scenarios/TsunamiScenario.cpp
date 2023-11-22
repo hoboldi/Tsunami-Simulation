@@ -1,5 +1,7 @@
 #include "TsunamiScenario.h"
 
+#include <cfloat>
+
 
 struct interval {
   RealType xleft;
@@ -12,94 +14,222 @@ struct interval {
 
 
 
-std::vector<std::vector<interval>> intervalsOriginal;
-std::vector<std::vector<interval>> intervalsDisplaced;
-size_t indexi;
-size_t indexj;
+std::vector<std::vector<interval>> intervals;
+unsigned long                      indexi = 0;
+unsigned long                      indexj = 0;
 
 double calculateAvgOf(const double left, const double right) {
   return (left + right) * 0.5;
 }
 
-
-//TODO CHECKS
 void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::string displacement) const {
   //Read Bathymetry
-  netCDF::NcFile bFile(bathymetry, netCDF::NcFile::read);
+  int bncid, bvarid;
+  int retval;
+
+  retval = nc_open(bathymetry.c_str(),NC_NOWRITE,&bncid);
+  assert(retval == NC_NOERR);
 
   //Get the variables
-  netCDF::NcVar bxVar = bFile.getVar("x");
-  netCDF::NcVar byVar = bFile.getVar("y");
-  netCDF::NcVar bzVar = bFile.getVar("z");
+  int bx_dimid, by_dimid;
+  int bx_varid, by_varid, bz_varid;
+  size_t bxlen, bylen;
 
-  //Get Dimensions
-  netCDF::NcDim bdimx = bxVar.getDim(0);
-  netCDF::NcDim bdimy = byVar.getDim(0);
+  //Get dimension ids
+  retval = nc_inq_dimid(bncid, "x", &bx_dimid);
+  assert(retval == NC_NOERR);
+  retval = nc_inq_dimid(bncid, "y", &by_dimid);
+  assert(retval == NC_NOERR);
 
-  std::vector<double> bxData(bdimx.getSize());
-  std::vector<double> byData(bdimy.getSize());
-  std::vector<double> bzData(bdimx.getSize() * bdimy.getSize());
+  //Get variable ids
+  retval = nc_inq_varid(bncid, "x", &bx_varid);
+  assert(retval == NC_NOERR);
+  retval = nc_inq_varid(bncid, "y", &by_varid);
+  assert(retval == NC_NOERR);
+  retval = nc_inq_varid(bncid, "z", &bz_varid);
+  assert(retval == NC_NOERR);
 
-  bxVar.getVar(&bxData[0]);
-  byVar.getVar(&byData[0]);
-  bzVar.getVar(&bzData[0]);
+  //Get dimension lengths
+  retval = nc_inq_dimlen(bncid,bx_dimid, &bxlen);
+  assert(retval == NC_NOERR);
+  retval = nc_inq_dimlen(bncid,by_dimid, &bylen);
+  assert(retval == NC_NOERR);
 
-  ///////////////////////
-  //Read Displacement
-  netCDF::NcFile dFile(displacement, netCDF::NcFile::read);
+  float bx_data[bxlen];
+  float by_data[bylen];
+  float bz_data[bxlen * bylen];
 
-  //Get the variables
-  netCDF::NcVar dxVar = dFile.getVar("x");
-  netCDF::NcVar dyVar = dFile.getVar("y");
-  netCDF::NcVar dzVar = dFile.getVar("z");
+  retval = nc_get_var_float(bncid,bx_varid,bx_data);
+  assert(retval == NC_NOERR);
+  retval = nc_get_var_float(bncid,by_varid,by_data);
+  assert(retval == NC_NOERR);
+  retval = nc_get_var_float(bncid,bz_varid,bz_data);
+  assert(retval == NC_NOERR);
 
-  //Get Dimensions
-  netCDF::NcDim ddimx = dxVar.getDim(0);
-  netCDF::NcDim ddimy = dyVar.getDim(0);
-
-  std::vector<double> dxData(ddimx.getSize());
-  std::vector<double> dyData(ddimy.getSize());
-  std::vector<double> dzData(ddimx.getSize() * ddimy.getSize());
-
-  dxVar.getVar(&dxData[0]);
-  dyVar.getVar(&dyData[0]);
-  dzVar.getVar(&dzData[0]);
-
-
-  RealType lastX = -std::numeric_limits<double>::infinity();
-  RealType lastY = -std::numeric_limits<double>::infinity();
+  std::vector<double> bxData(bxlen);
+  std::vector<double> byData(bylen);
+  std::vector<double> bzData(bxlen * bylen);
 
 
-  //Calculate Original Intervals
-  for(size_t i = 0; i < bxData.size() - 1; ++i) {
+  for(size_t i = 0; i < bxlen; i++) {
+    bxData[i] = bx_data[i];
+  }
+  for(size_t i = 0; i < bylen; i++) {
+    byData[i] = by_data[i];
+  }
+  for(size_t i = 0; i < bxlen * bylen; i++) {
+    bzData[i] = bz_data[i];
+  }
+
+  RealType lastX = -DBL_MAX;
+  RealType lastY = -DBL_MAX;
+
+  //Calculate Original Intervals TODO
+  for(size_t i = 0; i < bxData.size(); ++i) {
     std::vector<interval> oneGrid;
     for(size_t j = 0; j < byData.size() - 1; ++j) {
       interval oneInterval;
       oneInterval.xleft = lastX;
       oneInterval.xright = (bxData[i] + bxData[i]) * 0.5;
+      lastX = oneInterval.xright;
       oneInterval.yleft = lastY;
       oneInterval.yright = (byData[j] + byData[j]) * 0.5;
+      lastY = oneInterval.yright;
       oneInterval.b = bzData[i * byData.size() + j];
       oneInterval.h = -fmin(oneInterval.b,0);
+      oneGrid.push_back(oneInterval);
     }
+    interval oneInterval;
+    oneInterval.xleft = lastX;
+    oneInterval.xright = DBL_MAX;
+    oneInterval.yleft = lastY;
+    oneInterval.yright = DBL_MAX;
+    oneInterval.b = bzData[(i + 1) * byData.size() - 1];
+    oneInterval.h = -fmin(oneInterval.b,0);
+    oneGrid.push_back(oneInterval);
+    intervals.push_back(oneGrid);
+  }
+
+  int dncid, dvarid;
+
+  retval = nc_open(displacement.c_str(),NC_NOWRITE,&dncid);
+  assert(retval == NC_NOERR);
+
+  //Get the variables
+  int dx_dimid, dy_dimid;
+  int dx_varid, dy_varid, dz_varid;
+  size_t dxlen, dylen;
+
+  //Get dimension ids
+  retval = nc_inq_dimid(dncid, "x", &dx_dimid);
+  assert(retval == NC_NOERR);
+  retval = nc_inq_dimid(dncid, "y", &dy_dimid);
+  assert(retval == NC_NOERR);
+
+  //Get variable ids
+  retval = nc_inq_varid(dncid, "x", &dx_varid);
+  assert(retval == NC_NOERR);
+  retval = nc_inq_varid(dncid, "y", &dy_varid);
+  assert(retval == NC_NOERR);
+  retval = nc_inq_varid(dncid, "z", &dz_varid);
+  assert(retval == NC_NOERR);
+
+  //Get dimension lengths
+  retval = nc_inq_dimlen(dncid,dx_dimid, &dxlen);
+  assert(retval == NC_NOERR);
+  retval = nc_inq_dimlen(dncid,dy_dimid, &dylen);
+  assert(retval == NC_NOERR);
+
+  float dx_data[dxlen];
+  float dy_data[dylen];
+  float dz_data[dxlen * dylen];
+
+  retval = nc_get_var_float(dncid,dx_varid,dx_data);
+  assert(retval == NC_NOERR);
+  retval = nc_get_var_float(dncid,dy_varid,dy_data);
+  assert(retval == NC_NOERR);
+  retval = nc_get_var_float(dncid,dz_varid,dz_data);
+  assert(retval == NC_NOERR);
+
+  std::vector<double> dxData(dxlen);
+  std::vector<double> dyData(dylen);
+  std::vector<double> dzData(dxlen * dylen);
+
+
+  for(size_t i = 0; i < dxlen; i++) {
+    dxData[i] = dx_data[i];
+  }
+  for(size_t i = 0; i < dylen; i++) {
+    dyData[i] = dy_data[i];
+  }
+  for(size_t i = 0; i < dxlen * dylen; i++) {
+    dzData[i] = dz_data[i];
   }
 
 
-
-
+  //Calculate Displaced Intervals
+  for(size_t i = 0; i < dxData.size(); ++i) {
+    for(size_t j = 0; j < dyData.size(); ++j) {
+      RealType x,y,z;
+      x = dxData[i];
+      y = dyData[j];
+      z = dzData[i * dyData.size() + j];
+      while(x < intervals[indexi][indexj].xleft) {
+        indexi--;
+      }
+      std::cout << (x > intervals[indexi][indexj].xright);
+      while(x > intervals[indexi][indexj].xright) {
+        indexi++;
+      }
+      while(y < intervals[indexi][indexj].yleft) {
+        indexj--;
+      }
+      while(y > intervals[indexi][indexj].yright) {
+        indexj++;
+      }
+      intervals[indexi][indexj].b += z;
+    }
+  }
+  indexi = 0;
+  indexj = 0;
 }
 
 RealType Scenarios::TsunamiScenario::getWaterHeight(RealType x, RealType y) const {
-  return 0;
+  while(x < intervals[indexi][indexj].xleft) {
+    indexi--;
+  }
+  while(x > intervals[indexi][indexj].xright) {
+    indexi++;
+  }
+  while(y < intervals[indexi][indexj].yleft) {
+    indexj--;
+  }
+  while(y > intervals[indexi][indexj].yright) {
+    indexj++;
+  }
+  return intervals[indexi][indexj].h;
 }
 
 RealType Scenarios::TsunamiScenario::getBathymetry([[maybe_unused]] RealType x, [[maybe_unused]] RealType y)
  const {
- return 0;
+  while(x < intervals[indexi][indexj].xleft) {
+    indexi--;
+  }
+  while(x > intervals[indexi][indexj].xright) {
+    indexi++;
+  }
+  while(y < intervals[indexi][indexj].yleft) {
+    indexj--;
+  }
+  while(y > intervals[indexi][indexj].yright) {
+    indexj++;
+  }
+  return intervals[indexi][indexj].b;
+
 }
 
 double Scenarios::TsunamiScenario::getEndSimulationTime() const {
- return double(15);
+ return double(100);
 }
 
 BoundaryType Scenarios::TsunamiScenario::getBoundaryType([[maybe_unused]] BoundaryEdge edge) const {
@@ -107,13 +237,15 @@ BoundaryType Scenarios::TsunamiScenario::getBoundaryType([[maybe_unused]] Bounda
 }
 
 RealType Scenarios::TsunamiScenario::getBoundaryPos(BoundaryEdge edge) const {
- if (edge == BoundaryEdge::Left) {
-   return RealType(0.0);
- } else if (edge == BoundaryEdge::Right) {
-   return 0;
- } else if (edge == BoundaryEdge::Bottom) {
-   return RealType(0.0);
- } else {
-   return 0;
- }
+   if (edge == BoundaryEdge::Left) {
+      return RealType(0.0);
+   } else if (edge == BoundaryEdge::Right) {
+      return RealType(10000.0);
+   } else if (edge == BoundaryEdge::Bottom) {
+      return RealType(0.0);
+   } else {
+      return RealType(10000.0);
+   }
+
+
 }
