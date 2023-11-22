@@ -9,6 +9,7 @@
 #include "Tools/Logger.hpp"
 #include "Tools/ProgressBar.hpp"
 #include "Writers/Writer.hpp"
+#include "Readers/NetCDFReader.h"
 
 
 int main(int argc, char** argv) {
@@ -37,8 +38,7 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
 
   // Create the scenario
-  Scenarios::TsunamiScenario scenario;
-  scenario.readScenario("/home/horvath/SWE/artificialtsunami_bathymetry_1000.nc","/home/horvath/SWE/artificialtsunami_displ_1000.nc");
+  Scenarios::TsunamiScenario scenario("artificialtsunami_bathymetry_1000.nc","artificialtsunami_displ_1000.nc");
 
 
   // Compute the size of a single cell
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
     0,
     scenario.getBoundaryPos(BoundaryEdge::Left),
     scenario.getBoundaryPos(BoundaryEdge::Bottom),
-    0
+    1
   );
   Tools::ProgressBar progressBar(endSimulationTime);
   progressBar.update(0.0);
