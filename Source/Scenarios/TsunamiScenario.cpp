@@ -81,34 +81,61 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
     bzData[i] = bz_data[i];
   }
 
-  RealType lastX = -DBL_MAX;
-  RealType lastY = -DBL_MAX;
-
-  //Calculate Original Intervals TODO
+  //Initialize Intervals
   for(size_t i = 0; i < bxData.size(); ++i) {
     std::vector<interval> oneGrid;
-    for(size_t j = 0; j < byData.size() - 1; ++j) {
-      interval oneInterval;
-      oneInterval.xleft = lastX;
-      oneInterval.xright = (bxData[i] + bxData[i]) * 0.5;
-      lastX = oneInterval.xright;
-      oneInterval.yleft = lastY;
-      oneInterval.yright = (byData[j] + byData[j]) * 0.5;
-      lastY = oneInterval.yright;
-      oneInterval.b = bzData[i * byData.size() + j];
-      oneInterval.h = -fmin(oneInterval.b,0);
-      oneGrid.push_back(oneInterval);
-    }
-    interval oneInterval;
-    oneInterval.xleft = lastX;
-    oneInterval.xright = DBL_MAX;
-    oneInterval.yleft = lastY;
-    oneInterval.yright = DBL_MAX;
-    oneInterval.b = bzData[(i + 1) * byData.size() - 1];
-    oneInterval.h = -fmin(oneInterval.b,0);
-    oneGrid.push_back(oneInterval);
+    oneGrid.resize(byData.size());
     intervals.push_back(oneGrid);
   }
+
+  //Calculate Original Intervals
+
+  // i = 0, j = 0
+  intervals[0][0].xleft = -DBL_MAX;
+  intervals[0][0].yleft = -DBL_MAX;
+  intervals[0][0].xright = bxData[0];
+  intervals[0][0].yright = byData[0];
+  intervals[0][0].b = bzData[0];
+  intervals[0][0].h = -fmin(intervals[0][0].b, 0);
+
+  //First Line and Column
+  for(size_t i = 1; i < bxData.size(); ++i) {
+    intervals[i - 1][0].xright = (intervals[i - 1][0].xright + bxData[i]) * 0.5;
+
+    intervals[i][0].xleft = intervals[i - 1][0].xright;
+    intervals[i][0].yleft = -DBL_MAX;
+    intervals[i][0].xright = bxData[i];
+    intervals[i][0].yright = byData[0];
+    intervals[i][0].b = bzData[i * byData.size()];
+    intervals[i][0].h = -fmin(intervals[i][0].b, 0);
+  }
+
+  for(size_t j = 1; j < byData.size(); ++j) {
+    intervals[0][j - 1].yright = (intervals[0][j - 1].yright + byData[j]) * 0.5;
+
+    intervals[0][j].xleft = -DBL_MAX;
+    intervals[0][j].yleft = intervals[0][j - 1].yright;
+    intervals[0][j].xright = bxData[0];
+    intervals[0][j].yright = byData[j];
+    intervals[0][j].b = bzData[j];
+    intervals[0][j].h = -fmin(intervals[0][j].b, 0);
+  }
+
+
+  for(size_t i = 1; i < bxData.size(); ++i) {
+    for(size_t j = 1; j < byData.size(); ++j) {
+      intervals[i - 1][j].xright = (intervals[i - 1][j].xright + bxData[i]) * 0.5;
+      intervals[i][j - 1].yright = (intervals[i][j - 1].yright + byData[j]) * 0.5;
+
+      intervals[i][j].xleft = intervals[i - 1][j].xright;
+      intervals[i][j].yleft = intervals[i][j - 1].yright;
+      intervals[i][j].xright = i != bxData.size() - 1 ? bxData[i] : DBL_MAX;
+      intervals[i][j].yright = j != byData.size() - 1 ? byData[j] : DBL_MAX;
+      intervals[i][j].b = bzData[i * byData.size() + j];
+      intervals[i][j].h = -fmin(intervals[0][j].b, 0);
+    }
+  }
+
 
   int dncid, dvarid;
 
@@ -177,7 +204,6 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
       while(x < intervals[indexi][indexj].xleft) {
         indexi--;
       }
-      std::cout << (x > intervals[indexi][indexj].xright);
       while(x > intervals[indexi][indexj].xright) {
         indexi++;
       }
@@ -238,13 +264,13 @@ BoundaryType Scenarios::TsunamiScenario::getBoundaryType([[maybe_unused]] Bounda
 
 RealType Scenarios::TsunamiScenario::getBoundaryPos(BoundaryEdge edge) const {
    if (edge == BoundaryEdge::Left) {
-      return RealType(0.0);
+      return RealType(-500.0);
    } else if (edge == BoundaryEdge::Right) {
-      return RealType(10000.0);
+      return RealType(500.0);
    } else if (edge == BoundaryEdge::Bottom) {
-      return RealType(0.0);
+      return RealType(-500.0);
    } else {
-      return RealType(10000.0);
+      return RealType(500.0);
    }
 
 

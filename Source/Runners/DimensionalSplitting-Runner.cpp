@@ -4,10 +4,13 @@
 #include "Blocks/DimensionalSplitting.h"
 #include "BoundaryEdge.hpp"
 #include "Scenarios/RadialDamBreakScenario.hpp"
+#include "Scenarios/TsunamiScenario.h"
 #include "Tools/Args.hpp"
 #include "Tools/Logger.hpp"
 #include "Tools/ProgressBar.hpp"
 #include "Writers/Writer.hpp"
+
+
 int main(int argc, char** argv) {
   Tools::Args args;
   args.addOption("grid-size-x", 'x', "Number of cells in x direction");
@@ -23,8 +26,8 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  int         numberOfGridCellsX = args.getArgument<int>("grid-size-x", 16);
-  int         numberOfGridCellsY = args.getArgument<int>("grid-size-y", 16);
+  int         numberOfGridCellsX = args.getArgument<int>("grid-size-x", 10);
+  int         numberOfGridCellsY = args.getArgument<int>("grid-size-y", 10);
   std::string baseName           = args.getArgument<std::string>("output-basepath", "SWE");
   int numberOfCheckPoints = args.getArgument<int>("number-of-checkpoints", 20); //! Number of checkpoints for visualization (at each checkpoint in time, an output file is written).
 
@@ -34,7 +37,9 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
 
   // Create the scenario
-  Scenarios::RadialDamBreakScenario scenario;
+  Scenarios::TsunamiScenario scenario;
+  scenario.readScenario("/home/horvath/SWE/artificialtsunami_bathymetry_1000.nc","/home/horvath/SWE/artificialtsunami_displ_1000.nc");
+
 
   // Compute the size of a single cell
   RealType cellSizeX = (scenario.getBoundaryPos(BoundaryEdge::Right) - scenario.getBoundaryPos(BoundaryEdge::Left)) / numberOfGridCellsX;
