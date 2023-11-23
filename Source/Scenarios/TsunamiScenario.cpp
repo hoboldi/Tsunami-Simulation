@@ -9,10 +9,10 @@ Scenarios::TsunamiScenario::TsunamiScenario(const std::string& bathymetry, const
   int      ny_displacement;
   auto     displacement_data = Readers::NetCDFReader::readFile(displacement, dx_displacement, dy_displacement, nx_displacement, ny_displacement);
 
-  int startx = ((nx_ - nx_displacement) / 2 ) / dx_;
-  int endx   = ((nx_ + nx_displacement) / 2 ) / dx_;
-  int starty = ((ny_ - ny_displacement) / 2 ) / dy_;
-  int endy   = ((ny_ + ny_displacement) / 2 ) / dy_;
+  int startx = ((nx_ - nx_displacement) / 2) / dx_;
+  int endx   = ((nx_ + nx_displacement) / 2) / dx_;
+  int starty = ((ny_ - ny_displacement) / 2) / dy_;
+  int endy   = ((ny_ + ny_displacement) / 2) / dy_;
 
   int rowSize = nx_displacement / dx_displacement;
   for (int i = startx; i < endx; ++i) {
@@ -21,7 +21,6 @@ Scenarios::TsunamiScenario::TsunamiScenario(const std::string& bathymetry, const
     }
   }
 }
-
 
 RealType Scenarios::TsunamiScenario::getWaterHeight(RealType x, RealType y) const {
   if (x < 0 || x > nx_ || y < 0 || y > ny_) {
@@ -43,10 +42,26 @@ RealType Scenarios::TsunamiScenario::getBathymetry([[maybe_unused]] RealType x, 
   return bathymetry_[x_floor][y_floor];
 }
 
-double Scenarios::TsunamiScenario::getEndSimulationTime() const { return double(100); }
+double Scenarios::TsunamiScenario::getEndSimulationTime() const { return double(0.1); }
 
-BoundaryType Scenarios::TsunamiScenario::getBoundaryType([[maybe_unused]] BoundaryEdge edge) const { return BoundaryType::Outflow; }
+void Scenarios::TsunamiScenario::setEndSimulationTime(double time) {
+  assert(time >= 0);
+  endSimulationTime = time;
+}
 
+
+BoundaryType Scenarios::TsunamiScenario::getBoundaryType([[maybe_unused]] BoundaryEdge edge) const { return boundaryType; }
+
+void Scenarios::TsunamiScenario::setBoundaryType(int type) {
+  assert(type == 0 || type == 1);
+  if (type == 0) {
+    boundaryType = BoundaryType::Outflow;
+  } else if (type == 1) {
+    boundaryType = BoundaryType::Wall;
+  } else {
+    std::cout << "Boundary type not supported" << std::endl;
+  }
+}
 RealType Scenarios::TsunamiScenario::getBoundaryPos(BoundaryEdge edge) const {
   if (edge == BoundaryEdge::Left) {
     return RealType(0.0);

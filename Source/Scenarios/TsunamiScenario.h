@@ -32,8 +32,10 @@ namespace Scenarios {
     RealType getBathymetry(RealType x, RealType y) const override;
 
     double getEndSimulationTime() const override;
+    void setEndSimulationTime(double time);
 
     BoundaryType getBoundaryType(BoundaryEdge edge) const override;
+    void setBoundaryType(int type);
     RealType     getBoundaryPos(BoundaryEdge edge) const override;
   private:
     Tools::Float2D<RealType> bathymetry_;
@@ -42,6 +44,8 @@ namespace Scenarios {
     mutable int ny_;
     mutable RealType dx_;
     mutable RealType dy_;
+    BoundaryType boundaryType;
+    double endSimulationTime;
 
   };
 
