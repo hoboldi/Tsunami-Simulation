@@ -62,6 +62,7 @@ void Scenarios::TsunamiScenario::setBoundaryType(int type) {
     std::cout << "Boundary type not supported" << std::endl;
   }
 }
+
 RealType Scenarios::TsunamiScenario::getBoundaryPos(BoundaryEdge edge) const {
   if (edge == BoundaryEdge::Left) {
     return RealType(0.0);

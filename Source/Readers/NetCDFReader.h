@@ -36,7 +36,9 @@ namespace Readers{
        * @param [in/out] ny: A pointer which will be filled with the calculated cell-count in y direction
        * 
        * @return [out] timestep: The timestep of the simulation where the Snapshot was made
+       * 
+       * Data that has to be in the checkpoint: timestep, timePassed, boundary, dx, dy, nx, ny, b, h, hu, bv
       */
-      static int readCheckpoint(const std::string& filename, double* timePassed, double* bathymetries, double* heights, double* momentaX, double* momentaY, RealType& dx, RealType& dy, int& nx, int& ny);
+      static int readCheckpoint(const std::string& filename, double* timePassed, double* bathymetries, double* heights, double* hus, double* hvs, int* boundaries, RealType& dx, RealType& dy, int& nx, int& ny);
   };
 }
