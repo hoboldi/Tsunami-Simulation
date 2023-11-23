@@ -292,6 +292,12 @@ RealType Scenarios::TsunamiScenario::getBathymetry([[maybe_unused]] RealType x, 
   while(y > intervals[indexi][indexj].yright) {
     indexj++;
   }
+  if(intervals[indexi][indexj].b < 20 && intervals[indexi][indexj].b >= 0) {
+    return 20;
+  }
+  if(intervals[indexi][indexj].b > -20 && intervals[indexi][indexj].b < 0) {
+    return -20;
+  }
   return intervals[indexi][indexj].b;
 
 }

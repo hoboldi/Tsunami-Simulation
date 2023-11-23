@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
 
   // Create the scenario
   Scenarios::TsunamiScenario scenario;
-  scenario.readScenario("artificialtsunami_bathymetry_1000.nc", "artificialtsunami_displ_1000.nc");
+  scenario.readScenario("/home/horvath/SWE/chile_gebco_usgs_2000m_bath.nc", "/home/horvath/SWE/chile_gebco_usgs_2000m_displ.nc");
 
   int         numberOfGridCellsX = args.getArgument<int>("grid-size-x", 10);
   int         numberOfGridCellsY = args.getArgument<int>("grid-size-y", 10);
