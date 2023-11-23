@@ -72,8 +72,6 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
 
   offsetx = bx_data[0];
   offsety = by_data[0];
-  auto maxx = bx_data[bxlen - 1];
-  auto maxy = by_data[bylen - 1];
   if(bx_data[bxlen - 1] < 0) {
     sizex = fabs(bx_data[0]) - fabs(bx_data[bxlen - 1]);
   } else {
@@ -106,6 +104,14 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
   }
   for(size_t i = 0; i < bxlen * bylen; i++) {
     bzData[i] = bz_data[i];
+  }
+
+
+  for(size_t i = 0; i < bxlen - 1; i++) {
+    assert(bxData[i] < bxData[i + 1]);
+  }
+  for(size_t i = 0; i < bylen - 1; i++) {
+    assert(byData[i] < byData[i + 1]);
   }
 
   //Initialize Intervals
@@ -160,7 +166,7 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
       intervals[i][j].xright = i != bxData.size() - 1 ? bxData[i] : DBL_MAX;
       intervals[i][j].yright = j != byData.size() - 1 ? byData[j] : DBL_MAX;
       intervals[i][j].b = bzData[j * bxData.size() + i];
-      intervals[i][j].h = -fmin(intervals[0][j].b, 0);
+      intervals[i][j].h = -fmin(intervals[i][j].b, 0);
     }
   }
 
@@ -211,6 +217,8 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
   std::vector<double> dzData(dxlen * dylen);
 
 
+
+
   for(size_t i = 0; i < dxlen; i++) {
     dxData[i] = dx_data[i];
   }
@@ -220,6 +228,8 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
   for(size_t i = 0; i < dxlen * dylen; i++) {
     dzData[i] = dz_data[i];
   }
+
+
 
 
   //Calculate Displaced Intervals
