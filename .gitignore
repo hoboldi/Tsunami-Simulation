@@ -66,3 +66,13 @@ dkms.conf
 
 # Misc
 .DS_Store
+
+#vscode Directory
+.vscode/
+
+#build directory
+build/
+
+#doxygen Documentation
+html/
+latex/
