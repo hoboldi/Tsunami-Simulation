@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
   args.addOption("output-basepath", 'o', "Output base file name");
   args.addOption("number-of-checkpoints", 'n', "Number of checkpoints to write output files");
   args.addOption("simulation-time", 't', "Simulation time in seconds");
-  args.addOption("boundary-conditions", 'b', "Boundary conditions (0: Outflow, 1: Wall)");
+  args.addOption("boundary-conditions", 'b', "Set Boundary Conditions represented by an 4 digit Integer of 0s and 1s. (1: Outflow, 2: Wall).\n First Digit: Left Boundary\n Second Digit: Right Boundary\n Third Digit: Bottom Boundary\n Fourth Digit: Top Boundary");
 
   Tools::Args::Result ret = args.parse(argc, argv);
   if (ret == Tools::Args::Result::Help) {
@@ -30,19 +30,21 @@ int main(int argc, char** argv) {
   }
 
   // Create the scenario
-  Scenarios::TsunamiScenario scenario("artificialtsunami_bathymetry_1000.nc", "artificialtsunami_displ_1000.nc");
+  Scenarios::TsunamiScenario scenario;
+  scenario.readScenario("artificialtsunami_bathymetry_1000.nc", "artificialtsunami_displ_1000.nc");
 
   int         numberOfGridCellsX = args.getArgument<int>("grid-size-x", 10);
   int         numberOfGridCellsY = args.getArgument<int>("grid-size-y", 10);
   std::string baseName           = args.getArgument<std::string>("output-basepath", "SWE");
   int numberOfCheckPoints = args.getArgument<int>("number-of-checkpoints", 20); //! Number of checkpoints for visualization (at each checkpoint in time, an output file is written).
   double endSimulationTime  = args.getArgument<double>("simulation-time", 10);
-  int    boundaryConditions = args.getArgument<int>("boundary-conditions", 0);  // Default is 0: Outflow
+  int   boundaryConditions = args.getArgument<int>("boundary-conditions", 0000);  // Default is 0: Outflow
 
-  if (boundaryConditions == 0 || boundaryConditions == 1) {
+  //Ihhgitt!!
+  if(boundaryConditions == 1111 || boundaryConditions == 1112 || boundaryConditions == 1121 || boundaryConditions == 1122 || boundaryConditions == 1211 || boundaryConditions == 1212 || boundaryConditions == 1221 || boundaryConditions == 1222 || boundaryConditions == 2111 || boundaryConditions == 2112 || boundaryConditions == 2121 || boundaryConditions == 2122 || boundaryConditions == 2211 || boundaryConditions == 2212 || boundaryConditions == 2221 || boundaryConditions == 2222) {
     scenario.setBoundaryType(boundaryConditions);
   } else {
-    std::cout << "Boundary conditions must be 0 (Outflow) or 1 (Wall)" << std::endl;
+    std::cout << "Boundary conditions invalid!" << std::endl;
     return 1;
   }
 

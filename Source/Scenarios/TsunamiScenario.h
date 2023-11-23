@@ -27,10 +27,18 @@ namespace Scenarios {
     RealType getBathymetry(RealType x, RealType y) const override;
 
     double getEndSimulationTime() const override;
+    void setEndSimulationTime(double time);
+    void setBoundaryType(int type);
 
     BoundaryType getBoundaryType(BoundaryEdge edge) const override;
     RealType     getBoundaryPos(BoundaryEdge edge) const override;
     void         readScenario(std::string bathymetry, std::string displacement) const;
+  private:
+    BoundaryType boundaryTypeLeft;
+    BoundaryType boundaryTypeRight;
+    BoundaryType boundaryTypeTop;
+    BoundaryType boundaryTypeBottom;
+    double endSimulationTime;
   };
 
 } // namespace Scenarios

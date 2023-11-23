@@ -286,12 +286,57 @@ RealType Scenarios::TsunamiScenario::getBathymetry([[maybe_unused]] RealType x, 
 
 }
 
-double Scenarios::TsunamiScenario::getEndSimulationTime() const {
- return double(100);
+double Scenarios::TsunamiScenario::getEndSimulationTime() const { return endSimulationTime; }
+
+void Scenarios::TsunamiScenario::setEndSimulationTime(double time) {
+  assert(time >= 0);
+  endSimulationTime = time;
 }
 
+
 BoundaryType Scenarios::TsunamiScenario::getBoundaryType([[maybe_unused]] BoundaryEdge edge) const {
- return BoundaryType::Outflow;
+  if(edge == BoundaryEdge::Left) {
+    return boundaryTypeLeft;
+  } else if(edge == BoundaryEdge::Right) {
+    return boundaryTypeRight;
+  } else if(edge == BoundaryEdge::Bottom) {
+    return boundaryTypeBottom;
+  } else {
+    return boundaryTypeTop;
+  }
+}
+
+void Scenarios::TsunamiScenario::setBoundaryType(int type) {
+
+  //print type
+  std::cout << "Boundary Type: " << type << std::endl;
+  int left = type / 1000;
+  int right = (type % 1000) / 100;
+  int bottom = (type % 100) / 10;
+  int top = type % 10;
+  if(left == 1) {
+    boundaryTypeLeft = BoundaryType::Outflow;
+  } else if(left == 2) {
+    boundaryTypeLeft = BoundaryType::Wall;
+  }if(right == 1){
+    boundaryTypeRight = BoundaryType::Outflow;
+  } else if(right == 2) {
+    boundaryTypeRight = BoundaryType::Wall;
+  }if(bottom == 1) {
+    boundaryTypeBottom = BoundaryType::Outflow;
+  } else if(bottom == 2) {
+    boundaryTypeBottom = BoundaryType::Wall;
+  }if(top == 1) {
+    boundaryTypeTop = BoundaryType::Outflow;
+  } else if(top == 2) {
+    boundaryTypeTop = BoundaryType::Wall;
+  }
+  //print boundary types
+  std::cout << "Boundary Types: " << std::endl;
+  std::cout << "Left: " << left << std::endl;
+  std::cout << "Right: " << right << std::endl;
+  std::cout << "Bottom: " << bottom << std::endl;
+  std::cout << "Top: " << top << std::endl;
 }
 
 RealType Scenarios::TsunamiScenario::getBoundaryPos(BoundaryEdge edge) const {
