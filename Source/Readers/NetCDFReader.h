@@ -28,8 +28,9 @@ namespace Readers{
        * @param [in/out] timePassed: A pointer which will be filled with the timePassed value read from the checkpoint
        * @param [in/out] bathymetries: A pointer to an array of bathymtries read from the checkpint
        * @param [in/out] heights: A pointer to an array of heights read from the checkpoint
-       * @param [in/out] momentaX: A pointer to an array of momenta in X direction read from the checkpoint
-       * @param [in/out] momentaY: A pointer to an array of momenta in Y direction read from the checkpoint
+       * @param [in/out] hus: A pointer to an array of momenta in X direction read from the checkpoint
+       * @param [in/out] hvs: A pointer to an array of momenta in Y direction read from the checkpoint
+       * @param [in/out] boundaries: A pointer to an array of size 4 which will contain the boundaries (either 0 or 1) in the order Top, Right, Bottom, Left
        * @param [in/out] dx: A pointer which will be filled with the calculated cell-size in x direction
        * @param [in/out] dy: A pointer which will be filled with the calculated cell-size in y direction
        * @param [in/out] nx: A pointer which will be filled with the calculated cell-count in x direction
