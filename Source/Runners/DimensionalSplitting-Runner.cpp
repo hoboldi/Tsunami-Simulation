@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
   std::string baseName           = args.getArgument<std::string>("output-basepath", "SWE");
   int numberOfCheckPoints = args.getArgument<int>("number-of-checkpoints", 20); //! Number of checkpoints for visualization (at each checkpoint in time, an output file is written).
   double endSimulationTime  = args.getArgument<double>("simulation-time", 10);
-  int   boundaryConditions = args.getArgument<int>("boundary-conditions", 0000);  // Default is 0: Outflow
+  int   boundaryConditions = args.getArgument<int>("boundary-conditions", 1111);  // Default is 0: Outflow
 
   //Ihhgitt!!
   if(boundaryConditions == 1111 || boundaryConditions == 1112 || boundaryConditions == 1121 || boundaryConditions == 1122 || boundaryConditions == 1211 || boundaryConditions == 1212 || boundaryConditions == 1221 || boundaryConditions == 1222 || boundaryConditions == 2111 || boundaryConditions == 2112 || boundaryConditions == 2121 || boundaryConditions == 2122 || boundaryConditions == 2211 || boundaryConditions == 2212 || boundaryConditions == 2221 || boundaryConditions == 2222) {
