@@ -20,7 +20,12 @@ namespace Scenarios {
    RealType     getBoundaryPos(BoundaryEdge edge) const override;
 
  private:
-   //TODO Doxygen
+   /**
+    * @brief Calculates the displacement of the bathymetry after the earthquake
+    * @param x X-Coordinate
+    * @param y Y-Coordinate
+    * @return Effect of the displacement on the bathymetry
+    */
    RealType calculateDisplacement([[maybe_unused]] RealType x, [[maybe_unused]] RealType y) const;
  };
 
