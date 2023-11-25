@@ -4,6 +4,7 @@
 #include "Blocks/DimensionalSplitting.h"
 #include "BoundaryEdge.hpp"
 #include "Readers/NetCDFReader.h"
+#include "Scenarios/CheckpointScenario.h"
 #include "Scenarios/RadialDamBreakScenario.hpp"
 #include "Scenarios/TsunamiScenario.h"
 #include "Tools/Args.hpp"
@@ -20,6 +21,7 @@ int main(int argc, char** argv) {
   args.addOption("number-of-checkpoints", 'n', "Number of checkpoints to write output files");
   args.addOption("simulation-time", 't', "Simulation time in seconds");
   args.addOption("boundary-conditions", 'b', "Set Boundary Conditions represented by an 4 digit Integer of 1s and 2s. (1: Outflow, 2: Wall).\n First Digit: Left Boundary\n Second Digit: Right Boundary\n Third Digit: Bottom Boundary\n Fourth Digit: Top Boundary");
+  args.addOption("checkpoint-file", 'c', "Checkpoint file to read initial values from");
 
   Tools::Args::Result ret = args.parse(argc, argv);
   if (ret == Tools::Args::Result::Help) {
@@ -30,8 +32,9 @@ int main(int argc, char** argv) {
   }
 
   // Create the scenario
-  Scenarios::TsunamiScenario scenario;
-  scenario.readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
+  //Scenarios::TsunamiScenario scenario;
+  //scenario.readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
+
 
   int         numberOfGridCellsX = args.getArgument<int>("grid-size-x", 10);
   int         numberOfGridCellsY = args.getArgument<int>("grid-size-y", 10);
@@ -39,6 +42,14 @@ int main(int argc, char** argv) {
   int numberOfCheckPoints = args.getArgument<int>("number-of-checkpoints", 20); //! Number of checkpoints for visualization (at each checkpoint in time, an output file is written).
   double endSimulationTime  = args.getArgument<double>("simulation-time", 10);
   int   boundaryConditions = args.getArgument<int>("boundary-conditions", 1111);  // Default is 1111: Outflow for all Edges
+  std::string checkpointFile = args.getArgument<std::string>("checkpoint-file", "");
+
+  Scenarios::CheckpointScenario scenario(checkpointFile);
+
+  if (baseName == checkpointFile.substr(0, checkpointFile.find_last_of('.'))) {
+    std::cout << "Output base path and checkpoint file must be different!" << std::endl;
+    return 1;
+  }
 
   //Ihhgitt!!
   if(boundaryConditions == 1111 || boundaryConditions == 1112 || boundaryConditions == 1121 || boundaryConditions == 1122 || boundaryConditions == 1211 || boundaryConditions == 1212 || boundaryConditions == 1221 || boundaryConditions == 1222 || boundaryConditions == 2111 || boundaryConditions == 2112 || boundaryConditions == 2121 || boundaryConditions == 2122 || boundaryConditions == 2211 || boundaryConditions == 2212 || boundaryConditions == 2221 || boundaryConditions == 2222) {
@@ -97,7 +108,7 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.printStartMessage();
   Tools::Logger::logger.initWallClockTime(time(NULL));
 
-  double simulationTime = 0.0;
+  double simulationTime = scenario.getStartTime();
   progressBar.update(simulationTime);
 
   unsigned int iterations = 0;

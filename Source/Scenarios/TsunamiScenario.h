@@ -1,24 +1,25 @@
 #pragma once
 
-#include "Scenario.hpp"
+#include <algorithm>
+#include <array>
+#include <cassert>
 #include <cmath>
-#include <vector>
-#include <string>
+#include <iostream>
 #include <netcdf.h>
 #include <netcdf>
 #include <netcdfcpp.h>
-#include <iostream>
-#include <cassert>
-#include <algorithm>
+#include <string>
 #include <utility>
-#include <array>
+#include <vector>
+
+#include "Scenario.hpp"
 
 namespace Scenarios {
 
   /**
    * Scenario "Tsunami Scenario":
    * TODO
-  */
+   */
   class TsunamiScenario: public Scenario {
   public:
     ~TsunamiScenario() override = default;
@@ -27,17 +28,14 @@ namespace Scenarios {
     RealType getBathymetry(RealType x, RealType y) const override;
 
     double getEndSimulationTime() const override;
-    void setEndSimulationTime(double time);
-    void setBoundaryType(int type);
+    void   setEndSimulationTime(double time);
+
 
     BoundaryType getBoundaryType(BoundaryEdge edge) const override;
     RealType     getBoundaryPos(BoundaryEdge edge) const override;
     void         readScenario(std::string bathymetry, std::string displacement) const;
+
   private:
-    BoundaryType boundaryTypeLeft;
-    BoundaryType boundaryTypeRight;
-    BoundaryType boundaryTypeTop;
-    BoundaryType boundaryTypeBottom;
     double endSimulationTime;
   };
 
