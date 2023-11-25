@@ -100,8 +100,8 @@ double Readers::NetCDFReader::readCheckpoint(
 
 
   // Get boundary data
-  //retval = nc_inq_varid(bncid, "boundary", &boundary_id);
-  //assert(retval == NC_NOERR);
+  // retval = nc_inq_varid(bncid, "boundary", &boundary_id);
+  // assert(retval == NC_NOERR);
 
 
   // Get variable ids
@@ -130,9 +130,9 @@ double Readers::NetCDFReader::readCheckpoint(
   double by_data[bylen];
   double time_data[timeLen];
   auto*  b_data  = new double[bxlen * bylen];
-  auto*  h_data  = new double[bxlen * bylen * timeLen];
-  auto*  hu_data = new double[bxlen * bylen * timeLen];
-  auto*  hv_data = new double[bxlen * bylen * timeLen];
+  auto*  h_data  = new double[bxlen * bylen];
+  auto*  hu_data = new double[bxlen * bylen];
+  auto*  hv_data = new double[bxlen * bylen];
 
 
   int* boundary_data = new int[4];
@@ -141,10 +141,11 @@ double Readers::NetCDFReader::readCheckpoint(
   // Get time-data
   retval = nc_get_var_double(bncid, time_id, time_data);
   assert(retval == NC_NOERR);
+  timePassed = time_data[timeLen - 1];
   // print timestep
 #ifndef NDEBUG
   std::cout << "Found " << timeLen << " timesteps in file " << filename << std::endl;
-  std::cout << "Last timestep is " << time_data[timeLen - 1] << std::endl;
+  std::cout << "Last timestep is " << timePassed << std::endl;
 #endif
 
   // Get data
@@ -152,46 +153,37 @@ double Readers::NetCDFReader::readCheckpoint(
   assert(retval == NC_NOERR);
   retval = nc_get_var_double(bncid, by_varid, by_data);
   assert(retval == NC_NOERR);
-  retval = nc_get_var_double(bncid, b_varid, b_data);
-  assert(retval == NC_NOERR);
-  retval = nc_get_var_double(bncid, h_varid, h_data);
-  assert(retval == NC_NOERR);
-  retval = nc_get_var_double(bncid, hu_varid, hu_data);
-  assert(retval == NC_NOERR);
-  retval = nc_get_var_double(bncid, hv_varid, hv_data);
-  assert(retval == NC_NOERR);
-  //retval = nc_get_var_int(bncid, boundary_id, boundary_data);
-  //assert(retval == NC_NOERR);
-
-
-
-  //shrink arrays to only contain the last timestep
-  auto* h_data_last  = new double[bxlen * bylen];
-  auto* hu_data_last = new double[bxlen * bylen];
-  auto* hv_data_last = new double[bxlen * bylen];
-
-  //copy last timestep
-  for (size_t i = 0; i < bxlen * bylen; i++) {
-    h_data_last[i]  = h_data[(timeLen - 1) * bxlen * bylen + i];
-    hu_data_last[i] = hu_data[(timeLen - 1) * bxlen * bylen + i];
-    hv_data_last[i] = hv_data[(timeLen - 1) * bxlen * bylen + i];
-  }
 
   dx = (bx_data[bxlen - 1] - bx_data[0]) / (bxlen - 1);
   dy = (by_data[bylen - 1] - by_data[0]) / (bylen - 1);
   nx = static_cast<int>(bxlen);
   ny = static_cast<int>(bylen);
 
-  delete[] h_data;
-  delete[] hu_data;
-  delete[] hv_data;
+  // Startvector to get the last timestep
+  std::size_t start[] = {static_cast<std::size_t>(timeLen - 1), 0, 0};
+  std::size_t count[] = {1, static_cast<std::size_t>(bxlen), static_cast<std::size_t>(bylen)};
 
+  retval = nc_get_var_double(bncid, b_varid, b_data);
+  assert(retval == NC_NOERR);
+  retval = nc_get_vara_double(bncid, h_varid, start, count, h_data);
+  assert(retval == NC_NOERR);
+  retval = nc_get_vara_double(bncid, hu_varid, start, count, hu_data);
+  assert(retval == NC_NOERR);
+  retval = nc_get_vara_double(bncid, hv_varid, start, count, hv_data);
+  assert(retval == NC_NOERR);
+  // retval = nc_get_var_int(bncid, boundary_id, boundary_data);
+  // assert(retval == NC_NOERR);
 
 
   bathymetries = rotateAndFlip(bxlen, bylen, b_data);
-  heights      = rotateAndFlip(bxlen, bylen, h_data_last);
-  hus          = rotateAndFlip(bxlen, bylen, hu_data_last);
-  hvs          = rotateAndFlip(bxlen, bylen, hv_data_last);
+  heights      = rotateAndFlip(bxlen, bylen, h_data);
+  hus          = rotateAndFlip(bxlen, bylen, hu_data);
+  hvs          = rotateAndFlip(bxlen, bylen, hv_data);
   boundaries   = boundary_data;
+
+  // close file
+  retval = nc_close(bncid);
+  assert(retval == NC_NOERR);
+
   return time_data[timeLen - 1];
 }

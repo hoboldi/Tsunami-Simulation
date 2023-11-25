@@ -11,24 +11,36 @@ Scenarios::CheckpointScenario::CheckpointScenario(const std::string& filename):
   momentaY_(nx_, ny_, momentaY) {}
 
 RealType Scenarios::CheckpointScenario::getWaterHeight(RealType x, RealType y) const {
+  if (x < 0 || y < 0 || x >= nx_ *dx_ || y >= ny_ * dy_) {
+    return 0;
+  }
   int x_scaled = static_cast<int>((x - std::fmod(x, dx_)) / dx_);
   int y_scaled = static_cast<int>((y - std::fmod(y, dy_)) / dy_);
   return height_[x_scaled][y_scaled];
 }
 
 RealType Scenarios::CheckpointScenario::getBathymetry(RealType x, RealType y) const {
+  if (x < 0 || y < 0 || x >= nx_ *dx_ || y >= ny_ * dy_) {
+    return 0;
+  }
   int x_scaled = static_cast<int>((x - std::fmod(x, dx_)) / dx_);
   int y_scaled = static_cast<int>((y - std::fmod(y, dy_)) / dy_);
   return bathymetry_[x_scaled][y_scaled];
 }
 
 RealType Scenarios::CheckpointScenario::getDischargeHu(RealType x, RealType y) const {
+  if (x < 0 || y < 0 || x >= nx_ *dx_ || y >= ny_ * dy_) {
+    return 0;
+  }
   int x_scaled = static_cast<int>((x - std::fmod(x, dx_)) / dx_);
   int y_scaled = static_cast<int>((y - std::fmod(y, dy_)) / dy_);
   return momentaX_[x_scaled][y_scaled];
 }
 
 RealType Scenarios::CheckpointScenario::getDischargeHv(RealType x, RealType y) const {
+  if (x < 0 || y < 0 || x >= nx_ *dx_ || y >= ny_ * dy_) {
+    return 0;
+  }
   int x_scaled = static_cast<int>((x - std::fmod(x, dx_)) / dx_);
   int y_scaled = static_cast<int>((y - std::fmod(y, dy_)) / dy_);
   return momentaY_[x_scaled][y_scaled];
