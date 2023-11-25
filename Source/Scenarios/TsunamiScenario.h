@@ -12,10 +12,6 @@
 #include <algorithm>
 #include <utility>
 #include <array>
-#include <cfloat>
-
-#include "Readers/NetCDFReader.h"
-#include "Tools/Float2D.hpp"
 
 namespace Scenarios {
 
@@ -25,7 +21,6 @@ namespace Scenarios {
   */
   class TsunamiScenario: public Scenario {
   public:
-    TsunamiScenario(const std::string& bathymetry, const std::string& displacement);
     ~TsunamiScenario() override = default;
 
     RealType getWaterHeight(RealType x, RealType y) const override;
@@ -33,20 +28,17 @@ namespace Scenarios {
 
     double getEndSimulationTime() const override;
     void setEndSimulationTime(double time);
+    void setBoundaryType(int type);
 
     BoundaryType getBoundaryType(BoundaryEdge edge) const override;
-    void setBoundaryType(int type);
     RealType     getBoundaryPos(BoundaryEdge edge) const override;
+    void         readScenario(std::string bathymetry, std::string displacement) const;
   private:
-    Tools::Float2D<RealType> bathymetry_;
-    Tools::Float2D<RealType> water_height_;
-    mutable int nx_;
-    mutable int ny_;
-    mutable RealType dx_;
-    mutable RealType dy_;
-    BoundaryType boundaryType;
+    BoundaryType boundaryTypeLeft;
+    BoundaryType boundaryTypeRight;
+    BoundaryType boundaryTypeTop;
+    BoundaryType boundaryTypeBottom;
     double endSimulationTime;
-
   };
 
 } // namespace Scenarios

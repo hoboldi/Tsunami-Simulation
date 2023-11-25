@@ -86,6 +86,7 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
 
   // Compute the time step width
   maxTimeStep_ = dx_ / maxWaveSpeedX;
+  maxTimeStep_ = std::min(maxTimeStep_, dy_ / maxWaveSpeedY);
 
   // Reduce maximum time step size by "safety factor"
   maxTimeStep_ *= RealType(0.4); // CFL-number = 0.5
