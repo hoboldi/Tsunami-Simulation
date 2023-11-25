@@ -44,6 +44,11 @@ int main(int argc, char** argv) {
   int   boundaryConditions = args.getArgument<int>("boundary-conditions", 1111);  // Default is 1111: Outflow for all Edges
   std::string checkpointFile = args.getArgument<std::string>("checkpoint-file", "");
 
+  Tools::Logger::logger.printWelcomeMessage();
+
+  // Print information about the grid
+  Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
+
   Scenarios::CheckpointScenario scenario(checkpointFile);
 
   if (baseName == checkpointFile.substr(0, checkpointFile.find_last_of('.'))) {
@@ -65,11 +70,6 @@ int main(int argc, char** argv) {
     std::cout << "Simulation time must be positive" << std::endl;
     return 1;
   }
-
-  Tools::Logger::logger.printWelcomeMessage();
-
-  // Print information about the grid
-  Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
 
 
   // Compute the size of a single cell

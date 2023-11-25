@@ -25,13 +25,13 @@ namespace Scenarios {
    */
   class CheckpointScenario: public Scenario {
   public:
-    CheckpointScenario(const std::string& filename);
+    explicit CheckpointScenario(const std::string& filename);
     ~CheckpointScenario() override = default;
 
     RealType getWaterHeight(RealType x, RealType y) const override;
     RealType getBathymetry(RealType x, RealType y) const override;
-    RealType getDischargeHu(RealType x, RealType y) const;
-    RealType getDischargeHv(RealType x, RealType y) const;
+    RealType getVelocityU(RealType x, RealType y) const override;
+    RealType getVelocityV(RealType x, RealType y) const override;
 
     BoundaryType getBoundaryType(BoundaryEdge edge) const override;
     BoundaryType getBoundaryTypeForInteger(int value) const;

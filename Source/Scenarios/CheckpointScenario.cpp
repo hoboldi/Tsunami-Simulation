@@ -28,22 +28,22 @@ RealType Scenarios::CheckpointScenario::getBathymetry(RealType x, RealType y) co
   return bathymetry_[x_scaled][y_scaled];
 }
 
-RealType Scenarios::CheckpointScenario::getDischargeHu(RealType x, RealType y) const {
+RealType Scenarios::CheckpointScenario::getVelocityU(RealType x, RealType y) const {
   if (x < 0 || y < 0 || x >= nx_ *dx_ || y >= ny_ * dy_) {
     return 0;
   }
   int x_scaled = static_cast<int>((x - std::fmod(x, dx_)) / dx_);
   int y_scaled = static_cast<int>((y - std::fmod(y, dy_)) / dy_);
-  return momentaX_[x_scaled][y_scaled];
+  return momentaX_[x_scaled][y_scaled]/height_[x_scaled][y_scaled];
 }
 
-RealType Scenarios::CheckpointScenario::getDischargeHv(RealType x, RealType y) const {
+RealType Scenarios::CheckpointScenario::getVelocityV(RealType x, RealType y) const {
   if (x < 0 || y < 0 || x >= nx_ *dx_ || y >= ny_ * dy_) {
     return 0;
   }
   int x_scaled = static_cast<int>((x - std::fmod(x, dx_)) / dx_);
   int y_scaled = static_cast<int>((y - std::fmod(y, dy_)) / dy_);
-  return momentaY_[x_scaled][y_scaled];
+  return momentaY_[x_scaled][y_scaled]/height_[x_scaled][y_scaled];
 }
 
 BoundaryType Scenarios::CheckpointScenario::getBoundaryType(BoundaryEdge edge) const {
