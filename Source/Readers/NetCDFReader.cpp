@@ -1,5 +1,9 @@
 #include "NetCDFReader.h"
 
+#include <format>
+
+#include "Tools/Logger.hpp"
+
 double* Readers::NetCDFReader::rotateAndFlip(size_t bxlen, size_t bylen, const double* bz_data) { // rotate bz_data by 90 degrees cw to match the orientation of the grid
   double* bz_data_rotated = new double[bxlen * bylen];
   for (int i = 0; i < bxlen; i++) {
@@ -80,7 +84,7 @@ double* Readers::NetCDFReader::readFile(const std::string& filename, const std::
 }
 
 double Readers::NetCDFReader::readCheckpoint(
-  const std::string& filename, double& timePassed, double*& bathymetries, double*& heights, double*& hus, double*& hvs, int*& boundaries, RealType& dx, RealType& dy, int& nx, int& ny
+  const std::string& filename, double& timePassed, double*& bathymetries, double*& heights, double*& hus, double*& hvs, int& boundaries, RealType& dx, RealType& dy, int& nx, int& ny
 ) {
   int bncid;
   int retval;
@@ -100,8 +104,8 @@ double Readers::NetCDFReader::readCheckpoint(
 
 
   // Get boundary data
-  // retval = nc_inq_varid(bncid, "boundary", &boundary_id);
-  // assert(retval == NC_NOERR);
+  retval = nc_inq_varid(bncid, "boundary", &boundary_id);
+  assert(retval == NC_NOERR);
 
 
   // Get variable ids
@@ -135,7 +139,6 @@ double Readers::NetCDFReader::readCheckpoint(
   auto*  hv_data = new double[bxlen * bylen];
 
 
-  int* boundary_data = new int[4];
 
 
   // Get time-data
@@ -144,8 +147,9 @@ double Readers::NetCDFReader::readCheckpoint(
   timePassed = time_data[timeLen - 1];
   // print timestep
 #ifndef NDEBUG
-  std::cout << "Found " << timeLen << " timesteps in file " << filename << std::endl;
-  std::cout << "Last timestep is " << timePassed << std::endl;
+
+  Tools::Logger::logger.printString(std::format("Found {} timesteps in file {}.", timeLen, filename));
+  Tools::Logger::logger.printString(std::format("Last timestep is {}.", timePassed));
 #endif
 
   // Get data
@@ -171,15 +175,14 @@ double Readers::NetCDFReader::readCheckpoint(
   assert(retval == NC_NOERR);
   retval = nc_get_vara_double(bncid, hv_varid, start, count, hv_data);
   assert(retval == NC_NOERR);
-  // retval = nc_get_var_int(bncid, boundary_id, boundary_data);
-  // assert(retval == NC_NOERR);
+  retval = nc_get_var_int(bncid, boundary_id, &boundaries);
+  assert(retval == NC_NOERR);
 
 
   bathymetries = rotateAndFlip(bxlen, bylen, b_data);
   heights      = rotateAndFlip(bxlen, bylen, h_data);
   hus          = rotateAndFlip(bxlen, bylen, hu_data);
   hvs          = rotateAndFlip(bxlen, bylen, hv_data);
-  boundaries   = boundary_data;
 
   // close file
   retval = nc_close(bncid);

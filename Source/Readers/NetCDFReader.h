@@ -41,7 +41,7 @@ namespace Readers{
        * 
        * Data that has to be in the checkpoint: timestep, timePassed, boundary, dx, dy, nx, ny, b, h, hu, bv
       */
-      static double readCheckpoint(const std::string& filename, double& timePassed, double*& bathymetries, double*& heights, double*& hus, double*& hvs, int*& boundaries, RealType& dx, RealType& dy, int& nx, int& ny);
+      static double readCheckpoint(const std::string& filename, double& timePassed, double*& bathymetries, double*& heights, double*& hus, double*& hvs, int& boundaries, RealType& dx, RealType& dy, int& nx, int& ny);
       static double* rotateAndFlip(size_t bxlen, size_t bylen, const double* bz_data);
   };
 }

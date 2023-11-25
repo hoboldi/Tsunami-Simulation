@@ -1,4 +1,5 @@
 
+#include <format>
 #include <string>
 
 #include "Blocks/DimensionalSplitting.h"
@@ -10,6 +11,7 @@
 #include "Tools/Args.hpp"
 #include "Tools/Logger.hpp"
 #include "Tools/ProgressBar.hpp"
+#include "Writers/NetCDFWriter.hpp"
 #include "Writers/Writer.hpp"
 
 
@@ -20,7 +22,11 @@ int main(int argc, char** argv) {
   args.addOption("output-basepath", 'o', "Output base file name");
   args.addOption("number-of-checkpoints", 'n', "Number of checkpoints to write output files");
   args.addOption("simulation-time", 't', "Simulation time in seconds");
-  args.addOption("boundary-conditions", 'b', "Set Boundary Conditions represented by an 4 digit Integer of 1s and 2s. (1: Outflow, 2: Wall).\n First Digit: Left Boundary\n Second Digit: Right Boundary\n Third Digit: Bottom Boundary\n Fourth Digit: Top Boundary");
+  args.addOption(
+    "boundary-conditions",
+    'b',
+    "Set Boundary Conditions represented by an 4 digit Integer of 1s and 2s. (1: Outflow, 2: Wall).\n First Digit: Left Boundary\n Second Digit: Right Boundary\n Third Digit: Bottom Boundary\n Fourth Digit: Top Boundary"
+  );
   args.addOption("checkpoint-file", 'c', "Checkpoint file to read initial values from");
 
   Tools::Args::Result ret = args.parse(argc, argv);
@@ -32,17 +38,15 @@ int main(int argc, char** argv) {
   }
 
   // Create the scenario
-  //Scenarios::TsunamiScenario scenario;
-  //scenario.readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
 
 
   int         numberOfGridCellsX = args.getArgument<int>("grid-size-x", 10);
   int         numberOfGridCellsY = args.getArgument<int>("grid-size-y", 10);
   std::string baseName           = args.getArgument<std::string>("output-basepath", "SWE");
   int numberOfCheckPoints = args.getArgument<int>("number-of-checkpoints", 20); //! Number of checkpoints for visualization (at each checkpoint in time, an output file is written).
-  double endSimulationTime  = args.getArgument<double>("simulation-time", 10);
-  int   boundaryConditions = args.getArgument<int>("boundary-conditions", 1111);  // Default is 1111: Outflow for all Edges
-  std::string checkpointFile = args.getArgument<std::string>("checkpoint-file", "");
+  double      endSimulationTime  = args.getArgument<double>("simulation-time", 10);
+  int         boundaryConditions = args.getArgument<int>("boundary-conditions", 1111); // Default is 1111: Outflow for all Edges
+  std::string checkpointFile     = args.getArgument<std::string>("checkpoint-file", "");
 
   Tools::Logger::logger.printWelcomeMessage();
 
@@ -50,21 +54,29 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
 
   Scenarios::CheckpointScenario scenario(checkpointFile);
+  //Scenarios::TsunamiScenario scenario;
+  //scenario.readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
 
-  if (baseName == checkpointFile.substr(0, checkpointFile.find_last_of('.'))) {
-    std::cout << "Output base path and checkpoint file must be different!" << std::endl;
-    return 1;
+  if (checkpointFile.empty()) {
+    // Ihhgitt!!
+    if (boundaryConditions == 1111 || boundaryConditions == 1112 || boundaryConditions == 1121 || boundaryConditions == 1122 || boundaryConditions == 1211 || boundaryConditions == 1212 || boundaryConditions == 1221 || boundaryConditions == 1222 || boundaryConditions == 2111 || boundaryConditions == 2112 || boundaryConditions == 2121 || boundaryConditions == 2122 || boundaryConditions == 2211 || boundaryConditions == 2212 || boundaryConditions == 2221 || boundaryConditions == 2222) {
+      scenario.setBoundaryType(boundaryConditions);
+    } else {
+      std::cout << "Boundary conditions invalid!" << std::endl;
+      return 1;
+    }
   }
 
-  //Ihhgitt!!
-  if(boundaryConditions == 1111 || boundaryConditions == 1112 || boundaryConditions == 1121 || boundaryConditions == 1122 || boundaryConditions == 1211 || boundaryConditions == 1212 || boundaryConditions == 1221 || boundaryConditions == 1222 || boundaryConditions == 2111 || boundaryConditions == 2112 || boundaryConditions == 2121 || boundaryConditions == 2122 || boundaryConditions == 2211 || boundaryConditions == 2212 || boundaryConditions == 2221 || boundaryConditions == 2222) {
-    scenario.setBoundaryType(boundaryConditions);
-  } else {
-    std::cout << "Boundary conditions invalid!" << std::endl;
-    return 1;
-  }
+  //print boundary conditions
+  std::cout << "Boundary conditions: " << scenario.getBoundaryType(BoundaryEdge::Left) << std::endl;
+  std::cout << "Boundary conditions: " << scenario.getBoundaryType(BoundaryEdge::Right) << std::endl;
+  std::cout << "Boundary conditions: " << scenario.getBoundaryType(BoundaryEdge::Bottom) << std::endl;
+  std::cout << "Boundary conditions: " << scenario.getBoundaryType(BoundaryEdge::Top) << std::endl;
 
-  if(endSimulationTime >= 0){
+
+
+
+  if (endSimulationTime >= 0) {
     scenario.setEndSimulationTime(endSimulationTime);
   } else {
     std::cout << "Simulation time must be positive" << std::endl;
@@ -87,29 +99,35 @@ int main(int argc, char** argv) {
 
   Writers::BoundarySize boundarySize = {{1, 1, 1, 1}};
 
-  auto writer = Writers::Writer::createWriterInstance(
+  auto writer = Writers::NetCDFWriter(
     baseName,
     waveBlock->getBathymetry(),
     boundarySize,
+    boundaryConditions,
     numberOfGridCellsX,
     numberOfGridCellsY,
     cellSizeX,
     cellSizeY,
-    0,
-    0,
     scenario.getBoundaryPos(BoundaryEdge::Left),
     scenario.getBoundaryPos(BoundaryEdge::Bottom),
     1
   );
+
   Tools::ProgressBar progressBar(endSimulationTime);
   progressBar.update(0.0);
-  writer->writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
-
-  Tools::Logger::logger.printStartMessage();
-  Tools::Logger::logger.initWallClockTime(time(NULL));
+  writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
 
   double simulationTime = scenario.getStartTime();
   progressBar.update(simulationTime);
+
+  if (!checkpointFile.empty() && simulationTime != 0) {
+    Tools::Logger::logger.printString(
+      std::format("Checkpoint file {} loaded, ignoring previously defined output file: {} and appending to {}.", checkpointFile, baseName, checkpointFile)
+    );
+  }
+
+  Tools::Logger::logger.printStartMessage();
+  Tools::Logger::logger.initWallClockTime(time(NULL));
 
   unsigned int iterations = 0;
 
@@ -156,7 +174,7 @@ int main(int argc, char** argv) {
     progressBar.update(simulationTime);
 
     // Write output
-    writer->writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
+    writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
   }
 
   progressBar.clear();

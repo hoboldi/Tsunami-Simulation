@@ -41,6 +41,8 @@ namespace Writers {
 
     int timeVar_, hVar_, huVar_, hvVar_, bVar_;
 
+    int Boundarys_[4];
+
     /** Flush after every x write operation? */
     unsigned int flush_;
 
@@ -82,6 +84,7 @@ namespace Writers {
       const std::string&              fileName,
       const Tools::Float2D<RealType>& bathymetry,
       const BoundarySize&             boundarySize,
+      int                             boundarys,
       int                             nX,
       int                             nY,
       RealType                        dX,

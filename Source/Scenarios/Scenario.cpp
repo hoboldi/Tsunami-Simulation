@@ -51,7 +51,15 @@ RealType Scenarios::Scenario::getWaterHeightAtRest() const { return RealType(10.
 double Scenarios::Scenario::getEndSimulationTime() const { return 0.1; }
 
 BoundaryType Scenarios::Scenario::getBoundaryType([[maybe_unused]] BoundaryEdge edge) const {
-  return BoundaryType::Wall;
+  if(edge == BoundaryEdge::Left) {
+    return boundaryTypeLeft;
+  } else if(edge == BoundaryEdge::Right) {
+    return boundaryTypeRight;
+  } else if(edge == BoundaryEdge::Bottom) {
+    return boundaryTypeBottom;
+  } else {
+    return boundaryTypeTop;
+  }
 }
 
 void Scenarios::Scenario::setEndSimulationTime(double time) {

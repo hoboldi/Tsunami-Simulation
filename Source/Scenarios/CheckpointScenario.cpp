@@ -8,10 +8,12 @@ Scenarios::CheckpointScenario::CheckpointScenario(const std::string& filename):
   bathymetry_(nx_, ny_, bathymetries),
   height_(nx_, ny_, heights),
   momentaX_(nx_, ny_, momentaX),
-  momentaY_(nx_, ny_, momentaY) {}
+  momentaY_(nx_, ny_, momentaY) {
+  setBoundaryType(boundaries);
+}
 
 RealType Scenarios::CheckpointScenario::getWaterHeight(RealType x, RealType y) const {
-  if (x < 0 || y < 0 || x >= nx_ *dx_ || y >= ny_ * dy_) {
+  if (x < 0 || y < 0 || x >= nx_ * dx_ || y >= ny_ * dy_) {
     return 0;
   }
   int x_scaled = static_cast<int>((x - std::fmod(x, dx_)) / dx_);
@@ -20,7 +22,7 @@ RealType Scenarios::CheckpointScenario::getWaterHeight(RealType x, RealType y) c
 }
 
 RealType Scenarios::CheckpointScenario::getBathymetry(RealType x, RealType y) const {
-  if (x < 0 || y < 0 || x >= nx_ *dx_ || y >= ny_ * dy_) {
+  if (x < 0 || y < 0 || x >= nx_ * dx_ || y >= ny_ * dy_) {
     return 0;
   }
   int x_scaled = static_cast<int>((x - std::fmod(x, dx_)) / dx_);
@@ -29,32 +31,57 @@ RealType Scenarios::CheckpointScenario::getBathymetry(RealType x, RealType y) co
 }
 
 RealType Scenarios::CheckpointScenario::getVelocityU(RealType x, RealType y) const {
-  if (x < 0 || y < 0 || x >= nx_ *dx_ || y >= ny_ * dy_) {
+  if (x < 0 || y < 0 || x >= nx_ * dx_ || y >= ny_ * dy_) {
     return 0;
   }
   int x_scaled = static_cast<int>((x - std::fmod(x, dx_)) / dx_);
   int y_scaled = static_cast<int>((y - std::fmod(y, dy_)) / dy_);
-  return momentaX_[x_scaled][y_scaled]/height_[x_scaled][y_scaled];
+  return momentaX_[x_scaled][y_scaled] / height_[x_scaled][y_scaled];
 }
 
 RealType Scenarios::CheckpointScenario::getVelocityV(RealType x, RealType y) const {
-  if (x < 0 || y < 0 || x >= nx_ *dx_ || y >= ny_ * dy_) {
+  if (x < 0 || y < 0 || x >= nx_ * dx_ || y >= ny_ * dy_) {
     return 0;
   }
   int x_scaled = static_cast<int>((x - std::fmod(x, dx_)) / dx_);
   int y_scaled = static_cast<int>((y - std::fmod(y, dy_)) / dy_);
-  return momentaY_[x_scaled][y_scaled]/height_[x_scaled][y_scaled];
+  return momentaY_[x_scaled][y_scaled] / height_[x_scaled][y_scaled];
 }
 
 BoundaryType Scenarios::CheckpointScenario::getBoundaryType(BoundaryEdge edge) const {
   if (edge == edge == BoundaryEdge::Top) {
-    return getBoundaryTypeForInteger(boundaries[0]);
+    return boundaryTypeTop;
   } else if (edge == edge == BoundaryEdge::Right) {
-    return getBoundaryTypeForInteger(boundaries[1]);
+    return boundaryTypeRight;
   } else if (edge == edge == BoundaryEdge::Bottom) {
-    return getBoundaryTypeForInteger(boundaries[2]);
+    return boundaryTypeBottom;
   } else {
-    return getBoundaryTypeForInteger(boundaries[3]);
+    return boundaryTypeLeft;
+  }
+}
+
+void Scenarios::CheckpointScenario::setBoundaryType(int type) {
+
+  int left = type / 1000;
+  int right = (type % 1000) / 100;
+  int bottom = (type % 100) / 10;
+  int top = type % 10;
+  if(left == 1) {
+    boundaryTypeLeft = BoundaryType::Outflow;
+  } else if(left == 2) {
+    boundaryTypeLeft = BoundaryType::Wall;
+  }if(right == 1){
+    boundaryTypeRight = BoundaryType::Outflow;
+  } else if(right == 2) {
+    boundaryTypeRight = BoundaryType::Wall;
+  }if(bottom == 1) {
+    boundaryTypeBottom = BoundaryType::Outflow;
+  } else if(bottom == 2) {
+    boundaryTypeBottom = BoundaryType::Wall;
+  }if(top == 1) {
+    boundaryTypeTop = BoundaryType::Outflow;
+  } else if(top == 2) {
+    boundaryTypeTop = BoundaryType::Wall;
   }
 }
 

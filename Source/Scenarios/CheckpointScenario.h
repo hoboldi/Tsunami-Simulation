@@ -38,6 +38,8 @@ namespace Scenarios {
     RealType     getBoundaryPos(BoundaryEdge edge) const override;
     RealType     getStartTime() const override;
 
+    void setBoundaryType(int type) override;
+
   private:
     RealType                 timestepStart;
     Tools::Float2D<RealType> bathymetry_;
@@ -57,7 +59,7 @@ namespace Scenarios {
     mutable RealType timePassedAtStart;
     BoundaryType     boundaryType;
     double           endSimulationTime;
-    int*             boundaries;
+    int              boundaries;
   };
 
 } // namespace Scenarios

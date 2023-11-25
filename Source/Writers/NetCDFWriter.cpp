@@ -49,14 +49,13 @@
 #undef MPI_INCLUDED_NETCDF
 #endif
 
-void Writers::NetCDFWriter::ncPutAttText(int varid, const char* name, const char* value) {
-  nc_put_att_text(dataFile_, varid, name, strlen(value), value);
-}
+void Writers::NetCDFWriter::ncPutAttText(int varid, const char* name, const char* value) { nc_put_att_text(dataFile_, varid, name, strlen(value), value); }
 
 Writers::NetCDFWriter::NetCDFWriter(
   const std::string&              baseName,
   const Tools::Float2D<RealType>& bathymetry,
   const BoundarySize&             boundarySize,
+  int                             type,
   int                             nX,
   int                             nY,
   RealType                        dX,
@@ -97,9 +96,7 @@ Writers::NetCDFWriter::NetCDFWriter(
 
   nc_def_var(dataFile_, "time", NC_FLOAT, 1, &l_timeDim, &timeVar_);
   ncPutAttText(timeVar_, "long_name", "Time");
-  ncPutAttText(
-    timeVar_, "units", "seconds since simulation start"
-  ); // The word "since" is important for the ParaView reader
+  ncPutAttText(timeVar_, "units", "seconds since simulation start"); // The word "since" is important for the ParaView reader
 
   nc_def_var(dataFile_, "x", NC_FLOAT, 1, &l_xDim, &l_xVar);
   nc_def_var(dataFile_, "y", NC_FLOAT, 1, &l_yDim, &l_yVar);
@@ -111,15 +108,19 @@ Writers::NetCDFWriter::NetCDFWriter(
   nc_def_var(dataFile_, "hv", NC_FLOAT, 3, dims, &hvVar_);
   nc_def_var(dataFile_, "b", NC_FLOAT, 2, &dims[1], &bVar_);
 
+  // Define boundary variable, always 4 boundaries
+  int boundaryVar;
+  nc_def_var(dataFile_, "boundary", NC_INT, 0, nullptr, &boundaryVar);
+  ncPutAttText(boundaryVar, "long_name", "Boundary types");
+  ncPutAttText(boundaryVar, "description", "left, right, bottom, top");
+  ncPutAttText(boundaryVar, "values", "1: outflow, 2: wall");
+
+
   // Set attributes to match CF-1.5 convention
   ncPutAttText(NC_GLOBAL, "Conventions", "CF-1.5");
   ncPutAttText(NC_GLOBAL, "title", "Computed tsunami solution");
   ncPutAttText(NC_GLOBAL, "history", "SWE");
-  ncPutAttText(
-    NC_GLOBAL,
-    "institution",
-    "Technische Universitaet Muenchen, Department of Informatics, Chair of Scientific Computing"
-  );
+  ncPutAttText(NC_GLOBAL, "institution", "Technische Universitaet Muenchen, Department of Informatics, Chair of Scientific Computing");
   ncPutAttText(NC_GLOBAL, "source", "Bathymetry and displacement data.");
   ncPutAttText(NC_GLOBAL, "references", "http://www5.in.tum.de/SWE");
   ncPutAttText(
@@ -143,6 +144,9 @@ Writers::NetCDFWriter::NetCDFWriter(
 
     gridPosition += dY;
   }
+
+  // Write boundary
+  nc_put_var_int(dataFile_, boundaryVar, &type);
 }
 
 Writers::NetCDFWriter::~NetCDFWriter() { nc_close(dataFile_); }
@@ -154,14 +158,9 @@ void Writers::NetCDFWriter::writeVarTimeDependent(const Tools::Float2D<RealType>
   std::size_t start[] = {static_cast<std::size_t>(timeStep_), 0, 0};
   std::size_t count[] = {1, static_cast<std::size_t>(nY_), 1};
   for (unsigned int col = 0; col < nX_; col++) {
-    start[2] = col; // Select column (dim "x")
-    nc_put_vara_double(
-      dataFile_,
-      ncVariable,
-      start,
-      count,
-      &matrix[col + boundarySize_[0]][boundarySize_[2]]
-    ); // Write column
+    start[2] = col;                                                        // Select column (dim "x")
+    nc_put_vara_double(dataFile_, ncVariable, start, count,
+                       &matrix[col + boundarySize_[0]][boundarySize_[2]]); // Write column
   }
 }
 
@@ -172,20 +171,13 @@ void Writers::NetCDFWriter::writeVarTimeIndependent(const Tools::Float2D<RealTyp
   std::size_t start[] = {0, 0};
   std::size_t count[] = {static_cast<std::size_t>(nY_), 1};
   for (unsigned int col = 0; col < nX_; col++) {
-    start[1] = col; // Select column (dim "x")
-    nc_put_vara_double(
-      dataFile_,
-      ncVariable,
-      start,
-      count,
-      &matrix[col + boundarySize_[0]][boundarySize_[2]]
-    ); // Write column
+    start[1] = col;                                                        // Select column (dim "x")
+    nc_put_vara_double(dataFile_, ncVariable, start, count,
+                       &matrix[col + boundarySize_[0]][boundarySize_[2]]); // Write column
   }
 }
 
-void Writers::NetCDFWriter::writeTimeStep(
-  const Tools::Float2D<RealType>& h, const Tools::Float2D<RealType>& hu, const Tools::Float2D<RealType>& hv, double time
-) {
+void Writers::NetCDFWriter::writeTimeStep(const Tools::Float2D<RealType>& h, const Tools::Float2D<RealType>& hu, const Tools::Float2D<RealType>& hv, double time) {
   if (timeStep_ == 0) {
     // Write bathymetry
     writeVarTimeIndependent(bathymetry_, bVar_);

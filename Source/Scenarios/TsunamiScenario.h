@@ -31,7 +31,6 @@ namespace Scenarios {
     void   setEndSimulationTime(double time);
 
 
-    BoundaryType getBoundaryType(BoundaryEdge edge) const override;
     RealType     getBoundaryPos(BoundaryEdge edge) const override;
     void         readScenario(std::string bathymetry, std::string displacement) const;
 

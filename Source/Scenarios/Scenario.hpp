@@ -56,8 +56,8 @@ namespace Scenarios {
     virtual double   getEndSimulationTime() const;
     virtual RealType getStartTime() const;
     virtual void setEndSimulationTime(double time);
-    virtual BoundaryType getBoundaryType(BoundaryEdge edge) const;
-    virtual RealType     getBoundaryPos(BoundaryEdge edge) const;
+    [[nodiscard]] virtual BoundaryType getBoundaryType(BoundaryEdge edge) const;
+    [[nodiscard]] virtual RealType     getBoundaryPos(BoundaryEdge edge) const;
     virtual void setBoundaryType(int type);
     BoundaryType boundaryType;
 

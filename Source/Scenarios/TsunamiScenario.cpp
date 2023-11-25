@@ -311,17 +311,6 @@ void Scenarios::TsunamiScenario::setEndSimulationTime(double time) {
 }
 
 
-BoundaryType Scenarios::TsunamiScenario::getBoundaryType([[maybe_unused]] BoundaryEdge edge) const {
-  if(edge == BoundaryEdge::Left) {
-    return boundaryTypeLeft;
-  } else if(edge == BoundaryEdge::Right) {
-    return boundaryTypeRight;
-  } else if(edge == BoundaryEdge::Bottom) {
-    return boundaryTypeBottom;
-  } else {
-    return boundaryTypeTop;
-  }
-}
 
 
 
