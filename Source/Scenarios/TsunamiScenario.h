@@ -18,7 +18,7 @@ namespace Scenarios {
 
   /**
    * Scenario "Tsunami Scenario":
-   * TODO
+   * NetCDF Read Scenario
    */
   class TsunamiScenario: public Scenario {
   public:
@@ -32,6 +32,13 @@ namespace Scenarios {
 
 
     RealType     getBoundaryPos(BoundaryEdge edge) const override;
+
+    /**
+       * @brief A method to read from two netcdf files oen for bathymetry and for displacement.
+       *
+       * @param [in] bathymetry: The name of the file which will be read -> The bathymetry file
+       * @param [in] displacement: The name of the variable which will be read -> The displacement file
+     */
     void         readScenario(std::string bathymetry, std::string displacement) const;
 
   private:
