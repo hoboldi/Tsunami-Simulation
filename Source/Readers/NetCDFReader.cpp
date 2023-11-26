@@ -1,6 +1,6 @@
 #include "NetCDFReader.h"
 
-#include <format>
+//#include <format>
 
 #include "Tools/Logger.hpp"
 
@@ -148,8 +148,8 @@ double Readers::NetCDFReader::readCheckpoint(
   // print timestep
 #ifndef NDEBUG
 
-  Tools::Logger::logger.printString(std::format("Found {} timesteps in file {}.", timeLen, filename));
-  Tools::Logger::logger.printString(std::format("Last timestep is {}.", timePassed));
+  //Tools::Logger::logger.printString(std::format("Found {} timesteps in file {}.", timeLen, filename));
+  //Tools::Logger::logger.printString(std::format("Last timestep is {}.", timePassed));
 #endif
 
   // Get data

@@ -1,5 +1,5 @@
 
-#include <format>
+//#include <format>
 #include <string>
 
 #include "Blocks/DimensionalSplitting.h"
@@ -51,11 +51,11 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.printWelcomeMessage();
 
   // Print information about the grid
-  Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
+  //Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
 
-  Scenarios::CheckpointScenario scenario(checkpointFile);
-  //Scenarios::TsunamiScenario scenario;
-  //scenario.readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
+  //Scenarios::CheckpointScenario scenario(checkpointFile);
+  Scenarios::TsunamiScenario scenario;
+  scenario.readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
 
   if (checkpointFile.empty()) {
     // Ihhgitt!!
@@ -120,11 +120,13 @@ int main(int argc, char** argv) {
   double simulationTime = scenario.getStartTime();
   progressBar.update(simulationTime);
 
+/*
   if (!checkpointFile.empty() && simulationTime != 0) {
     Tools::Logger::logger.printString(
       std::format("Checkpoint file {} loaded, ignoring previously defined output file: {} and appending to {}.", checkpointFile, baseName, checkpointFile)
     );
   }
+  */
 
   Tools::Logger::logger.printStartMessage();
   Tools::Logger::logger.initWallClockTime(time(NULL));
