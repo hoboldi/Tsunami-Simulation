@@ -40,7 +40,6 @@ namespace Scenarios {
        * @param [in] displacement: The name of the variable which will be read -> The displacement file
      */
     void         readScenario(std::string bathymetry, std::string displacement) const;
-
   private:
     double endSimulationTime;
   };
