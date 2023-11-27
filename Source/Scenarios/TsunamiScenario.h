@@ -16,6 +16,22 @@
 
 namespace Scenarios {
 
+
+  struct interval {
+    RealType xleft;
+    RealType xright;
+    RealType yleft;
+    RealType yright;
+    RealType h;
+    RealType b;
+  };
+
+
+
+
+
+  std::vector<std::vector<interval>> getInterval();
+
   /**
    * Scenario "Tsunami Scenario":
    * NetCDF Read Scenario
@@ -23,6 +39,7 @@ namespace Scenarios {
   class TsunamiScenario: public Scenario {
   public:
     ~TsunamiScenario() override = default;
+
 
     RealType getWaterHeight(RealType x, RealType y) const override;
     RealType getBathymetry(RealType x, RealType y) const override;
@@ -40,6 +57,7 @@ namespace Scenarios {
        * @param [in] displacement: The name of the variable which will be read -> The displacement file
      */
     void         readScenario(std::string bathymetry, std::string displacement) const;
+
   private:
     double endSimulationTime;
   };
