@@ -240,6 +240,8 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
       intervals[indexi][indexj].b += z;
     }
   }
+  delete(bz_data);
+  delete(dz_data);
   indexi = 0;
   indexj = 0;
 }
