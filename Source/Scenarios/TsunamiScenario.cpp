@@ -3,18 +3,18 @@
 #include <cfloat>
 
 
-unsigned long                      indexi = 0;
-unsigned long                      indexj = 0;
-double                             offsetx;
-double                             offsety;
-double                             sizex;
-double                             sizey;
+unsigned long indexi = 0;
+unsigned long indexj = 0;
+double        offsetx;
+double        offsety;
+double        sizex;
+double        sizey;
 
 
 namespace Scenarios {
   std::vector<std::vector<interval>> intervals;
   std::vector<std::vector<interval>> getInterval() { return intervals; }
-}
+} // namespace Scenarios
 double calculateAvgOf(const double left, const double right) { return (left + right) * 0.5; }
 
 void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::string displacement) const {
@@ -159,8 +159,8 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
       intervals[i][j].h      = -fmin(intervals[i][j].b, 0);
     }
   }
-
-
+  // close the file
+  nc_close(bncid);
   int dncid, dvarid;
 
   retval = nc_open(displacement.c_str(), NC_NOWRITE, &dncid);
@@ -169,7 +169,7 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
   // Get the variables
   int    dx_dimid, dy_dimid;
   int    dx_varid, dy_varid, dz_varid;
-  size_t dxlen, dylen;
+  size_t dxlen, dylen = 0;
 
   // Get dimension ids
   retval = nc_inq_dimid(dncid, "x", &dx_dimid);
@@ -240,10 +240,12 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
       intervals[indexi][indexj].b += z;
     }
   }
-  delete(bz_data);
-  delete(dz_data);
   indexi = 0;
   indexj = 0;
+  nc_close(dncid);
+
+  delete[] dz_data;
+  delete[] bz_data;
 }
 
 RealType Scenarios::TsunamiScenario::getWaterHeight(RealType x, RealType y) const {

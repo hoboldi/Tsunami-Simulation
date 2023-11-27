@@ -11,11 +11,11 @@ foreach (file ${SOURCES})
 endforeach ()
 
 if (MSVC)
-    configure_file(${CMAKE_SOURCE_DIR}/Tests/netCDFReaderTestBathymetry.nc ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/Tests/netCDFReaderTestBathymetry.nc ${CMAKE_CURRENT_BINARY_DIR}/Tests COPYONLY)
 
-    configure_file(${CMAKE_SOURCE_DIR}/Tests/netCDFReaderTestDisplacement.nc ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/Tests/netCDFReaderTestDisplacement.nc ${CMAKE_CURRENT_BINARY_DIR}/Tests COPYONLY)
 else ()
-    configure_file(${CMAKE_SOURCE_DIR}/Tests/netCDFReaderTestBathymetry.nc ${CMAKE_BINARY_DIR} COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/Tests/netCDFReaderTestBathymetry.nc ${CMAKE_BINARY_DIR}/Tests COPYONLY)
 
-    configure_file(${CMAKE_SOURCE_DIR}/Tests/netCDFReaderTestDisplacement.nc ${CMAKE_BINARY_DIR} COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/Tests/netCDFReaderTestDisplacement.nc ${CMAKE_BINARY_DIR}/Tests COPYONLY)
 endif ()

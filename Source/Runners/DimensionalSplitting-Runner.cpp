@@ -56,8 +56,8 @@ int main(int argc, char** argv) {
 
   if (checkpointFile.empty()) {
     auto tsunamiScenario = new Scenarios::TsunamiScenario();
-    tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
-    //tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
+    //tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
+    tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
     scenario = tsunamiScenario;
   } else {
     scenario = new Scenarios::CheckpointScenario(checkpointFile);
@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
   progressBar.update(simulationTime);
   // skip until correct checkpoint
   int cp = 1;
-  while (simulationTime > checkPoints[cp]) {
+  while (simulationTime > checkPoints[cp] && cp <= numberOfCheckPoints) {
     cp++;
   }
 

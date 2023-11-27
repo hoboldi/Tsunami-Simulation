@@ -7,7 +7,9 @@
 
 TEST_CASE("Comparison of the intervals") {
   Scenarios::TsunamiScenario scenario;
-  scenario.readScenario("netCDFReaderTestBathymetry.nc", "netCDFReaderTestDisplacement.nc");
+  scenario.readScenario(
+    "netCDFReaderTestBathymetry.nc", "netCDFReaderTestDisplacement.nc"
+  );
 
   std::vector<std::vector<Scenarios::interval>> intervalsToBeTested = Scenarios::getInterval();
 
