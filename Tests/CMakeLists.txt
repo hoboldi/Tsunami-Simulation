@@ -9,3 +9,13 @@ foreach (file ${SOURCES})
     target_link_libraries(${filename} PRIVATE ${META_PROJECT_NAME} ${META_PROJECT_NAME}_test)
     target_link_system_libraries(${filename} PRIVATE Catch2 Catch2WithMain)
 endforeach ()
+
+if (MSVC)
+    configure_file(${CMAKE_SOURCE_DIR}/Tests/netCDFReaderTestBathymetry.nc ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+
+    configure_file(${CMAKE_SOURCE_DIR}/Tests/netCDFReaderTestDisplacement.nc ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+else ()
+    configure_file(${CMAKE_SOURCE_DIR}/Tests/netCDFReaderTestBathymetry.nc ${CMAKE_BINARY_DIR} COPYONLY)
+
+    configure_file(${CMAKE_SOURCE_DIR}/Tests/netCDFReaderTestDisplacement.nc ${CMAKE_BINARY_DIR} COPYONLY)
+endif ()
