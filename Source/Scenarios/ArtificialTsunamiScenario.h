@@ -19,7 +19,6 @@ namespace Scenarios {
    BoundaryType getBoundaryType(BoundaryEdge edge) const override;
    RealType     getBoundaryPos(BoundaryEdge edge) const override;
 
- private:
    /**
     * @brief Calculates the displacement of the bathymetry after the earthquake
     * @param x X-Coordinate
