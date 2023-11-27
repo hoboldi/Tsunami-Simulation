@@ -93,6 +93,16 @@ namespace Writers {
       RealType                        originY = 0.,
       unsigned int                    flush   = 0
     );
+    /**
+     * Constructor of the netCDFWriter in append mode, which appends data to an existing netCDF-file (checkpoints).
+      *
+      * @param fileName name of the netCDF-file.
+      * @param nx number of cells in x-direction.
+      * @param ny number of cells in y-direction.
+      * @param boundarySize size of the boundaries.
+      * @param flush flush after every x write operation.
+      */
+    NetCDFWriter(const std::string& fileName, int nx, int ny, BoundarySize boundarySize, unsigned int flush = 1);
 
     ~NetCDFWriter() override;
 
@@ -110,12 +120,7 @@ namespace Writers {
      * @param boundarySize size of the boundaries.
      * @param time simulation time of the time step.
      */
-    void writeTimeStep(
-      const Tools::Float2D<RealType>& h,
-      const Tools::Float2D<RealType>& hu,
-      const Tools::Float2D<RealType>& hv,
-      double                          time
-    ) override;
+    void writeTimeStep(const Tools::Float2D<RealType>& h, const Tools::Float2D<RealType>& hu, const Tools::Float2D<RealType>& hv, double time) override;
   };
 
 #endif

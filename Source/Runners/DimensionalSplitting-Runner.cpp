@@ -1,5 +1,5 @@
 
-//#include <format>
+// #include <format>
 #include <string>
 
 #include "Blocks/DimensionalSplitting.h"
@@ -51,33 +51,32 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.printWelcomeMessage();
 
   // Print information about the grid
-  //Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
+  Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
+  Scenarios::Scenario* scenario;
 
-  //Scenarios::CheckpointScenario scenario(checkpointFile);
-  Scenarios::TsunamiScenario scenario;
-  scenario.readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
+  if (checkpointFile.empty()) {
+    auto tsunamiScenario = new Scenarios::TsunamiScenario();
+    tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
+    scenario = tsunamiScenario;
+  } else {
+    scenario = new Scenarios::CheckpointScenario(checkpointFile);
+  }
+
 
   if (checkpointFile.empty()) {
     // Ihhgitt!!
     if (boundaryConditions == 1111 || boundaryConditions == 1112 || boundaryConditions == 1121 || boundaryConditions == 1122 || boundaryConditions == 1211 || boundaryConditions == 1212 || boundaryConditions == 1221 || boundaryConditions == 1222 || boundaryConditions == 2111 || boundaryConditions == 2112 || boundaryConditions == 2121 || boundaryConditions == 2122 || boundaryConditions == 2211 || boundaryConditions == 2212 || boundaryConditions == 2221 || boundaryConditions == 2222) {
-      scenario.setBoundaryType(boundaryConditions);
+      scenario->setBoundaryType(boundaryConditions);
     } else {
       std::cout << "Boundary conditions invalid!" << std::endl;
       return 1;
     }
   }
 
-  //print boundary conditions
-  std::cout << "Boundary conditions: " << scenario.getBoundaryType(BoundaryEdge::Left) << std::endl;
-  std::cout << "Boundary conditions: " << scenario.getBoundaryType(BoundaryEdge::Right) << std::endl;
-  std::cout << "Boundary conditions: " << scenario.getBoundaryType(BoundaryEdge::Bottom) << std::endl;
-  std::cout << "Boundary conditions: " << scenario.getBoundaryType(BoundaryEdge::Top) << std::endl;
-
-
 
 
   if (endSimulationTime >= 0) {
-    scenario.setEndSimulationTime(endSimulationTime);
+    scenario->setEndSimulationTime(endSimulationTime);
   } else {
     std::cout << "Simulation time must be positive" << std::endl;
     return 1;
@@ -85,11 +84,11 @@ int main(int argc, char** argv) {
 
 
   // Compute the size of a single cell
-  RealType cellSizeX = (scenario.getBoundaryPos(BoundaryEdge::Right) - scenario.getBoundaryPos(BoundaryEdge::Left)) / numberOfGridCellsX;
-  RealType cellSizeY = (scenario.getBoundaryPos(BoundaryEdge::Top) - scenario.getBoundaryPos(BoundaryEdge::Bottom)) / numberOfGridCellsY;
+  RealType cellSizeX = (scenario->getBoundaryPos(BoundaryEdge::Right) - scenario->getBoundaryPos(BoundaryEdge::Left)) / numberOfGridCellsX;
+  RealType cellSizeY = (scenario->getBoundaryPos(BoundaryEdge::Top) - scenario->getBoundaryPos(BoundaryEdge::Bottom)) / numberOfGridCellsY;
 
   auto waveBlock = new Blocks::DimensionalSplitting(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY);
-  waveBlock->initialiseScenario(0, 0, scenario);
+  waveBlock->initialiseScenario(0, 0, *scenario);
 
   double* checkPoints = new double[numberOfCheckPoints + 1];
 
@@ -98,35 +97,44 @@ int main(int argc, char** argv) {
   }
 
   Writers::BoundarySize boundarySize = {{1, 1, 1, 1}};
-
-  auto writer = Writers::NetCDFWriter(
-    baseName,
-    waveBlock->getBathymetry(),
-    boundarySize,
-    boundaryConditions,
-    numberOfGridCellsX,
-    numberOfGridCellsY,
-    cellSizeX,
-    cellSizeY,
-    scenario.getBoundaryPos(BoundaryEdge::Left),
-    scenario.getBoundaryPos(BoundaryEdge::Bottom),
-    1
-  );
+  Writers::NetCDFWriter writer
+    = checkpointFile.empty() ? Writers::NetCDFWriter(
+        baseName,
+        waveBlock->getBathymetry(),
+        boundarySize,
+        boundaryConditions,
+        numberOfGridCellsX,
+        numberOfGridCellsY,
+        cellSizeX,
+        cellSizeY,
+        scenario->getBoundaryPos(BoundaryEdge::Left),
+        scenario->getBoundaryPos(BoundaryEdge::Bottom),
+        1
+      )
+                             : Writers::NetCDFWriter(checkpointFile, numberOfGridCellsX, numberOfGridCellsY, boundarySize, 1);
 
   Tools::ProgressBar progressBar(endSimulationTime);
   progressBar.update(0.0);
-  writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
-
-  double simulationTime = scenario.getStartTime();
-  progressBar.update(simulationTime);
-
-/*
-  if (!checkpointFile.empty() && simulationTime != 0) {
-    Tools::Logger::logger.printString(
-      std::format("Checkpoint file {} loaded, ignoring previously defined output file: {} and appending to {}.", checkpointFile, baseName, checkpointFile)
-    );
+  if (checkpointFile.empty()){
+    writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
   }
-  */
+
+  double simulationTime = scenario->getStartTime();
+  progressBar.update(simulationTime);
+  // skip until correct checkpoint
+  int cp = 1;
+  while (simulationTime > checkPoints[cp]) {
+    cp++;
+  }
+
+
+  /*
+    if (!checkpointFile.empty() && simulationTime != 0) {
+      Tools::Logger::logger.printString(
+        std::format("Checkpoint file {} loaded, ignoring previously defined output file: {} and appending to {}.", checkpointFile, baseName, checkpointFile)
+      );
+    }
+    */
 
   Tools::Logger::logger.printStartMessage();
   Tools::Logger::logger.initWallClockTime(time(NULL));
@@ -134,7 +142,7 @@ int main(int argc, char** argv) {
   unsigned int iterations = 0;
 
   // Loop over checkpoints
-  for (int cp = 1; cp <= numberOfCheckPoints; cp++) {
+  for (; cp <= numberOfCheckPoints; cp++) {
     // Do time steps until next checkpoint is reached
     while (simulationTime < checkPoints[cp]) {
       // Reset CPU-Communication clock

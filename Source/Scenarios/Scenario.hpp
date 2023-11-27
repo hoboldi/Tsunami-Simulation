@@ -27,9 +27,10 @@
 
 #pragma once
 
+#include <cassert>
+
 #include "BoundaryEdge.hpp"
 #include "BoundaryType.hpp"
-#include <cassert>
 #include "Tools/RealType.hpp"
 
 namespace Scenarios {
@@ -52,21 +53,21 @@ namespace Scenarios {
     virtual RealType getVelocityV(RealType x, RealType y) const;
     virtual RealType getBathymetry(RealType x, RealType y) const;
 
-    virtual RealType getWaterHeightAtRest() const;
-    virtual double   getEndSimulationTime() const;
-    virtual RealType getStartTime() const;
-    virtual void setEndSimulationTime(double time);
-    [[nodiscard]] virtual BoundaryType getBoundaryType(BoundaryEdge edge) const;
-    [[nodiscard]] virtual RealType     getBoundaryPos(BoundaryEdge edge) const;
-    virtual void setBoundaryType(int type);
-    BoundaryType boundaryType;
+    virtual RealType               getWaterHeightAtRest() const;
+    virtual double                 getEndSimulationTime() const;
+    virtual RealType               getStartTime() const;
+    virtual void                   setEndSimulationTime(double time);
+    [[nodiscard]] virtual BoundaryType     getBoundaryType(BoundaryEdge edge) const;
+    [[nodiscard]] virtual RealType getBoundaryPos(BoundaryEdge edge) const;
+    void                           setBoundaryType(int type);
+    BoundaryType                   boundaryType;
 
   protected:
     BoundaryType boundaryTypeLeft;
     BoundaryType boundaryTypeRight;
     BoundaryType boundaryTypeTop;
     BoundaryType boundaryTypeBottom;
-    double endSimulationTime;
+    double       endSimulationTime;
   };
 
 } // namespace Scenarios

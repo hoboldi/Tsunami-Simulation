@@ -33,12 +33,9 @@ namespace Scenarios {
     RealType getVelocityU(RealType x, RealType y) const override;
     RealType getVelocityV(RealType x, RealType y) const override;
 
-    BoundaryType getBoundaryType(BoundaryEdge edge) const override;
-    BoundaryType getBoundaryTypeForInteger(int value) const;
+    static BoundaryType getBoundaryTypeForInteger(int value) ;
     RealType     getBoundaryPos(BoundaryEdge edge) const override;
     RealType     getStartTime() const override;
-
-    void setBoundaryType(int type) override;
 
   private:
     RealType                 timestepStart;

@@ -29,6 +29,8 @@
 
 #include "NetCDFWriter.hpp"
 
+#include "Readers/NetCDFReader.h"
+
 #ifdef ENABLE_NETCDF
 
 #include <cassert>
@@ -149,6 +151,54 @@ Writers::NetCDFWriter::NetCDFWriter(
   nc_put_var_int(dataFile_, boundaryVar, &type);
 }
 
+Writers::NetCDFWriter::NetCDFWriter(const std::string& fileName, int nx, int ny, BoundarySize boundarySize, unsigned int flush):
+  Writer(fileName, Tools::Float2D<RealType>(nx, ny, false), boundarySize, nx, ny),
+  flush_(flush) {
+  timeStep_  = 0;
+  int status = -1;
+  // Open file
+  status = nc_open(fileName.c_str(), NC_WRITE, &dataFile_);
+  // Check if the netCDF-file opened successfully
+  if (status != NC_NOERR) {
+    assert(false);
+    return;
+  }
+
+  // Dimensions
+  int l_timeDim, l_xDim, l_yDim;
+  status = nc_inq_dimid(dataFile_, "time", &l_timeDim);
+  assert(status == NC_NOERR);
+  status = nc_inq_dimid(dataFile_, "x", &l_xDim);
+  assert(status == NC_NOERR);
+  status = nc_inq_dimid(dataFile_, "y", &l_yDim);
+  assert(status == NC_NOERR);
+
+  // Dimension lengths
+  size_t xDim, yDim;
+  status = nc_inq_dimlen(dataFile_, l_xDim, &xDim);
+  assert(status == NC_NOERR);
+  status = nc_inq_dimlen(dataFile_, l_yDim, &yDim);
+  assert(status == NC_NOERR);
+  assert((int)xDim == nx);
+  assert((int)yDim == ny);
+  size_t timeDim;
+  status = nc_inq_dimlen(dataFile_, l_timeDim, &timeDim);
+  assert(status == NC_NOERR);
+  timeStep_ = (int)timeDim;
+
+  // Variables
+  status = nc_inq_varid(dataFile_, "h", &hVar_);
+  assert(status == NC_NOERR);
+  status = nc_inq_varid(dataFile_, "hu", &huVar_);
+  assert(status == NC_NOERR);
+  status = nc_inq_varid(dataFile_, "hv", &hvVar_);
+  assert(status == NC_NOERR);
+  status = nc_inq_varid(dataFile_, "b", &bVar_);
+  assert(status == NC_NOERR);
+  status = nc_inq_varid(dataFile_, "time", &timeVar_);
+  assert(status == NC_NOERR);
+}
+
 Writers::NetCDFWriter::~NetCDFWriter() { nc_close(dataFile_); }
 
 void Writers::NetCDFWriter::writeVarTimeDependent(const Tools::Float2D<RealType>& matrix, int ncVariable) {
@@ -176,7 +226,6 @@ void Writers::NetCDFWriter::writeVarTimeIndependent(const Tools::Float2D<RealTyp
                        &matrix[col + boundarySize_[0]][boundarySize_[2]]); // Write column
   }
 }
-
 void Writers::NetCDFWriter::writeTimeStep(const Tools::Float2D<RealType>& h, const Tools::Float2D<RealType>& hu, const Tools::Float2D<RealType>& hv, double time) {
   if (timeStep_ == 0) {
     // Write bathymetry
