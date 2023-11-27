@@ -1,43 +1,64 @@
 #pragma once
 
-#include "Scenario.hpp"
+#include <algorithm>
+#include <array>
+#include <cassert>
 #include <cmath>
-#include <vector>
-#include <string>
+#include <iostream>
 #include <netcdf.h>
 #include <netcdf>
 #include <netcdfcpp.h>
-#include <iostream>
-#include <cassert>
-#include <algorithm>
+#include <string>
 #include <utility>
-#include <array>
+#include <vector>
+
+#include "Scenario.hpp"
 
 namespace Scenarios {
 
+
+  struct interval {
+    RealType xleft;
+    RealType xright;
+    RealType yleft;
+    RealType yright;
+    RealType h;
+    RealType b;
+  };
+
+
+
+
+
+  std::vector<std::vector<interval>> getInterval();
+
   /**
    * Scenario "Tsunami Scenario":
-   * TODO
-  */
+   * NetCDF Read Scenario
+   */
   class TsunamiScenario: public Scenario {
   public:
     ~TsunamiScenario() override = default;
+
 
     RealType getWaterHeight(RealType x, RealType y) const override;
     RealType getBathymetry(RealType x, RealType y) const override;
 
     double getEndSimulationTime() const override;
-    void setEndSimulationTime(double time);
-    void setBoundaryType(int type);
+    void   setEndSimulationTime(double time);
 
-    BoundaryType getBoundaryType(BoundaryEdge edge) const override;
+
     RealType     getBoundaryPos(BoundaryEdge edge) const override;
+
+    /**
+       * @brief A method to read from two netcdf files oen for bathymetry and for displacement.
+       *
+       * @param [in] bathymetry: The name of the file which will be read -> The bathymetry file
+       * @param [in] displacement: The name of the variable which will be read -> The displacement file
+     */
     void         readScenario(std::string bathymetry, std::string displacement) const;
+
   private:
-    BoundaryType boundaryTypeLeft;
-    BoundaryType boundaryTypeRight;
-    BoundaryType boundaryTypeTop;
-    BoundaryType boundaryTypeBottom;
     double endSimulationTime;
   };
 
