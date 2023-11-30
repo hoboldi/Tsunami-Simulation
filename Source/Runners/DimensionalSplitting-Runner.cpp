@@ -192,6 +192,8 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.printStatisticsMessage();
   Tools::Logger::logger.printTime("CPU", "CPU Time");
   Tools::Logger::logger.printTime("CPU-Communication", "CPU + Communication Time");
+  Tools::Logger::logger.getDefaultOutputStream() << "Average time per Cell: " << Tools::Logger::logger.getTime("CPU") / (numberOfGridCellsX * numberOfGridCellsY) << " seconds" << std::endl;
+  Tools::Logger::logger.getDefaultOutputStream() << "Average time per Iteration: " << Tools::Logger::logger.getTime("CPU") / iterations << " seconds" << std::endl;
   Tools::Logger::logger.printWallClockTime(time(NULL));
   Tools::Logger::logger.printIterationsDone(iterations);
 
