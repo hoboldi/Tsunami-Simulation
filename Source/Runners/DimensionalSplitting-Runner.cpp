@@ -1,7 +1,6 @@
 
 // #include <format>
 #include <string>
-
 #include "Blocks/DimensionalSplitting.h"
 #include "BoundaryEdge.hpp"
 #include "Readers/NetCDFReader.h"
@@ -13,6 +12,8 @@
 #include "Tools/ProgressBar.hpp"
 #include "Writers/NetCDFWriter.hpp"
 #include "Writers/Writer.hpp"
+#include <omp.h>
+
 
 
 int main(int argc, char** argv) {
@@ -196,6 +197,8 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.getDefaultOutputStream() << "Average time per Iteration: " << Tools::Logger::logger.getTime("CPU") / iterations << " seconds" << std::endl;
   Tools::Logger::logger.printWallClockTime(time(NULL));
   Tools::Logger::logger.printIterationsDone(iterations);
+  //print number of threads
+  Tools::Logger::logger.getDefaultOutputStream() << "Number of threads: " << omp_get_num_threads() << std::endl;
 
   Tools::Logger::logger.printFinishMessage();
 
