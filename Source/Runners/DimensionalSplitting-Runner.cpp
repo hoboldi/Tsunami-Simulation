@@ -1,6 +1,7 @@
 
 // #include <format>
 #include <string>
+
 #include "Blocks/DimensionalSplitting.h"
 #include "BoundaryEdge.hpp"
 #include "Readers/NetCDFReader.h"
@@ -12,8 +13,9 @@
 #include "Tools/ProgressBar.hpp"
 #include "Writers/NetCDFWriter.hpp"
 #include "Writers/Writer.hpp"
+#ifdef ENABLE_OPENMP
 #include <omp.h>
-
+#endif
 
 
 int main(int argc, char** argv) {
@@ -57,7 +59,7 @@ int main(int argc, char** argv) {
 
   if (checkpointFile.empty()) {
     auto tsunamiScenario = new Scenarios::TsunamiScenario();
-    //tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
+    // tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
     tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
     scenario = tsunamiScenario;
   } else {
@@ -74,7 +76,6 @@ int main(int argc, char** argv) {
       return 1;
     }
   }
-
 
 
   if (endSimulationTime >= 0) {
@@ -117,7 +118,7 @@ int main(int argc, char** argv) {
 
   Tools::ProgressBar progressBar(endSimulationTime);
   progressBar.update(0.0);
-  if (checkpointFile.empty()){
+  if (checkpointFile.empty()) {
     writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
   }
 
@@ -193,12 +194,16 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.printStatisticsMessage();
   Tools::Logger::logger.printTime("CPU", "CPU Time");
   Tools::Logger::logger.printTime("CPU-Communication", "CPU + Communication Time");
-  Tools::Logger::logger.getDefaultOutputStream() << "Average time per Cell: " << Tools::Logger::logger.getTime("CPU") / (numberOfGridCellsX * numberOfGridCellsY) << " seconds" << std::endl;
+  Tools::Logger::logger.getDefaultOutputStream(
+  ) << "Average time per Cell: "
+    << Tools::Logger::logger.getTime("CPU") / (numberOfGridCellsX * numberOfGridCellsY) << " seconds" << std::endl;
   Tools::Logger::logger.getDefaultOutputStream() << "Average time per Iteration: " << Tools::Logger::logger.getTime("CPU") / iterations << " seconds" << std::endl;
   Tools::Logger::logger.printWallClockTime(time(NULL));
   Tools::Logger::logger.printIterationsDone(iterations);
-  //print number of threads
-  Tools::Logger::logger.getDefaultOutputStream() << "Number of threads: " << omp_get_num_threads() << std::endl;
+  // print number of threads
+#ifdef ENABLE_OPENMP
+  Tools::Logger::logger.getDefaultOutputStream() << "Number of threads: " << omp_get_max_threads() << std::endl;
+#endif
 
   Tools::Logger::logger.printFinishMessage();
 

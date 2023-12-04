@@ -1,5 +1,7 @@
 #include "DimensionalSplitting.h"
-#include <omp.h>
+#if defined(ENABLE_OPENMP)
+  #include <omp.h>
+#endif
 
 Blocks::DimensionalSplitting::DimensionalSplitting(int nx, int ny, RealType dx, RealType dy):
   Block(nx, ny, dx, dy),
@@ -28,15 +30,9 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
    */
 
 #if defined(ENABLE_OPENMP)
-#pragma omp parallel
-  {
-    RealType maxWaveSpeedXLocal = RealType(0.0);
-#pragma omp for
+#pragma omp parallel for reduction(max : maxWaveSpeedX)
 #endif
     for (int i = 0; i <= nx_; ++i) {
-#if defined(ENABLE_OPENMP)
-#pragma omp reduction(max : maxWaveSpeedXLocal)
-#endif
       for (int j = 1; j <= ny_; ++j) {
         RealType maxEdgeSpeed{0.0};
 
@@ -55,7 +51,7 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
         );
 
 #if defined(ENABLE_OPENMP)
-        maxWaveSpeedXLocal = std::max(maxWaveSpeedX, maxEdgeSpeed);
+        maxWaveSpeedX = std::max(maxWaveSpeedX, maxEdgeSpeed);
 #else
       // Update the maximum wave speed
       maxWaveSpeedX = std::max(maxWaveSpeedX, maxEdgeSpeed);
@@ -78,40 +74,35 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
      */
 
 #if defined(ENABLE_OPENMP)
-#pragma omp parallel
-    {
-      RealType maxWaveSpeedYLocal = RealType(0.0);
-#pragma omp for
+#pragma omp parallel for reduction(max : maxWaveSpeedY)
 #endif
-      for (int i = 1; i < nx_; ++i) {
-#if defined(ENABLE_OPENMP)
-#pragma omp reduction(max : maxWaveSpeedYLocal)
-#endif
-        for (int j = 0; j <= ny_; ++j) {
-          RealType maxEdgeSpeed{0.0};
+    for (int i = 1; i < nx_; ++i) {
+      for (int j = 0; j <= ny_; ++j) {
+        RealType maxEdgeSpeed{0.0};
 
-          fWaveSolver_.computeNetUpdates(
-            h_[i][j],
-            h_[i][j + 1],
-            hv_[i][j],
-            hv_[i][j + 1],
-            b_[i][j],
-            b_[i][j + 1],
-            hNetUpdatesYLeft_[i][j],
-            hNetUpdatesYRight_[i][j],
-            hvNetUpdatesYLeft_[i][j],
-            hvNetUpdatesYRight_[i][j],
-            maxEdgeSpeed
-          );
+        fWaveSolver_.computeNetUpdates(
+          h_[i][j],
+          h_[i][j + 1],
+          hv_[i][j],
+          hv_[i][j + 1],
+          b_[i][j],
+          b_[i][j + 1],
+          hNetUpdatesYLeft_[i][j],
+          hNetUpdatesYRight_[i][j],
+          hvNetUpdatesYLeft_[i][j],
+          hvNetUpdatesYRight_[i][j],
+          maxEdgeSpeed
+        );
 
 #if defined(ENABLE_OPENMP)
-          maxWaveSpeedYLocal = std::max(maxWaveSpeedY, maxEdgeSpeed);
+        maxWaveSpeedY = std::max(maxWaveSpeedY, maxEdgeSpeed);
 #else
       // Update the maximum wave speed
       maxWaveSpeedY = std::max(maxWaveSpeedY, maxEdgeSpeed);
 #endif
-        }
       }
+    }
+
 
       // Compute the time step width
       maxTimeStep_ = dx_ / maxWaveSpeedX;
