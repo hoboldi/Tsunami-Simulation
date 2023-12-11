@@ -31,6 +31,7 @@ int main(int argc, char** argv) {
     "Set Boundary Conditions represented by an 4 digit Integer of 1s and 2s. (1: Outflow, 2: Wall).\n First Digit: Left Boundary\n Second Digit: Right Boundary\n Third Digit: Bottom Boundary\n Fourth Digit: Top Boundary"
   );
   args.addOption("checkpoint-file", 'c', "Checkpoint file to read initial values from");
+  args.addOption("coarse", 'a', "Parameter for the coarse output, averaging the next <param> cells");
 
   Tools::Args::Result ret = args.parse(argc, argv);
   if (ret == Tools::Args::Result::Help) {
@@ -50,6 +51,11 @@ int main(int argc, char** argv) {
   double      endSimulationTime  = args.getArgument<double>("simulation-time", 10);
   int         boundaryConditions = args.getArgument<int>("boundary-conditions", 1111); // Default is 1111: Outflow for all Edges
   std::string checkpointFile     = args.getArgument<std::string>("checkpoint-file", "");
+  int         coarse             = args.getArgument<int>("coarse", 0); // Default is 0 if no coarse should be used
+
+  std::vector<RealType> coarseHeights;
+  std::vector<RealType> coarseHus;
+  std::vector<RealType> coarseHvs;
 
   Tools::Logger::logger.printWelcomeMessage();
 
@@ -119,7 +125,17 @@ int main(int argc, char** argv) {
   Tools::ProgressBar progressBar(endSimulationTime);
   progressBar.update(0.0);
   if (checkpointFile.empty()) {
-    writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
+    // Coarse output here
+    if (coarse != 0)
+    {
+      coarseHeights.push_back(waveBlock->getWaterHeight());
+      coarseHus.push_back(waveBlock->getDischargeHu());
+      coarseHvs.push_back(waveBlock->getDischargeHv());
+    }
+    else
+    {
+      writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
+    }
   }
 
   double simulationTime = scenario->getStartTime();
@@ -187,7 +203,20 @@ int main(int argc, char** argv) {
     progressBar.update(simulationTime);
 
     // Write output
-    writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
+    // Coarse output
+    if (coarse != 0)
+    {
+      // Calculate how many full groups (groups of size coarse) are needed, and then how many cells are left over that will be bundled into a new average
+      int groupsX = waveBlock->getNx() / coarse;
+      int restX = waveBlock->getNx() - (groupsX * coarse);
+      int groupsY = waveBlock->getNy() / coarse;
+      int restY = waveBlock->getNy() - (groupsY * coarse);
+      writer.writeTimeStep(averagedHeight, averagedHu, averagedHv, simulationTime);
+    }
+    else
+    {
+      writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
+    }
   }
 
   progressBar.clear();
@@ -211,4 +240,76 @@ int main(int argc, char** argv) {
   delete[] checkPoints;
 
   return EXIT_SUCCESS;
+}
+
+Tools::Float2D<RealType> coarseArray(Tools::Float2D<RealType> array, int coarse, int nx, int ny, int groupsX, int restX, int groupsY, int restY)
+{
+  int addX = 0;
+  if (restX != 0)
+  {
+    addX++;
+  }
+  int addY = 0;
+  if (restY != 0)
+  {
+    addY++;
+  }
+  RealType averagedValue = 0;
+  Tools::Float2D<RealType> tempStorageX = new Tools::Float2D<RealType>(groupsX + addX, ny, true);
+  //Average the values in x Direction
+  for (int y = 0; y < ny; y++)
+  {
+    averagedValue = 0;
+    for (int x = 0; x < groupsX; x++)
+    {
+      averagedValue = 0;
+      for (int i = 0; i < coarse; i++)
+      {
+        averagedValue += array[x*coarse + i][y];
+      }
+      averagedValue = averagedValue / coarse;
+      tempStorageX[x][y] = averagedValue;
+    }
+    averagedValue = 0;
+    //Collect the remaining restX cells into one
+    if (addX != 0)
+    {
+      averagedValue = 0;
+      for (int i = 0; i < restX; i++)
+      {
+        averagedValue += array[groupsX*coarse + i][y];
+      }
+      averagedValue = averagedValue / coarse;
+      tempStorageX[groupsX + addX][y] = averagedValue;
+    }
+  }
+  
+  //Average the values in y direction
+  Tools::Float2D<RealType> tempStorageY = new ToolsFloat2D<RealType>(groupsX + addX, groupsY + addY, true);
+  for (int x = 0; x < groupsX + addX; x++)
+  {
+    averagedValue = 0
+    for (int y = 0; y < groupsY; y++)
+    {
+      averagedValue = 0;
+      for (int i = 0; i < coarse; i++)
+      {
+        averagedValue += tempStorageX[x][y*coarse + i];
+      }
+      averagedValue = averagedValue / coarse;
+      tempStorageY[x][y] = averagedValue;
+    }
+    // Collect the remaining restY rows below
+    if (addY != 0)
+    {
+      averagedValue = 0;
+      for (int i = 0; i < restY; i++)
+      {
+        averagedValue += tempStorageX[x][groupsY*coarse + i];
+      }
+      averagedValue = averagedValue / coarse;
+      tempStorageY[x][groupsY + addY] = averagedValue;
+    }
+  }
+  return tempStorageY;
 }
