@@ -40,11 +40,11 @@ int main(int argc, char** argv) {
   // Create the scenario
 
 
-  int         numberOfGridCellsX = args.getArgument<int>("grid-size-x", 10);
-  int         numberOfGridCellsY = args.getArgument<int>("grid-size-y", 10);
+  int         numberOfGridCellsX = args.getArgument<int>("grid-size-x", 10000);
+  int         numberOfGridCellsY = args.getArgument<int>("grid-size-y", 10000);
   std::string baseName           = args.getArgument<std::string>("output-basepath", "SWE");
-  int numberOfCheckPoints = args.getArgument<int>("number-of-checkpoints", 20); //! Number of checkpoints for visualization (at each checkpoint in time, an output file is written).
-  double      endSimulationTime  = args.getArgument<double>("simulation-time", 10);
+  int numberOfCheckPoints = args.getArgument<int>("number-of-checkpoints", 1000); //! Number of checkpoints for visualization (at each checkpoint in time, an output file is written).
+  double      endSimulationTime  = args.getArgument<double>("simulation-time", 10000);
   int         boundaryConditions = args.getArgument<int>("boundary-conditions", 1111); // Default is 1111: Outflow for all Edges
   std::string checkpointFile     = args.getArgument<std::string>("checkpoint-file", "");
 
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
   if (checkpointFile.empty()) {
     auto tsunamiScenario = new Scenarios::TsunamiScenario();
     //tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
-    tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
+    tsunamiScenario->readScenario("artificialtsunami_bathymetry_1000.nc", "artificialtsunami_displ_1000.nc");
     scenario = tsunamiScenario;
   } else {
     scenario = new Scenarios::CheckpointScenario(checkpointFile);
