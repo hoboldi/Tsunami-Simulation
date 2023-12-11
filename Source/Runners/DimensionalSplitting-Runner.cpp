@@ -17,6 +17,77 @@
 #include <omp.h>
 #endif
 
+Tools::Float2D<RealType> coarseArray(Tools::Float2D<RealType> array, int coarse, int nx, int ny, int groupsX, int restX, int groupsY, int restY)
+{
+  int addX = 0;
+  if (restX != 0)
+  {
+    addX++;
+  }
+  int addY = 0;
+  if (restY != 0)
+  {
+    addY++;
+  }
+  RealType averagedValue = 0;
+  Tools::Float2D<RealType> tempStorageX(groupsX + addX, ny, true);
+  //Average the values in x Direction
+  for (int y = 0; y < ny; y++)
+  {
+    averagedValue = 0;
+    for (int x = 0; x < groupsX; x++)
+    {
+      averagedValue = 0;
+      for (int i = 0; i < coarse; i++)
+      {
+        averagedValue += array[x*coarse + i][y];
+      }
+      averagedValue = averagedValue / coarse;
+      tempStorageX[x][y] = averagedValue;
+    }
+    averagedValue = 0;
+    //Collect the remaining restX cells into one
+    if (addX != 0)
+    {
+      averagedValue = 0;
+      for (int i = 0; i < restX; i++)
+      {
+        averagedValue += array[groupsX*coarse + i][y];
+      }
+      averagedValue = averagedValue / coarse;
+      tempStorageX[groupsX + addX][y] = averagedValue;
+    }
+  }
+  
+  //Average the values in y direction
+  Tools::Float2D<RealType> tempStorageY(groupsX + addX, groupsY + addY, true);
+  for (int x = 0; x < groupsX + addX; x++)
+  {
+    averagedValue = 0;
+    for (int y = 0; y < groupsY; y++)
+    {
+      averagedValue = 0;
+      for (int i = 0; i < coarse; i++)
+      {
+        averagedValue += tempStorageX[x][y*coarse + i];
+      }
+      averagedValue = averagedValue / coarse;
+      tempStorageY[x][y] = averagedValue;
+    }
+    // Collect the remaining restY rows below
+    if (addY != 0)
+    {
+      averagedValue = 0;
+      for (int i = 0; i < restY; i++)
+      {
+        averagedValue += tempStorageX[x][groupsY*coarse + i];
+      }
+      averagedValue = averagedValue / coarse;
+      tempStorageY[x][groupsY + addY] = averagedValue;
+    }
+  }
+  return tempStorageY;
+}
 
 int main(int argc, char** argv) {
   Tools::Args args;
@@ -126,7 +197,7 @@ int main(int argc, char** argv) {
   progressBar.update(0.0);
   if (checkpointFile.empty()) {
     // Coarse output here
-    if (coarse != 0)
+    if (coarse > 0)
     {
       // Calculate how many full groups (groups of size coarse) are needed, and then how many cells are left over that will be bundled into a new average
       int groupsX = waveBlock->getNx() / coarse;
@@ -134,14 +205,14 @@ int main(int argc, char** argv) {
       int groupsY = waveBlock->getNy() / coarse;
       int restY = waveBlock->getNy() - (groupsY * coarse);
       // average the values in the arrays
-      Tools::Float2D<RealType> averagedHeights = coarseArray(waveBlock->getWaterHeight(), waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
-      Tools::Float2D<RealType> averagedHus = coarseArray(waveBlock->getDischargeHu(), waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
-      Tools::Float2D<RealType> averagedHvs = coarseArray(waveBlock->getDischargeHv(), waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
-      writer.writeTimeStep(averagedHeights, averagedHus, averagedHvs, simulationTime);
+      Tools::Float2D<RealType> averagedHeights = coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+      Tools::Float2D<RealType> averagedHus = coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+      Tools::Float2D<RealType> averagedHvs = coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+      writer.writeTimeStep(averagedHeights, averagedHus, averagedHvs, 0.0);
     }
     else
     {
-      writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
+      writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
     }
   }
 
@@ -211,7 +282,7 @@ int main(int argc, char** argv) {
 
     // Write output
     // Coarse output
-    if (coarse != 0)
+    if (coarse > 0)
     {
       // Calculate how many full groups (groups of size coarse) are needed, and then how many cells are left over that will be bundled into a new average
       int groupsX = waveBlock->getNx() / coarse;
@@ -219,9 +290,9 @@ int main(int argc, char** argv) {
       int groupsY = waveBlock->getNy() / coarse;
       int restY = waveBlock->getNy() - (groupsY * coarse);
       // average the values in the arrays
-      Tools::Float2D<RealType> averagedHeights = coarseArray(waveBlock->getWaterHeight(), waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
-      Tools::Float2D<RealType> averagedHus = coarseArray(waveBlock->getDischargeHu(), waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
-      Tools::Float2D<RealType> averagedHvs = coarseArray(waveBlock->getDischargeHv(), waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+      Tools::Float2D<RealType> averagedHeights = coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+      Tools::Float2D<RealType> averagedHus = coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+      Tools::Float2D<RealType> averagedHvs = coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
       writer.writeTimeStep(averagedHeights, averagedHus, averagedHvs, simulationTime);
     }
     else
@@ -251,76 +322,4 @@ int main(int argc, char** argv) {
   delete[] checkPoints;
 
   return EXIT_SUCCESS;
-}
-
-Tools::Float2D<RealType> coarseArray(Tools::Float2D<RealType> array, int coarse, int nx, int ny, int groupsX, int restX, int groupsY, int restY)
-{
-  int addX = 0;
-  if (restX != 0)
-  {
-    addX++;
-  }
-  int addY = 0;
-  if (restY != 0)
-  {
-    addY++;
-  }
-  RealType averagedValue = 0;
-  Tools::Float2D<RealType> tempStorageX = new Tools::Float2D<RealType>(groupsX + addX, ny, true);
-  //Average the values in x Direction
-  for (int y = 0; y < ny; y++)
-  {
-    averagedValue = 0;
-    for (int x = 0; x < groupsX; x++)
-    {
-      averagedValue = 0;
-      for (int i = 0; i < coarse; i++)
-      {
-        averagedValue += array[x*coarse + i][y];
-      }
-      averagedValue = averagedValue / coarse;
-      tempStorageX[x][y] = averagedValue;
-    }
-    averagedValue = 0;
-    //Collect the remaining restX cells into one
-    if (addX != 0)
-    {
-      averagedValue = 0;
-      for (int i = 0; i < restX; i++)
-      {
-        averagedValue += array[groupsX*coarse + i][y];
-      }
-      averagedValue = averagedValue / coarse;
-      tempStorageX[groupsX + addX][y] = averagedValue;
-    }
-  }
-  
-  //Average the values in y direction
-  Tools::Float2D<RealType> tempStorageY = new ToolsFloat2D<RealType>(groupsX + addX, groupsY + addY, true);
-  for (int x = 0; x < groupsX + addX; x++)
-  {
-    averagedValue = 0
-    for (int y = 0; y < groupsY; y++)
-    {
-      averagedValue = 0;
-      for (int i = 0; i < coarse; i++)
-      {
-        averagedValue += tempStorageX[x][y*coarse + i];
-      }
-      averagedValue = averagedValue / coarse;
-      tempStorageY[x][y] = averagedValue;
-    }
-    // Collect the remaining restY rows below
-    if (addY != 0)
-    {
-      averagedValue = 0;
-      for (int i = 0; i < restY; i++)
-      {
-        averagedValue += tempStorageX[x][groupsY*coarse + i];
-      }
-      averagedValue = averagedValue / coarse;
-      tempStorageY[x][groupsY + addY] = averagedValue;
-    }
-  }
-  return tempStorageY;
 }
