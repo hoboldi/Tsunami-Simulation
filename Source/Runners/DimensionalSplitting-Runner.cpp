@@ -128,13 +128,20 @@ int main(int argc, char** argv) {
     // Coarse output here
     if (coarse != 0)
     {
-      coarseHeights.push_back(waveBlock->getWaterHeight());
-      coarseHus.push_back(waveBlock->getDischargeHu());
-      coarseHvs.push_back(waveBlock->getDischargeHv());
+      // Calculate how many full groups (groups of size coarse) are needed, and then how many cells are left over that will be bundled into a new average
+      int groupsX = waveBlock->getNx() / coarse;
+      int restX = waveBlock->getNx() - (groupsX * coarse);
+      int groupsY = waveBlock->getNy() / coarse;
+      int restY = waveBlock->getNy() - (groupsY * coarse);
+      // average the values in the arrays
+      Tools::Float2D<RealType> averagedHeights = coarseArray(waveBlock->getWaterHeight(), waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+      Tools::Float2D<RealType> averagedHus = coarseArray(waveBlock->getDischargeHu(), waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+      Tools::Float2D<RealType> averagedHvs = coarseArray(waveBlock->getDischargeHv(), waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+      writer.writeTimeStep(averagedHeights, averagedHus, averagedHvs, simulationTime);
     }
     else
     {
-      writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
+      writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
     }
   }
 
@@ -211,7 +218,11 @@ int main(int argc, char** argv) {
       int restX = waveBlock->getNx() - (groupsX * coarse);
       int groupsY = waveBlock->getNy() / coarse;
       int restY = waveBlock->getNy() - (groupsY * coarse);
-      writer.writeTimeStep(averagedHeight, averagedHu, averagedHv, simulationTime);
+      // average the values in the arrays
+      Tools::Float2D<RealType> averagedHeights = coarseArray(waveBlock->getWaterHeight(), waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+      Tools::Float2D<RealType> averagedHus = coarseArray(waveBlock->getDischargeHu(), waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+      Tools::Float2D<RealType> averagedHvs = coarseArray(waveBlock->getDischargeHv(), waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+      writer.writeTimeStep(averagedHeights, averagedHus, averagedHvs, simulationTime);
     }
     else
     {
