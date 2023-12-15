@@ -74,6 +74,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
+add_compile_options(
+        $<$<CONFIG:RELEASE>:-O0>
+)
+
 add_subdirectory(CMake)
 include(MessageUtils)
 include(Clang-Format)
@@ -101,7 +105,6 @@ display_variable(CMAKE_CXX_FLAGS_RELEASE)
 display_variable(CMAKE_CXX_FLAGS_MINSIZEREL)
 display_variable(CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 display_variable(CMAKE_VERBOSE_MAKEFILE)
-add_compile_options(-O0)
 
 display_subseparator("Options to Build")
 display_variable(BUILD_SHARED_LIBS)
