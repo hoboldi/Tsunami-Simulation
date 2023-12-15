@@ -74,9 +74,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
-add_compile_options(
-        $<$<CONFIG:RELEASE>:-O0>
-)
+add_compile_options(-O0)
 
 add_subdirectory(CMake)
 include(MessageUtils)
