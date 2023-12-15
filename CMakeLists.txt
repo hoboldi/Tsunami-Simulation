@@ -64,7 +64,6 @@ project(${META_PROJECT_NAME}
 )
 file(WRITE "${PROJECT_BINARY_DIR}/.gitignore" "*")
 
-add_compile_options(-Wall -O0)
 include(${_project_options_SOURCE_DIR}/src/DynamicProjectOptions.cmake)
 dynamic_project_options()
 target_compile_features(project_options INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
@@ -75,6 +74,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O0")
 
 add_subdirectory(CMake)
 include(MessageUtils)
