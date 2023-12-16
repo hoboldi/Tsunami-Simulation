@@ -218,7 +218,7 @@ void Tools::Logger::initWallClockTime(const double wallClockTime) { wallClockTim
 void Tools::Logger::printWallClockTime(const double wallClockTime, const std::string wallClockTimeMessage) const {
   getTimeStream(
   ) << indentation_
-    << "Process " << processRank_ << " - " << wallClockTimeMessage << ": " << wallClockTime - wallClockTime
+    << "Process " << processRank_ << " - " << wallClockTimeMessage << ": " << wallClockTime
     << " seconds" << std::endl;
 }
 
