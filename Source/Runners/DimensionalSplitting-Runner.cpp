@@ -5,16 +5,15 @@
 #include "Blocks/DimensionalSplitting.h"
 #include "BoundaryEdge.hpp"
 #include "Readers/NetCDFReader.h"
+#include "Scenarios/ArtificialTsunamiScenario.h"
 #include "Scenarios/CheckpointScenario.h"
 #include "Scenarios/RadialDamBreakScenario.hpp"
 #include "Scenarios/TsunamiScenario.h"
-#include "Scenarios/ArtificialTsunamiScenario.h"
 #include "Tools/Args.hpp"
 #include "Tools/Logger.hpp"
 #include "Tools/ProgressBar.hpp"
 #include "Writers/NetCDFWriter.hpp"
 #include "Writers/Writer.hpp"
-#include <iostream>
 #ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
@@ -46,7 +45,7 @@ void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY)
 
 /**
  * @brief This method can be used to convert an array of sizes nx / ny to a coarsed version with the averaged values according to Sheet 4 Task 5
- * 
+ *
  * @param array [in] The array to be coarsed
  * @param coarse [in] The parameter that defines how many cells should be added into one
  * @param nx [in] The dimension in X direction of the origin array
@@ -185,7 +184,7 @@ int main(int argc, char** argv) {
   double      endSimulationTime  = args.getArgument<double>("simulation-time", 10);
   int         boundaryConditions = args.getArgument<int>("boundary-conditions", 1111); // Default is 1111: Outflow for all Edges
   std::string checkpointFile     = args.getArgument<std::string>("checkpoint-file", "");
-  int         coarse             = args.getArgument<int>("coarse", 0); // Default is 0 if no coarse should be used
+  int         coarse             = args.getArgument<int>("coarse", 0);                 // Default is 0 if no coarse should be used
 
   std::vector<RealType> coarseHeights;
   std::vector<RealType> coarseHus;
@@ -198,10 +197,10 @@ int main(int argc, char** argv) {
   Scenarios::Scenario* scenario;
 
   if (checkpointFile.empty()) {
-    //auto tsunamiScenario = new Scenarios::TsunamiScenario();
-    //tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
-    //tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
-    //scenario = tsunamiScenario;
+    // auto tsunamiScenario = new Scenarios::TsunamiScenario();
+    // tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
+    // tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
+    // scenario = tsunamiScenario;
     scenario = new Scenarios::ArtificialTsunamiScenario();
   } else {
     scenario = new Scenarios::CheckpointScenario(checkpointFile);
@@ -241,138 +240,143 @@ int main(int argc, char** argv) {
   }
 
   Writers::BoundarySize boundarySize = {{1, 1, 1, 1}};
-  int groupsX = 0;
-  int groupsY = 0;
-  int restX = 0;
-  int restY = 0;
-  int addX = 0;
-  int addY = 0;
-  if (coarse > 0)
-  {
+  int                   groupsX      = 0;
+  int                   groupsY      = 0;
+  int                   restX        = 0;
+  int                   restY        = 0;
+  int                   addX         = 0;
+  int                   addY         = 0;
+  if (coarse > 0) {
     groupsX = waveBlock->getNx() / coarse;
-    restX = waveBlock->getNx() - (groupsX * coarse);
+    restX   = waveBlock->getNx() - (groupsX * coarse);
     groupsY = waveBlock->getNy() / coarse;
-    restY = waveBlock->getNy() - (groupsY * coarse);
-    addX = (restX != 0) ? 1 : 0;
-    addY = (restY != 0) ? 1 : 0;
+    restY   = waveBlock->getNy() - (groupsY * coarse);
+    addX    = (restX != 0) ? 1 : 0;
+    addY    = (restY != 0) ? 1 : 0;
   }
-  Writers::NetCDFWriter writer = checkpointFile.empty() ? Writers::NetCDFWriter(
-        baseName,
-        (coarse <= 0) ? waveBlock->getBathymetry() : coarseArray(waveBlock->getBathymetry(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
-        boundarySize,
-        boundaryConditions,
-        (coarse <= 0) ? numberOfGridCellsX : groupsX + addX,
-        (coarse <= 0) ? numberOfGridCellsY : groupsY + addY,
-        cellSizeX,
-        cellSizeY,
-        scenario->getBoundaryPos(BoundaryEdge::Left),
-        scenario->getBoundaryPos(BoundaryEdge::Bottom),
-        1
-      )
-      : Writers::NetCDFWriter(checkpointFile, (coarse <= 0) ? numberOfGridCellsX : groupsX + addX, (coarse <= 0) ? numberOfGridCellsY : groupsY + addY, boundarySize, 1);
+  // bathymetry copy
+  double* bathymetry = new double[waveBlock->getNx() * waveBlock->getNy()];
+  for (int i = 0; i < waveBlock->getNx() * waveBlock->getNy(); i++) {
+    int x = i % waveBlock->getNx();
+    int y = i / waveBlock->getNx();
+    bathymetry[i] = waveBlock->getBathymetry()[x][y];
+  }
+  Tools::Float2D<RealType> bathyCopy(waveBlock->getNx(), waveBlock->getNy(), bathymetry);
+  Writers::NetCDFWriter writer
+    = checkpointFile.empty()
+        ? Writers::NetCDFWriter(
+          baseName,
+          ((coarse <= 0) ? bathyCopy : coarseArray(waveBlock->getBathymetry(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY)),
+          boundarySize,
+          boundaryConditions,
+          ((coarse <= 0) ? numberOfGridCellsX : (groupsX + addX)),
+          ((coarse <= 0) ? numberOfGridCellsY : (groupsY + addY)),
+          ((coarse <= 0) ? cellSizeX : (cellSizeX * coarse)),
+          ((coarse <= 0) ? cellSizeY : (cellSizeY * coarse)),
+          scenario->getBoundaryPos(BoundaryEdge::Left),
+          scenario->getBoundaryPos(BoundaryEdge::Bottom),
+          1
+        )
+        : Writers::NetCDFWriter(checkpointFile, ((coarse <= 0) ? numberOfGridCellsX : (groupsX + addX)), ((coarse <= 0) ? numberOfGridCellsY : (groupsY + addY)), boundarySize, 1);
   Tools::ProgressBar progressBar(endSimulationTime);
   progressBar.update(0.0);
   if (checkpointFile.empty()) {
-    
+
     // Coarse output here
-    if (coarse > 0)
-    {
+    if (coarse > 0) {
       // average the values in the arrays
-      writer.writeTimeStep
-      (coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
-       coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
-       coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
-       0.0);
-    }
-    else
-    {
+      writer.writeTimeStep(
+        coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
+        coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
+        coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
+        0.0
+      );
+    } else {
       writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
     }
-  double simulationTime = scenario->getStartTime();
-  progressBar.update(simulationTime);
-  // skip until correct checkpoint
-  int cp = 1;
-  while (simulationTime > checkPoints[cp] && cp <= numberOfCheckPoints) {
-    cp++;
-  }
-
-  Tools::Logger::logger.printStartMessage();
-  Tools::Logger::logger.initWallClockTime(time(NULL));
-
-  unsigned int iterations = 0;
-  // Loop over checkpoints
-  for (; cp <= numberOfCheckPoints; cp++) {
-    // Do time steps until next checkpoint is reached
-    while (simulationTime < checkPoints[cp]) {
-      // Reset CPU-Communication clock
-      Tools::Logger::logger.resetClockToCurrentTime("CPU-Communication");
-
-      // Reset the cpu clock
-      Tools::Logger::logger.resetClockToCurrentTime("CPU");
-      // Set values in ghost cells
-      waveBlock->setGhostLayer();
-      // Compute numerical flux on each edge
-      waveBlock->computeNumericalFluxes();
-      RealType maxTimeStepWidth = waveBlock->getMaxTimeStep();
-      std::cout << "GetMaxTimestep called Value: " << maxTimeStepWidth << std::endl;
-      // Update the cell values
-      waveBlock->updateUnknowns(maxTimeStepWidth);
-      // Update the cpu time in the logger
-      Tools::Logger::logger.updateTime("CPU");
-      Tools::Logger::logger.updateTime("CPU-Communication");
-
-      // Print the current simulation time
-      progressBar.clear();
-      Tools::Logger::logger.printSimulationTime(
-        simulationTime, "[" + std::to_string(iterations) + "]: Simulation with max. global dt " + std::to_string(maxTimeStepWidth) + " at time"
-      );
-
-      // Update simulation time with time step width
-      simulationTime += maxTimeStepWidth;
-      iterations++;
-      progressBar.update(simulationTime);
-    }
-
-    // Print current simulation time of the output
-    progressBar.clear();
-    Tools::Logger::logger.printOutputTime(simulationTime);
+    double simulationTime = scenario->getStartTime();
     progressBar.update(simulationTime);
-    // Coarse output
-    if (coarse > 0)
-    {
-      // average the values in the arrays
-      writer.writeTimeStep
-      (coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
-       coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
-       coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
-       simulationTime);
+    // skip until correct checkpoint
+    int cp = 1;
+    while (simulationTime > checkPoints[cp] && cp <= numberOfCheckPoints) {
+      cp++;
     }
-    else
-    {
-      writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
-    }
-  }
 
-  progressBar.clear();
-  Tools::Logger::logger.printStatisticsMessage();
-  Tools::Logger::logger.printTime("CPU", "CPU Time");
-  Tools::Logger::logger.printTime("CPU-Communication", "CPU + Communication Time");
-  Tools::Logger::logger.getDefaultOutputStream(
-  ) << "Average time per Cell: "
-    << Tools::Logger::logger.getTime("CPU") / (numberOfGridCellsX * numberOfGridCellsY) << " seconds" << std::endl;
-  Tools::Logger::logger.getDefaultOutputStream() << "Average time per Iteration: " << Tools::Logger::logger.getTime("CPU") / iterations << " seconds" << std::endl;
-  Tools::Logger::logger.printWallClockTime(time(NULL));
-  Tools::Logger::logger.printIterationsDone(iterations);
-  // print number of threads
+    Tools::Logger::logger.printStartMessage();
+    Tools::Logger::logger.initWallClockTime(time(NULL));
+
+    unsigned int iterations = 0;
+    // Loop over checkpoints
+    for (; cp <= numberOfCheckPoints; cp++) {
+      // Do time steps until next checkpoint is reached
+      while (simulationTime < checkPoints[cp]) {
+        // Reset CPU-Communication clock
+        Tools::Logger::logger.resetClockToCurrentTime("CPU-Communication");
+
+        // Reset the cpu clock
+        Tools::Logger::logger.resetClockToCurrentTime("CPU");
+        // Set values in ghost cells
+        // waveBlock->setGhostLayer();
+        // Compute numerical flux on each edge
+        waveBlock->computeNumericalFluxes();
+        RealType maxTimeStepWidth = waveBlock->getMaxTimeStep();
+        // std::cout << "GetMaxTimestep called Value: " << maxTimeStepWidth << std::endl;
+        //  Update the cell values
+        waveBlock->updateUnknowns(maxTimeStepWidth);
+        // Update the cpu time in the logger
+        Tools::Logger::logger.updateTime("CPU");
+        Tools::Logger::logger.updateTime("CPU-Communication");
+
+        // Print the current simulation time
+        progressBar.clear();
+        Tools::Logger::logger.printSimulationTime(
+          simulationTime, "[" + std::to_string(iterations) + "]: Simulation with max. global dt " + std::to_string(maxTimeStepWidth) + " at time"
+        );
+
+        // Update simulation time with time step width
+        simulationTime += maxTimeStepWidth;
+        iterations++;
+        progressBar.update(simulationTime);
+      }
+
+      // Print current simulation time of the output
+      progressBar.clear();
+      Tools::Logger::logger.printOutputTime(simulationTime);
+      progressBar.update(simulationTime);
+      // Coarse output
+      if (coarse > 0) {
+        // average the values in the arrays
+        writer.writeTimeStep(
+          coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
+          coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
+          coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
+          simulationTime
+        );
+      } else {
+        writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
+      }
+    }
+
+    progressBar.clear();
+    Tools::Logger::logger.printStatisticsMessage();
+    Tools::Logger::logger.printTime("CPU", "CPU Time");
+    Tools::Logger::logger.printTime("CPU-Communication", "CPU + Communication Time");
+    Tools::Logger::logger.getDefaultOutputStream(
+    ) << "Average time per Cell: "
+      << Tools::Logger::logger.getTime("CPU") / (numberOfGridCellsX * numberOfGridCellsY) << " seconds" << std::endl;
+    Tools::Logger::logger.getDefaultOutputStream() << "Average time per Iteration: " << Tools::Logger::logger.getTime("CPU") / iterations << " seconds" << std::endl;
+    Tools::Logger::logger.printWallClockTime(time(NULL));
+    Tools::Logger::logger.printIterationsDone(iterations);
+    // print number of threads
 #ifdef ENABLE_OPENMP
-  Tools::Logger::logger.getDefaultOutputStream() << "Number of threads: " << omp_get_max_threads() << std::endl;
+    Tools::Logger::logger.getDefaultOutputStream() << "Number of threads: " << omp_get_max_threads() << std::endl;
 #endif
 
-  Tools::Logger::logger.printFinishMessage();
+    Tools::Logger::logger.printFinishMessage();
 
-  delete waveBlock;
-  delete[] checkPoints;
+    delete waveBlock;
+    delete[] checkPoints;
 
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
   }
 }
