@@ -32,7 +32,7 @@ void printFloat2D(Tools::Float2D<RealType> array, int dimX, int dimY)
   }
 }
 
-Tools::Float2D<RealType> coarseArray(Tools::Float2D<RealType> array, int coarse, int nx, int ny, int groupsX, int restX, int groupsY, int restY)
+Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int coarse, int nx, int ny, int groupsX, int restX, int groupsY, int restY)
 {
   int addX = 0;
   if (restX != 0)
