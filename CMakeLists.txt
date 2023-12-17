@@ -75,26 +75,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
-set(SRC_DIR2 "/dss/dsshome1/lxc02/di29way/Task2/SWE/build")
-
-file(GLOB SOURCE_FILES "${SRC_DIR2}/*.cpp")
-
-set(REPORTS_DIR "${CMAKE_BINARY_DIR}/optimization_reports")
-file(MAKE_DIRECTORY ${REPORTS_DIR})
-
-foreach(file ${SOURCE_FILES})
-    get_filename_component(filename ${file} NAME_WE)
-    set(report_file "${REPORTS_DIR}/${filename}_opt_report.txt")
-
-    add_executable(${filename} ${file})
-    target_compile_options(${filename} PRIVATE -O3 -qopt-report=2 -qopt-report-file=${report_file})
-
-
-    message(filename="$${file}")
-    message(report_file="${REPORTS_DIR}/${filename}_opt_report.txt")
-    message(compile_options="${filename} PRIVATE -O3 -qopt-report=2 -qopt-report-file=${report_file}")
-endforeach()
-
 add_subdirectory(CMake)
 include(MessageUtils)
 include(Clang-Format)
@@ -131,3 +111,27 @@ display_variable(CMAKE_INSTALL_FULL_BINDIR)
 display_variable(CMAKE_INSTALL_FULL_LIBDIR)
 
 display_subseparator("End of Summary")
+
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -qopt-report=2")
+
+
+function(add_qopt_report_target TARGET_NAME SOURCE_FILE)
+    get_filename_component(SOURCE_FILENAME ${SOURCE_FILE} NAME_WE)
+    set(QOPT_REPORT_FILE "${CMAKE_BINARY_DIR}/${SOURCE_FILENAME}.qopt-report.txt")
+    add_custom_command(
+            OUTPUT ${QOPT_REPORT_FILE}
+            COMMAND ${CMAKE_CXX_COMPILER} <INTEL_COMPILER_FLAGS> -qopt-report=2 -c ${SOURCE_FILE} -o ${CMAKE_BINARY_DIR}/${SOURCE_FILENAME}.o
+            COMMAND ${CMAKE_CXX_COMPILER} <INTEL_COMPILER_FLAGS> -qopt-report-phase=vec -qopt-report-file=${QOPT_REPORT_FILE} -c ${SOURCE_FILE}
+            DEPENDS ${SOURCE_FILE}
+            COMMENT "Generating qopt-report for ${SOURCE_FILE}"
+    )
+    add_custom_target(${TARGET_NAME} ALL DEPENDS ${QOPT_REPORT_FILE})
+endfunction()
+
+file(GLOB SOURCES "/dss/dsshome1/lxc02/di29way/Task2/SWE/Source/*.cpp")
+
+foreach(SOURCE_FILE ${SOURCES})
+    get_filename_component(SOURCE_FILENAME ${SOURCE_FILE} NAME_WE)
+    add_qopt_report_target(${SOURCE_FILENAME}_qopt_report ${SOURCE_FILE})
+endforeach()
