@@ -75,6 +75,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
+set(REPORTS_DIR "${CMAKE_BINARY_DIR}/optimization_reports")
+file(MAKE_DIRECTORY ${REPORTS_DIR})
+
 foreach(file ${SOURCE_FILES})
     get_filename_component(filename ${file} NAME_WE)
     set(report_file "${REPORTS_DIR}/${filename}_opt_report.txt")
