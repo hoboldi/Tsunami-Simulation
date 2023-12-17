@@ -105,9 +105,9 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
       tempStorageX[(groupsX + addX) - 1][y] = averagedValue;
     }
   }
-  //std::cout << "\nThe Array in X direction collapsed:\n";
+  std::cout << "\nThe Array in X direction collapsed:\n";
   //print2DArray(tempArrayX, groupsX + addX, ny);
-  //printFloat2D(tempStorageX, groupsX + addX, ny);
+  printFloat2D(tempStorageX, groupsX + addX, ny);
   //Average the values in y direction
   //RealType* tempArrayY = new RealType[(groupsX + addX) * (groupsY + addY)];
   Tools::Float2D<RealType> tempStorageY(groupsX + addX + 2, groupsY + addY + 2, true);
@@ -143,7 +143,7 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
       //tempArrayX[(groupsY + addY)*(x) + x] = averagedValue;
     }
   }
-  //std::cout << "\nThe array in y direction collapsed: " << std::endl;
+  std::cout << "\nThe array in y direction collapsed: " << std::endl;
   printFloat2D(tempStorageY, groupsX + addX, groupsY + addY);
   std::cout << "All done\n" << std::endl;
   return tempStorageY;
