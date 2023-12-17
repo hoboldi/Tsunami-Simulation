@@ -102,8 +102,8 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
       }
       averagedValue = averagedValue / restX;
       //tempArrayX[y*(groupsX + addX) + groupsX] = averagedValue;
-      std::cout << "Writing Rest " << averagedValue << " to array pos " << groupsX + addX -1 << ";" << y << std::endl;
-      tempStorageX[(groupsX + addX) - 1][y];
+      std::cout << "Writing X Rest " << averagedValue << " to array pos " << groupsX + addX -1 << ";" << y << std::endl;
+      tempStorageX[(groupsX + addX) - 1][y] = averagedValue;
     }
   }
   std::cout << "\nThe Array in X direction collapsed:\n";
@@ -139,7 +139,7 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
         //averagedValue += tempArrayX[x + (groupsY*coarse) + (i*(groupsX+addX))];
       }
       averagedValue = averagedValue / restY;
-      std::cout << "Writing Rest " << averagedValue << " to array pos " << x << ";" << groupsY + addY - 1 << std::endl;
+      std::cout << "Writing Y Rest " << averagedValue << " to array pos " << x << ";" << groupsY + addY - 1 << std::endl;
       tempStorageY[x][groupsY + addY - 1] = averagedValue;
       //tempArrayX[(groupsY + addY)*(x) + x] = averagedValue;
     }
