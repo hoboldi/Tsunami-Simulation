@@ -217,33 +217,42 @@ int main(int argc, char** argv) {
   }
 
   Writers::BoundarySize boundarySize = {{1, 1, 1, 1}};
-  Writers::NetCDFWriter writer
-    = checkpointFile.empty() ? Writers::NetCDFWriter(
+  int groupsX = 0;
+  int groupsY = 0;
+  int restX = 0;
+  int restY = 0;
+  int addX = 0;
+  int addY = 0;
+  if (coarse > 0)
+  {
+    groupsX = waveBlock->getNx() / coarse;
+    restX = waveBlock->getNx() - (groupsX * coarse);
+    groupsY = waveBlock->getNy() / coarse;
+    restY = waveBlock->getNy() - (groupsY * coarse);
+    addX = (restX != 0) ? 1 : 0;
+    addY = (restY != 0) ? 1 : 0;
+  }
+  Writers::NetCDFWriter writer = checkpointFile.empty() ? Writers::NetCDFWriter(
         baseName,
-        waveBlock->getBathymetry(),
+        (coarse <= 0) ? waveBlock->getBathymetry() : coarseArray(waveBlock->getBathymetry(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
         boundarySize,
         boundaryConditions,
-        numberOfGridCellsX,
-        numberOfGridCellsY,
+        (coarse <= 0) ? numberOfGridCellsX : groupsX + addX,
+        (coarse <= 0) ? numberOfGridCellsY : groupsY + addY,
         cellSizeX,
         cellSizeY,
         scenario->getBoundaryPos(BoundaryEdge::Left),
         scenario->getBoundaryPos(BoundaryEdge::Bottom),
         1
       )
-                             : Writers::NetCDFWriter(checkpointFile, numberOfGridCellsX, numberOfGridCellsY, boundarySize, 1);
-
+      : Writers::NetCDFWriter(checkpointFile, (coarse <= 0) ? numberOfGridCellsX : groupsX + addX, (coarse <= 0) ? numberOfGridCellsY : groupsY + addY, boundarySize, 1);
   Tools::ProgressBar progressBar(endSimulationTime);
   progressBar.update(0.0);
   if (checkpointFile.empty()) {
+    
     // Coarse output here
     if (coarse > 0)
     {
-      // Calculate how many full groups (groups of size coarse) are needed, and then how many cells are left over that will be bundled into a new average
-      int groupsX = waveBlock->getNx() / coarse;
-      int restX = waveBlock->getNx() - (groupsX * coarse);
-      int groupsY = waveBlock->getNy() / coarse;
-      int restY = waveBlock->getNy() - (groupsY * coarse);
       // Save the Arrays seperately to prevent memory issues
       // average the values in the arrays
       writer.writeTimeStep
@@ -256,8 +265,21 @@ int main(int argc, char** argv) {
     {
       writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
     }
+  std::cout << "Wrote first steps" << std::endl;
+  /*
+   if (coarse > 0)
+   {
+    int groupsX = waveBlock->getNx() / coarse;
+    int restX = waveBlock->getNx() - (groupsX * coarse);
+    int groupsY = waveBlock->getNy() / coarse;
+    int restY = waveBlock->getNy() - (groupsY * coarse);
+    coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+    coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+    coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
+   }
+   writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
   }
-
+  */
   double simulationTime = scenario->getStartTime();
   progressBar.update(simulationTime);
   // skip until correct checkpoint
@@ -279,7 +301,6 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.initWallClockTime(time(NULL));
 
   unsigned int iterations = 0;
-  std::cout << "We starting the run here " << std::endl;
   // Loop over checkpoints
   for (; cp <= numberOfCheckPoints; cp++) {
     // Do time steps until next checkpoint is reached
@@ -289,18 +310,14 @@ int main(int argc, char** argv) {
 
       // Reset the cpu clock
       Tools::Logger::logger.resetClockToCurrentTime("CPU");
-      std::cout << "Initial Logging block done" << std::endl;
       // Set values in ghost cells
       waveBlock->setGhostLayer();
-      std::cout << "Set Ghost Layer" << std::endl;
       // Compute numerical flux on each edge
       waveBlock->computeNumericalFluxes();
-      std::cout << "Calculation Midway checkpoint" << std::endl;
       RealType maxTimeStepWidth = waveBlock->getMaxTimeStep();
       std::cout << "GetMaxTimestep called Value: " << maxTimeStepWidth << std::endl;
       // Update the cell values
       waveBlock->updateUnknowns(maxTimeStepWidth);
-      std::cout << "Calculations for checkpoint step done" << std::endl;
       // Update the cpu time in the logger
       Tools::Logger::logger.updateTime("CPU");
       Tools::Logger::logger.updateTime("CPU-Communication");
@@ -326,12 +343,8 @@ int main(int argc, char** argv) {
     // Coarse output
     if (coarse > 0)
     {
-      std::cout << "Yes, we reached the second block!" << std::endl;
+      std::cout << "\nSecond coarse Block during simulation" << std::endl;
       // Calculate how many full groups (groups of size coarse) are needed, and then how many cells are left over that will be bundled into a new average
-      int groupsX = waveBlock->getNx() / coarse;
-      int restX = waveBlock->getNx() - (groupsX * coarse);
-      int groupsY = waveBlock->getNy() / coarse;
-      int restY = waveBlock->getNy() - (groupsY * coarse);
       std::cout << "Groups n Stuff calculated as " << groupsX << ";" << restX << ";" << groupsY << ";" << restY << std::endl;
       // average the values in the arrays
       writer.writeTimeStep
@@ -367,4 +380,5 @@ int main(int argc, char** argv) {
   delete[] checkPoints;
 
   return EXIT_SUCCESS;
+  }
 }
