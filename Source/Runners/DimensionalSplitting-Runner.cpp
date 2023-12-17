@@ -34,9 +34,9 @@ void print2DArray(RealType array[], int dimX, int dimY)
 void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY)
 {
   std::cout << "\nPrinting Float2D:" << std::endl;
-  for (int x = 0; x < dimX; x++)
+  for (int y = 0; y < dimY; y++)
   {
-    for (int y = 0; y < dimY; y++)
+    for (int x = 0; x < dimX; x++)
     {
       std::cout << array[x][y] << "\t";
     }
@@ -73,7 +73,8 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
   }
   std::cout << "Should have groupX, restX, groupY, restY, addX, addY " << groupsX << ";" << restX << ";" << groupsY << ";" << restY << ";" << addX << ";" << addY << std::endl;
   RealType averagedValue = 0;
-  RealType* tempArrayX = new RealType[(groupsX + addX) * ny];
+  //RealType* tempArrayX = new RealType[(groupsX + addX) * ny];
+  Tools::Float2D<RealType> tempStorageX(groupsX + addX, ny, true);
   //Average the values in x Direction
   for (int y = 0; y < ny; y++)
   {
@@ -86,7 +87,9 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
         averagedValue += array[x*coarse + i][y];
       }
       averagedValue = averagedValue / coarse;
-      tempArrayX[(y*(groupsX + addX)) + x] = averagedValue;
+      //tempArrayX[(y*(groupsX + addX)) + x] = averagedValue;
+      std::cout << "Writing " << averagedValue << " to array pos " << x << ";" << y << std::endl;
+      tempStorageX[x][y] = averagedValue;
     }
     averagedValue = 0;
     //Collect the remaining restX cells into one
@@ -98,14 +101,17 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
         averagedValue += array[groupsX*coarse + i][y];
       }
       averagedValue = averagedValue / restX;
-      tempArrayX[y*(groupsX + addX) + groupsX] = averagedValue;
+      //tempArrayX[y*(groupsX + addX) + groupsX] = averagedValue;
+      std::cout << "Writing Rest " << averagedValue << " to array pos " << groupsX + addX -1 << ";" << y << std::endl;
+      tempStorageX[(groupsX + addX) - 1][y];
     }
   }
   std::cout << "\nThe Array in X direction collapsed:\n";
-  print2DArray(tempArrayX, groupsX + addX, ny);
-  //Print the 2D x Array
+  //print2DArray(tempArrayX, groupsX + addX, ny);
+  printFloat2D(tempStorageX, groupsX + addX, ny);
   //Average the values in y direction
-  RealType* tempArrayY = new RealType[(groupsX + addX) * (groupsY + addY)];
+  //RealType* tempArrayY = new RealType[(groupsX + addX) * (groupsY + addY)];
+  Tools::Float2D<RealType> tempStorageY(groupsX + addX, groupsY + addY, true);
   for (int x = 0; x < groupsX + addX; x++)
   {
     averagedValue = 0;
@@ -114,12 +120,14 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
       averagedValue = 0;
       for (int i = 0; i < coarse; i++)
       {
-        averagedValue += tempArrayX[(y*coarse) + (i*(groupsX + addX)) + x];
+        //averagedValue += tempArrayX[(y*coarse) + (i*(groupsX + addX)) + x];
+        averagedValue += tempStorageX[x][y*coarse + i];
       }
       averagedValue = averagedValue / coarse;
       std::cout << "\n";
-      std::cout << "Writing " << averagedValue << " to array pos " << (x*(groupsX + addX) + y) << std::endl;
-      tempArrayY[(y*(groupsX + addX)) + x] = averagedValue;
+      std::cout << "Writing " << averagedValue << " to array pos " << x << ";" << y << std::endl;
+      //tempArrayY[(y*(groupsX + addX)) + x] = averagedValue;
+      tempStorageY[x][y] = averagedValue;
     }
     // Collect the remaining restY rows below
     if (addY != 0)
@@ -127,20 +135,21 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
       averagedValue = 0;
       for (int i = 0; i < restY; i++)
       {
-        //averagedValue += tempStorageX[x][groupsY*coarse + i];
-        averagedValue += tempArrayX[x + (groupsY*coarse) + (i*(groupsX+addX))];
+        averagedValue += tempStorageX[x][groupsY*coarse + i];
+        //averagedValue += tempArrayX[x + (groupsY*coarse) + (i*(groupsX+addX))];
       }
       averagedValue = averagedValue / restY;
-      //tempStorageY[x][groupsY] = averagedValue;
-      tempArrayX[(groupsY + addY)*(x) + x] = averagedValue;
+      std::cout << "Writing Rest " << averagedValue << " to array pos " << x << ";" << groupsY + addY - 1 << std::endl;
+      tempStorageY[x][groupsY + addY - 1] = averagedValue;
+      //tempArrayX[(groupsY + addY)*(x) + x] = averagedValue;
     }
   }
   std::cout << "\nThe array in y direction collapsed: " << std::endl;
-  print2DArray(tempArrayY, groupsX + addX, groupsY + addY);
-  Tools::Float2D<RealType> averagedArray(groupsX + addX, groupsY + addY, tempArrayY);
-  printFloat2D(averagedArray, groupsX + addX, groupsY + addY);
+  //print2DArray(tempArrayY, groupsX + addX, groupsY + addY);
+  //Tools::Float2D<RealType> averagedArray(groupsX + addX, groupsY + addY, tempArrayY);
+  printFloat2D(tempStorageY, groupsX + addX, groupsY + addY);
   std::cout << "All done\n" << std::endl;
-  return averagedArray;
+  return tempStorageY;
 }
 
 int main(int argc, char** argv) {
