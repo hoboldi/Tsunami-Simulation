@@ -75,6 +75,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
+set(SRC_DIR "${CMAKE_SOURCE_DIR}/Source")
+
+file(GLOB SOURCE_FILES "${SRC_DIR}/*.cpp")
+
 set(REPORTS_DIR "${CMAKE_BINARY_DIR}/optimization_reports")
 file(MAKE_DIRECTORY ${REPORTS_DIR})
 
@@ -82,7 +86,7 @@ foreach(file ${SOURCE_FILES})
     get_filename_component(filename ${file} NAME_WE)
     set(report_file "${REPORTS_DIR}/${filename}_opt_report.txt")
     add_executable(${filename} ${file})
-    target_compile_options(${filename} PRIVATE -O2 -qopt-report=2 -qopt-report-file=${report_file})
+    target_compile_options(${filename} PRIVATE -O3 -qopt-report=2 -qopt-report-file=${report_file})
 endforeach()
 
 add_subdirectory(CMake)
