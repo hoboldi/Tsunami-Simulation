@@ -81,9 +81,9 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
     for (int x = 1; x <= groupsX; x++)
     {
       averagedValue = 0;
-      for (int i = 0; i < coarse; i++)
+      for (int i = 1; i <= coarse; i++)
       {
-        averagedValue += array[x*coarse + i][y];
+        averagedValue += array[(x-1)*coarse + i][y];
       }
       averagedValue = averagedValue / coarse;
       //tempArrayX[(y*(groupsX + addX)) + x] = averagedValue;
@@ -95,14 +95,14 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
     if (addX != 0)
     {
       averagedValue = 0;
-      for (int i = 0; i < restX; i++)
+      for (int i = 1; i <= restX; i++)
       {
         averagedValue += array[groupsX*coarse + i][y];
       }
       averagedValue = averagedValue / restX;
       //tempArrayX[y*(groupsX + addX) + groupsX] = averagedValue;
       //std::cout << "Writing X Rest " << averagedValue << " to array pos " << groupsX + addX -1 << ";" << y << std::endl;
-      tempStorageX[(groupsX + addX) - 1][y] = averagedValue;
+      tempStorageX[(groupsX + addX)][y] = averagedValue;
     }
   }
   std::cout << "\nThe Array in X direction collapsed:\n";
@@ -120,7 +120,7 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
       for (int i = 1; i <= coarse; i++)
       {
         //averagedValue += tempArrayX[(y*coarse) + (i*(groupsX + addX)) + x];
-        averagedValue += tempStorageX[x][y*coarse + i];
+        averagedValue += tempStorageX[x][(y-1)*coarse + i];
       }
       averagedValue = averagedValue / coarse;
       //std::cout << "\n";
@@ -139,7 +139,7 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
       }
       averagedValue = averagedValue / restY;
       //std::cout << "Writing Y Rest " << averagedValue << " to array pos " << x << ";" << groupsY + addY - 1 << std::endl;
-      tempStorageY[x][groupsY + addY - 1] = averagedValue;
+      tempStorageY[x][groupsY + addY] = averagedValue;
       //tempArrayX[(groupsY + addY)*(x) + x] = averagedValue;
     }
   }
