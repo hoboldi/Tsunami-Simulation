@@ -19,16 +19,28 @@
 #include <omp.h>
 #endif
 
-void printFloat2D(Tools::Float2D<RealType> array, int dimX, int dimY)
+void print2DArray(RealType array[], int dimX, int dimY)
 {
-  std::cout << "Printing Array:" << std::endl;
+  for (int y = 0; y < dimY; y++)
+  {
+    for (int x = 0; x < dimX; x++)
+    {
+      std::cout << array[dimX*y + x] << "\t";
+    }
+    std::cout << "\n";
+  }
+}
+
+void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY)
+{
+  std::cout << "\nPrinting Float2D:" << std::endl;
   for (int x = 0; x < dimX; x++)
   {
     for (int y = 0; y < dimY; y++)
     {
-      std::cout << array[x][y] << "  ";
+      std::cout << array[x][y] << "\t";
     }
-    std::cout << std::endl;
+    std::cout << "\n";
   }
 }
 
@@ -47,6 +59,8 @@ void printFloat2D(Tools::Float2D<RealType> array, int dimX, int dimY)
  */
 Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int coarse, int nx, int ny, int groupsX, int restX, int groupsY, int restY)
 {
+  std::cout << "\nOrigin Array: \n";
+  printFloat2D(array, nx, ny);
   int addX = 0;
   if (restX != 0)
   {
@@ -87,6 +101,9 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
       tempArrayX[groupsY*(groupsX + addX) + groupsX] = averagedValue;
     }
   }
+  std::cout << "\nThe Array in X direction collapsed:\n";
+  print2DArray(tempArrayX, groupsX + addX, ny);
+  //Print the 2D x Array
   //Average the values in y direction
   RealType* tempArrayY = new RealType[(groupsX + addX) * (groupsY + addY)];
   for (int x = 0; x < groupsX + addX; x++)
@@ -116,7 +133,8 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
       tempArrayX[(groupsY + addY)*(groupsY) + x] = averagedValue;
     }
   }
-  std::cout << "Done with the calculation" << std::endl;
+  std::cout << "\nThe array in y direction collapsed: " << std::endl;
+  print2DArray(tempArrayY, groupsX + addX, groupsY + addY);
   Tools::Float2D<RealType> averagedArray(groupsX + addX, groupsY + addY, tempArrayY);
   printFloat2D(averagedArray, groupsX + addX, groupsY + addY);
   std::cout << "All done\n" << std::endl;
