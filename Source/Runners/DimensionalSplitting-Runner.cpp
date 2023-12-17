@@ -32,6 +32,19 @@ void printFloat2D(Tools::Float2D<RealType> array, int dimX, int dimY)
   }
 }
 
+/**
+ * @brief This method can be used to convert an array of sizes nx / ny to a coarsed version with the averaged values according to Sheet 4 Task 5
+ * 
+ * @param array [in] The array to be coarsed
+ * @param coarse [in] The parameter that defines how many cells should be added into one
+ * @param nx [in] The dimension in X direction of the origin array
+ * @param ny [in] The dimension in Y direction of the origin array
+ * @param groupsX [in] The amount of full groups that can be formed in X direction -> nx / coarse as full integer rounded down
+ * @param restX [in] The amount of leftover cells in X direction that don't form a full group
+ * @param groupsY [in] The amount of full groups that can be formed in Y direction -> ny / coarse as full integer rounded down
+ * @param restY [in] The amount of leftover cells in Y direction that don't form a full group
+ * @return [out] The array of coarsed values which can then be printed
+ */
 Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int coarse, int nx, int ny, int groupsX, int restX, int groupsY, int restY)
 {
   int addX = 0;
@@ -46,13 +59,10 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
   }
   std::cout << "Should have groupX, restX, groupY, restY, addX, addY " << groupsX << ";" << restX << ";" << groupsY << ";" << restY << ";" << addX << ";" << addY << std::endl;
   RealType averagedValue = 0;
-  //Tools::Float2D<RealType> tempStorageX(groupsX + addX, ny, true);
   RealType* tempArrayX = new RealType[(groupsX + addX) * ny];
-  //std::cout << "Created x Storage" << std::endl;
   //Average the values in x Direction
   for (int y = 0; y < ny; y++)
   {
-    //std::cout << "Average x for y " << y << std::endl; 
     averagedValue = 0;
     for (int x = 0; x < groupsX; x++)
     {
@@ -62,57 +72,42 @@ Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int 
         averagedValue += array[x*coarse + i][y];
       }
       averagedValue = averagedValue / coarse;
-      //tempStorageX[x][y] = averagedValue;
-      //std::cout << "Trying to write to cell " << y*(groupsX + addX) + x << " for array of size " << (groupsX + addX) * ny << std::endl;
       tempArrayX[(y*(groupsX + addX)) + x] = averagedValue;
     }
     averagedValue = 0;
     //Collect the remaining restX cells into one
-    //std::cout << "Main X calculation done" << std::endl;
     if (addX != 0)
     {
-      //std::cout << "Collecting rest for x..." << std::endl;
       averagedValue = 0;
       for (int i = 0; i < restX; i++)
       {
-        //std::cout << "\ti = " << i << std::endl;
         averagedValue += array[groupsX*coarse + i][y];
       }
       averagedValue = averagedValue / coarse;
-      //tempStorageX[groupsX][y] = averagedValue;
       tempArrayX[groupsY*(groupsX + addX) + groupsX] = averagedValue;
     }
   }
-  //std::cout << "Going for the y averaging now" << std::endl;
   //Average the values in y direction
-  //Tools::Float2D<RealType> tempStorageY(groupsX + addX, groupsY + addY, true);
   RealType* tempArrayY = new RealType[(groupsX + addX) * (groupsY + addY)];
-  //std::cout << "TempStorage Y allocated" << std::endl;
   for (int x = 0; x < groupsX + addX; x++)
   {
-    //std::cout << "Average for x = " << x << std::endl;
     averagedValue = 0;
     for (int y = 0; y < groupsY; y++)
     {
       averagedValue = 0;
       for (int i = 0; i < coarse; i++)
       {
-        //averagedValue += tempStorageX[x][y*coarse + i];
         averagedValue += tempArrayX[(y*coarse) + (i*(groupsX + addX)) + x];
       }
       averagedValue = averagedValue / coarse;
-      //tempStorageY[x][y] = averagedValue;
       tempArrayY[(y*(groupsX + addX)) + x] = averagedValue;
     }
-    //std::cout << "Main Y calculation done" << std::endl;
     // Collect the remaining restY rows below
     if (addY != 0)
     {
-      //std::cout << "Collecting rest for y..." << std::endl;
       averagedValue = 0;
       for (int i = 0; i < restY; i++)
       {
-        //std::cout << "\ti = " << i << std::endl;
         //averagedValue += tempStorageX[x][groupsY*coarse + i];
         averagedValue += tempArrayX[x + (groupsY*coarse) + (i*(groupsX+addX))];
       }
@@ -175,7 +170,7 @@ int main(int argc, char** argv) {
 
   if (checkpointFile.empty()) {
     //auto tsunamiScenario = new Scenarios::TsunamiScenario();
-    // tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
+    //tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
     //tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
     //scenario = tsunamiScenario;
     scenario = new Scenarios::ArtificialTsunamiScenario();
@@ -253,7 +248,6 @@ int main(int argc, char** argv) {
     // Coarse output here
     if (coarse > 0)
     {
-      // Save the Arrays seperately to prevent memory issues
       // average the values in the arrays
       writer.writeTimeStep
       (coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
@@ -265,21 +259,6 @@ int main(int argc, char** argv) {
     {
       writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
     }
-  std::cout << "Wrote first steps" << std::endl;
-  /*
-   if (coarse > 0)
-   {
-    int groupsX = waveBlock->getNx() / coarse;
-    int restX = waveBlock->getNx() - (groupsX * coarse);
-    int groupsY = waveBlock->getNy() / coarse;
-    int restY = waveBlock->getNy() - (groupsY * coarse);
-    coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
-    coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
-    coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY);
-   }
-   writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
-  }
-  */
   double simulationTime = scenario->getStartTime();
   progressBar.update(simulationTime);
   // skip until correct checkpoint
@@ -287,15 +266,6 @@ int main(int argc, char** argv) {
   while (simulationTime > checkPoints[cp] && cp <= numberOfCheckPoints) {
     cp++;
   }
-
-
-  /*
-    if (!checkpointFile.empty() && simulationTime != 0) {
-      Tools::Logger::logger.printString(
-        std::format("Checkpoint file {} loaded, ignoring previously defined output file: {} and appending to {}.", checkpointFile, baseName, checkpointFile)
-      );
-    }
-    */
 
   Tools::Logger::logger.printStartMessage();
   Tools::Logger::logger.initWallClockTime(time(NULL));
@@ -338,14 +308,9 @@ int main(int argc, char** argv) {
     progressBar.clear();
     Tools::Logger::logger.printOutputTime(simulationTime);
     progressBar.update(simulationTime);
-
-    // Write output
     // Coarse output
     if (coarse > 0)
     {
-      std::cout << "\nSecond coarse Block during simulation" << std::endl;
-      // Calculate how many full groups (groups of size coarse) are needed, and then how many cells are left over that will be bundled into a new average
-      std::cout << "Groups n Stuff calculated as " << groupsX << ";" << restX << ";" << groupsY << ";" << restY << std::endl;
       // average the values in the arrays
       writer.writeTimeStep
       (coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
