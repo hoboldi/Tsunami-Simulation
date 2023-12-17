@@ -80,6 +80,7 @@ foreach(file ${SOURCE_FILES})
     set(report_file "${REPORTS_DIR}/${filename}_opt_report.txt")
     add_executable(${filename} ${file})
     target_compile_options(${filename} PRIVATE -O2 -qopt-report=2 -qopt-report-file=${report_file})
+endforeach()
 
 add_subdirectory(CMake)
 include(MessageUtils)
