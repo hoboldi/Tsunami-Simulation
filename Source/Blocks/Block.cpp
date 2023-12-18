@@ -388,6 +388,7 @@ void Blocks::Block::setGhostLayer() {
 }
 
 void Blocks::Block::computeMaxTimeStep(const RealType dryTol, const RealType cfl) {
+  std::cout << "Computing maximum timestep for dryTol;cfl: " << dryTol << ";" << cfl  << " using nx;ny: " << nx_ << ";" << ny_ << " and dx;dy: " << dx_ << ";" << dy_ << std::endl;
   // Initialize the maximum wave speed
   RealType maximumWaveSpeed = RealType(0.0);
 
@@ -416,7 +417,9 @@ void Blocks::Block::computeMaxTimeStep(const RealType dryTol, const RealType cfl
   maxTimeStep_ *= cfl;
 }
 
-RealType Blocks::Block::getMaxTimeStep() const { return maxTimeStep_; }
+RealType Blocks::Block::getMaxTimeStep() const {
+  return maxTimeStep_; 
+}
 
 void Blocks::Block::synchAfterWrite() {
   synchWaterHeightAfterWrite();

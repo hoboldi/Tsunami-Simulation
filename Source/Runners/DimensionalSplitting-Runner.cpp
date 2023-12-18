@@ -5,6 +5,7 @@
 #include "Blocks/DimensionalSplitting.h"
 #include "BoundaryEdge.hpp"
 #include "Readers/NetCDFReader.h"
+#include "Scenarios/ArtificialTsunamiScenario.h"
 #include "Scenarios/CheckpointScenario.h"
 #include "Scenarios/RadialDamBreakScenario.hpp"
 #include "Scenarios/TsunamiScenario.h"
@@ -13,9 +14,43 @@
 #include "Tools/ProgressBar.hpp"
 #include "Writers/NetCDFWriter.hpp"
 #include "Writers/Writer.hpp"
+#include "Tools/Coarse.h"
 #ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
+
+void print2DArray(RealType array[], int dimX, int dimY) {
+  for (int y = 0; y < dimY; y++) {
+    for (int x = 0; x < dimX; x++) {
+      std::cout << array[dimX * y + x] << "\t";
+    }
+    std::cout << "\n";
+  }
+}
+
+void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY) {
+  std::cout << "\nPrinting Float2D:" << std::endl;
+  for (int y = 0; y < dimY + 2; y++) {
+    for (int x = 0; x < dimX + 2; x++) {
+      std::cout << array[x][y] << "\t";
+    }
+    std::cout << "\n";
+  }
+}
+
+/**
+ * @brief This method can be used to convert an array of sizes nx / ny to a coarsed version with the averaged values according to Sheet 4 Task 5
+ *
+ * @param array [in] The array to be coarsed
+ * @param coarse [in] The parameter that defines how many cells should be added into one
+ * @param nx [in] The dimension in X direction of the origin array
+ * @param ny [in] The dimension in Y direction of the origin array
+ * @param groupsX [in] The amount of full groups that can be formed in X direction -> nx / coarse as full integer rounded down
+ * @param restX [in] The amount of leftover cells in X direction that don't form a full group
+ * @param groupsY [in] The amount of full groups that can be formed in Y direction -> ny / coarse as full integer rounded down
+ * @param restY [in] The amount of leftover cells in Y direction that don't form a full group
+ * @return [out] The array of coarsed values which can then be printed
+ */
 
 
 int main(int argc, char** argv) {
@@ -31,6 +66,7 @@ int main(int argc, char** argv) {
     "Set Boundary Conditions represented by an 4 digit Integer of 1s and 2s. (1: Outflow, 2: Wall).\n First Digit: Left Boundary\n Second Digit: Right Boundary\n Third Digit: Bottom Boundary\n Fourth Digit: Top Boundary"
   );
   args.addOption("checkpoint-file", 'c', "Checkpoint file to read initial values from");
+  args.addOption("coarse", 'a', "Parameter for the coarse output, averaging the next <param> cells");
 
   Tools::Args::Result ret = args.parse(argc, argv);
   if (ret == Tools::Args::Result::Help) {
@@ -50,6 +86,11 @@ int main(int argc, char** argv) {
   double      endSimulationTime  = args.getArgument<double>("simulation-time", 10);
   int         boundaryConditions = args.getArgument<int>("boundary-conditions", 1111); // Default is 1111: Outflow for all Edges
   std::string checkpointFile     = args.getArgument<std::string>("checkpoint-file", "");
+  int         coarse             = args.getArgument<int>("coarse", 0);                 // Default is 0 if no coarse should be used
+
+  std::vector<RealType> coarseHeights;
+  std::vector<RealType> coarseHus;
+  std::vector<RealType> coarseHvs;
 
   Tools::Logger::logger.printWelcomeMessage();
 
@@ -63,6 +104,7 @@ int main(int argc, char** argv) {
     tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
     //tsunamiScenario->readScenario("artificialtsunami_bathymetry_1000.nc", "artificialtsunami_displ_1000.nc");
     scenario = tsunamiScenario;
+    // scenario = new Scenarios::ArtificialTsunamiScenario();
   } else {
     scenario = new Scenarios::CheckpointScenario(checkpointFile);
   }
@@ -101,28 +143,64 @@ int main(int argc, char** argv) {
   }
 
   Writers::BoundarySize boundarySize = {{1, 1, 1, 1}};
-  Writers::NetCDFWriter writer
-    = checkpointFile.empty() ? Writers::NetCDFWriter(
-        baseName,
-        waveBlock->getBathymetry(),
-        boundarySize,
-        boundaryConditions,
-        numberOfGridCellsX,
-        numberOfGridCellsY,
-        cellSizeX,
-        cellSizeY,
-        scenario->getBoundaryPos(BoundaryEdge::Left),
-        scenario->getBoundaryPos(BoundaryEdge::Bottom),
-        1
-      )
-                             : Writers::NetCDFWriter(checkpointFile, numberOfGridCellsX, numberOfGridCellsY, boundarySize, 1);
+  int                   groupsX      = 0;
+  int                   groupsY      = 0;
+  int                   restX        = 0;
+  int                   restY        = 0;
+  int                   addX         = 0;
+  int                   addY         = 0;
+  if (coarse > 0) {
+    groupsX = waveBlock->getNx() / coarse;
+    restX   = waveBlock->getNx() - (groupsX * coarse);
+    groupsY = waveBlock->getNy() / coarse;
+    restY   = waveBlock->getNy() - (groupsY * coarse);
+    addX    = (restX != 0) ? 1 : 0;
+    addY    = (restY != 0) ? 1 : 0;
+  }
+  // bathymetry copy
+  auto* bathymetry = new RealType[(waveBlock->getNx() + 2) * (waveBlock->getNy() + 2)];
+  if (coarse <= 0) {
 
+    for (int i = 0; i < (waveBlock->getNx() + 2) * (waveBlock->getNy() + 2); i++) {
+      int x         = i / (waveBlock->getNx() + 2);
+      int y         = i % (waveBlock->getNx() + 2);
+      bathymetry[i] = waveBlock->getBathymetry()[x][y];
+    }
+  }
+  Tools::Float2D<RealType> coarseArr(Tools::Coarse::coarseArray(waveBlock->getBathymetry(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+
+  Tools::Float2D<RealType> bathyCopy(waveBlock->getNx() + 2, waveBlock->getNy() + 2, bathymetry);
+  Writers::NetCDFWriter    writer
+    = checkpointFile.empty()
+        ? Writers::NetCDFWriter(
+          baseName,
+          ((coarse <= 0) ? bathyCopy : coarseArr),
+          boundarySize,
+          boundaryConditions,
+          ((coarse <= 0) ? numberOfGridCellsX : (groupsX + addX)),
+          ((coarse <= 0) ? numberOfGridCellsY : (groupsY + addY)),
+          ((coarse <= 0) ? cellSizeX : (cellSizeX * coarse)),
+          ((coarse <= 0) ? cellSizeY : (cellSizeY * coarse)),
+          scenario->getBoundaryPos(BoundaryEdge::Left),
+          scenario->getBoundaryPos(BoundaryEdge::Bottom),
+          1
+        )
+        : Writers::NetCDFWriter(checkpointFile, ((coarse <= 0) ? numberOfGridCellsX : (groupsX + addX)), ((coarse <= 0) ? numberOfGridCellsY : (groupsY + addY)), boundarySize, 1);
   Tools::ProgressBar progressBar(endSimulationTime);
   progressBar.update(0.0);
   if (checkpointFile.empty()) {
-    writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
-  }
 
+    // Coarse output here
+    if (coarse > 0) {
+      // average the values in the arrays
+      Tools::Float2D<RealType> waterHeight(Tools::Coarse::coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> dischargeHu(Tools::Coarse::coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> dischargeHv(Tools::Coarse::coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      writer.writeTimeStep(waterHeight, dischargeHu, dischargeHv, 0.0);
+    } else {
+      writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
+    }
+  }
   double simulationTime = scenario->getStartTime();
   progressBar.update(simulationTime);
   // skip until correct checkpoint
@@ -131,21 +209,11 @@ int main(int argc, char** argv) {
     cp++;
   }
 
-
-  /*
-    if (!checkpointFile.empty() && simulationTime != 0) {
-      Tools::Logger::logger.printString(
-        std::format("Checkpoint file {} loaded, ignoring previously defined output file: {} and appending to {}.", checkpointFile, baseName, checkpointFile)
-      );
-    }
-    */
-
   Tools::Logger::logger.printStartMessage();
   double wallClockTime = 1;
   Tools::Logger::logger.initWallClockTime(wallClockTime);
 
   unsigned int iterations = 0;
-
   // Loop over checkpoints
   for (; cp <= numberOfCheckPoints; cp++) {
     // Do time steps until next checkpoint is reached
@@ -161,14 +229,12 @@ int main(int argc, char** argv) {
 #endif
 
       // Set values in ghost cells
-      waveBlock->setGhostLayer();
-
+      // waveBlock->setGhostLayer();
       // Compute numerical flux on each edge
       waveBlock->computeNumericalFluxes();
-
       RealType maxTimeStepWidth = waveBlock->getMaxTimeStep();
-
-      // Update the cell values
+      // std::cout << "GetMaxTimestep called Value: " << maxTimeStepWidth << std::endl;
+      //  Update the cell values
       waveBlock->updateUnknowns(maxTimeStepWidth);
 
 #if defined(ENABLE_OPENMP)
@@ -196,9 +262,16 @@ int main(int argc, char** argv) {
     progressBar.clear();
     Tools::Logger::logger.printOutputTime(simulationTime);
     progressBar.update(simulationTime);
-
-    // Write output
-    writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
+    // Coarse output
+    if (coarse > 0) {
+      // average the values in the arrays
+      Tools::Float2D<RealType> waterHeight(Tools::Coarse::coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> dischargeHu(Tools::Coarse::coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> dischargeHv(Tools::Coarse::coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      writer.writeTimeStep(waterHeight, dischargeHu, dischargeHv, simulationTime);
+    } else {
+      writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
+    }
   }
   progressBar.clear();
   Tools::Logger::logger.printStatisticsMessage();
