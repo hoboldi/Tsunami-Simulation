@@ -178,7 +178,7 @@ int main(int argc, char** argv) {
   if (checkpointFile.empty()) {
     auto tsunamiScenario = new Scenarios::TsunamiScenario();
     // tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
-    tsunamiScenario->readScenario("/dss/dsshome1/lxc02/di29way/Scenarios/chile_2010/chile_gebco_usgs_2000m_bath.nc", "/dss/dsshome1/lxc02/di29way/Scenarios/chile_2010/chile_gebco_usgs_2000m_displ.nc");
+    tsunamiScenario->readScenario("/dss/dsshome1/lxc02/di29way/Scenarios/tohoku_2011/tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "/dss/dsshome1/lxc02/di29way/Scenarios/tohoku_2011/tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
     scenario = tsunamiScenario;
     // scenario = new Scenarios::ArtificialTsunamiScenario();
   } else {
