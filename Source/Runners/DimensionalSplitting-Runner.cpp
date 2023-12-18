@@ -14,6 +14,7 @@
 #include "Tools/ProgressBar.hpp"
 #include "Writers/NetCDFWriter.hpp"
 #include "Writers/Writer.hpp"
+#include "Tools/Coarse.h"
 #ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
@@ -50,85 +51,7 @@ void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY) {
  * @param restY [in] The amount of leftover cells in Y direction that don't form a full group
  * @return [out] The array of coarsed values which can then be printed
  */
-Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int coarse, int nx, int ny, int groupsX, int restX, int groupsY, int restY) {
-  // std::cout << "\nOrigin Array: \n";
-  // printFloat2D(array, nx, ny);
-  int addX = 0;
-  if (restX != 0) {
-    addX++;
-  }
-  int addY = 0;
-  if (restY != 0) {
-    addY++;
-  }
-  // std::cout << "Should have groupX, restX, groupY, restY, addX, addY " << groupsX << ";" << restX << ";" << groupsY << ";" << restY << ";" << addX << ";" << addY << std::endl;
-  RealType averagedValue = 0;
-  // RealType* tempArrayX = new RealType[(groupsX + addX) * ny];
-  Tools::Float2D<RealType> tempStorageX(groupsX + addX + 2, ny + 2, true);
-  // Average the values in x Direction
-  for (int y = 1; y <= ny; y++) {
-    averagedValue = 0;
-    for (int x = 1; x <= groupsX; x++) {
-      averagedValue = 0;
-      for (int i = 1; i <= coarse; i++) {
-        averagedValue += array[(x - 1) * coarse + i][y];
-      }
-      averagedValue = averagedValue / coarse;
-      // tempArrayX[(y*(groupsX + addX)) + x] = averagedValue;
-      // std::cout << "Writing " << averagedValue << " to array pos " << x << ";" << y << std::endl;
-      tempStorageX[x][y] = averagedValue;
-    }
-    averagedValue = 0;
-    // Collect the remaining restX cells into one
-    if (addX != 0) {
-      averagedValue = 0;
-      for (int i = 1; i <= restX; i++) {
-        averagedValue += array[groupsX * coarse + i][y];
-      }
-      averagedValue = averagedValue / restX;
-      // tempArrayX[y*(groupsX + addX) + groupsX] = averagedValue;
-      // std::cout << "Writing X Rest " << averagedValue << " to array pos " << groupsX + addX -1 << ";" << y << std::endl;
-      tempStorageX[(groupsX + addX)][y] = averagedValue;
-    }
-  }
-  // std::cout << "\nThe Array in X direction collapsed:\n";
-  // print2DArray(tempArrayX, groupsX + addX, ny);
-  // printFloat2D(tempStorageX, groupsX + addX, ny);
-  // Average the values in y direction
-  // RealType* tempArrayY = new RealType[(groupsX + addX) * (groupsY + addY)];
-  Tools::Float2D<RealType> tempStorageY(groupsX + addX + 2, groupsY + addY + 2, true);
-  for (int x = 1; x <= groupsX + addX; x++) {
-    averagedValue = 0;
-    for (int y = 1; y <= groupsY; y++) {
-      averagedValue = 0;
-      for (int i = 1; i <= coarse; i++) {
-        // averagedValue += tempArrayX[(y*coarse) + (i*(groupsX + addX)) + x];
-        averagedValue += tempStorageX[x][(y - 1) * coarse + i];
-      }
-      averagedValue = averagedValue / coarse;
-      // std::cout << "\n";
-      //std::cout << "Writing " << averagedValue << " to array pos " << x << ";" << y << std::endl;
-      // tempArrayY[(y*(groupsX + addX)) + x] = averagedValue;
-      tempStorageY[x][y] = averagedValue;
-    }
-    // Collect the remaining restY rows below
-    if (addY != 0) {
-      averagedValue = 0;
-      for (int i = 1; i <= restY; i++) {
-        averagedValue += tempStorageX[x][groupsY * coarse + i];
-        // averagedValue += tempArrayX[x + (groupsY*coarse) + (i*(groupsX+addX))];
-      }
-      averagedValue = averagedValue / restY;
-      // std::cout << "Writing Y Rest " << averagedValue << " to array pos " << x << ";" << groupsY + addY - 1 << std::endl;
-      tempStorageY[x][groupsY + addY] = averagedValue;
-      // tempArrayX[(groupsY + addY)*(x) + x] = averagedValue;
-    }
-  }
-  // std::cout << "\nThe array in y direction collapsed: " << std::endl;
-  // printFloat2D(tempStorageY, groupsX + addX, groupsY + addY);
-  // std::cout << "All done\n" << std::endl;
-  return tempStorageY;
-}
+
 
 int main(int argc, char** argv) {
   Tools::Args args;
@@ -178,7 +101,7 @@ int main(int argc, char** argv) {
   if (checkpointFile.empty()) {
     auto tsunamiScenario = new Scenarios::TsunamiScenario();
     // tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
-    tsunamiScenario->readScenario("/dss/dsshome1/lxc02/di29way/Scenarios/tohoku_2011/tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "/dss/dsshome1/lxc02/di29way/Scenarios/tohoku_2011/tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
+    tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
     scenario = tsunamiScenario;
     // scenario = new Scenarios::ArtificialTsunamiScenario();
   } else {
@@ -243,7 +166,7 @@ int main(int argc, char** argv) {
       bathymetry[i] = waveBlock->getBathymetry()[x][y];
     }
   }
-  Tools::Float2D<RealType> coarseArr(coarseArray(waveBlock->getBathymetry(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+  Tools::Float2D<RealType> coarseArr(Tools::Coarse::coarseArray(waveBlock->getBathymetry(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
 
   Tools::Float2D<RealType> bathyCopy(waveBlock->getNx() + 2, waveBlock->getNy() + 2, bathymetry);
   Writers::NetCDFWriter    writer
@@ -269,9 +192,9 @@ int main(int argc, char** argv) {
     // Coarse output here
     if (coarse > 0) {
       // average the values in the arrays
-      Tools::Float2D<RealType> waterHeight(coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
-      Tools::Float2D<RealType> dischargeHu(coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
-      Tools::Float2D<RealType> dischargeHv(coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> waterHeight(Tools::Coarse::coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> dischargeHu(Tools::Coarse::coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> dischargeHv(Tools::Coarse::coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
       writer.writeTimeStep(waterHeight, dischargeHu, dischargeHv, 0.0);
     } else {
       writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
@@ -329,9 +252,9 @@ int main(int argc, char** argv) {
     // Coarse output
     if (coarse > 0) {
       // average the values in the arrays
-      Tools::Float2D<RealType> waterHeight(coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
-      Tools::Float2D<RealType> dischargeHu(coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
-      Tools::Float2D<RealType> dischargeHv(coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> waterHeight(Tools::Coarse::coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> dischargeHu(Tools::Coarse::coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> dischargeHv(Tools::Coarse::coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
       writer.writeTimeStep(waterHeight, dischargeHu, dischargeHv, simulationTime);
     } else {
       writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
