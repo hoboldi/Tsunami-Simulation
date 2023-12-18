@@ -30,7 +30,7 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
    */
 
 #if defined(ENABLE_OPENMP)
-#pragma omp parallel for reduction(max : maxWaveSpeedX), schedule(runtime)
+#pragma omp parallel for reduction(max : maxWaveSpeedX), schedule(dynamic)
 #endif
     for (int i = 0; i <= nx_; ++i) {
       for (int j = 1; j <= ny_; ++j) {
@@ -74,7 +74,7 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
      */
 
 #if defined(ENABLE_OPENMP)
-#pragma omp parallel for reduction(max : maxWaveSpeedY), schedule(runtime)
+#pragma omp parallel for reduction(max : maxWaveSpeedY), schedule(dynamic)
 #endif
     for (int i = 1; i < nx_; ++i) {
       for (int j = 0; j <= ny_; ++j) {
@@ -122,7 +122,7 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
     void Blocks::DimensionalSplitting::updateUnknowns(RealType dt) {
 
 #if defined(ENABLE_OPENMP)
-#pragma omp parallel for schedule(runtime)
+#pragma omp parallel for schedule(dynamic)
 #endif
       for (int i = 1; i <= nx_; ++i) {
         for (int j = 1; j < ny_; ++j) {
@@ -132,7 +132,7 @@ void Blocks::DimensionalSplitting::computeNumericalFluxes() {
       }
 
 #if defined(ENABLE_OPENMP)
-#pragma omp parallel for schedule(runtime)
+#pragma omp parallel for schedule(dynamic)
 #endif
       for (int i = 1; i < nx_; ++i) {
         for (int j = 1; j <= ny_; ++j) {
