@@ -4,6 +4,8 @@
 #include <Tools/Coarse.h>
 
 TEST_CASE("Coarse Array Test") {
+  // we added the 0 on the boarder to make sure that the boarder is not used for the coarse array
+  // as there is always a boarder in SWE
   SECTION("Simple Test with all -10, coarse by 2x2") {
     Tools::Float2D<RealType> array(12, 12, true);
     for (int i = 0; i < 12; i++) {
@@ -24,7 +26,7 @@ TEST_CASE("Coarse Array Test") {
   }
 
   SECTION("Advanced Test with coarse by 3x3") {
-    // all 3x3 blocks sum up to 39, on the boarder that does not fit into a 3x3 block, the sums are 14 except for the bottom right corner which is 15
+    // all 3x3 blocks sum up to 39, on the boarder that does not fit into a 3x3 block, the sums are 14 except for the bottom right corner which is 5
     // that gives an average of 4.333 for the 3x3 blocks and 4.666 for the boarder cells except for the bottom right corner which is 5
     RealType array[15][15] = {
       {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
