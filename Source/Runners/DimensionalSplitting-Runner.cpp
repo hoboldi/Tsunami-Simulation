@@ -18,25 +18,19 @@
 #include <omp.h>
 #endif
 
-void print2DArray(RealType array[], int dimX, int dimY)
-{
-  for (int y = 0; y < dimY; y++)
-  {
-    for (int x = 0; x < dimX; x++)
-    {
-      std::cout << array[dimX*y + x] << "\t";
+void print2DArray(RealType array[], int dimX, int dimY) {
+  for (int y = 0; y < dimY; y++) {
+    for (int x = 0; x < dimX; x++) {
+      std::cout << array[dimX * y + x] << "\t";
     }
     std::cout << "\n";
   }
 }
 
-void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY)
-{
+void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY) {
   std::cout << "\nPrinting Float2D:" << std::endl;
-  for (int y = 0; y < dimY + 2; y++)
-  {
-    for (int x = 0; x < dimX + 2; x++)
-    {
+  for (int y = 0; y < dimY + 2; y++) {
+    for (int x = 0; x < dimX + 2; x++) {
       std::cout << array[x][y] << "\t";
     }
     std::cout << "\n";
@@ -56,96 +50,83 @@ void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY)
  * @param restY [in] The amount of leftover cells in Y direction that don't form a full group
  * @return [out] The array of coarsed values which can then be printed
  */
-Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int coarse, int nx, int ny, int groupsX, int restX, int groupsY, int restY)
-{
-  //std::cout << "\nOrigin Array: \n";
-  //printFloat2D(array, nx, ny);
+Tools::Float2D<RealType> coarseArray(const Tools::Float2D<RealType>& array, int coarse, int nx, int ny, int groupsX, int restX, int groupsY, int restY) {
+  // std::cout << "\nOrigin Array: \n";
+  // printFloat2D(array, nx, ny);
   int addX = 0;
-  if (restX != 0)
-  {
+  if (restX != 0) {
     addX++;
   }
   int addY = 0;
-  if (restY != 0)
-  {
+  if (restY != 0) {
     addY++;
   }
-  //std::cout << "Should have groupX, restX, groupY, restY, addX, addY " << groupsX << ";" << restX << ";" << groupsY << ";" << restY << ";" << addX << ";" << addY << std::endl;
+  // std::cout << "Should have groupX, restX, groupY, restY, addX, addY " << groupsX << ";" << restX << ";" << groupsY << ";" << restY << ";" << addX << ";" << addY << std::endl;
   RealType averagedValue = 0;
-  //RealType* tempArrayX = new RealType[(groupsX + addX) * ny];
+  // RealType* tempArrayX = new RealType[(groupsX + addX) * ny];
   Tools::Float2D<RealType> tempStorageX(groupsX + addX + 2, ny + 2, true);
-  //Average the values in x Direction
-  for (int y = 1; y <= ny; y++)
-  {
+  // Average the values in x Direction
+  for (int y = 1; y <= ny; y++) {
     averagedValue = 0;
-    for (int x = 1; x <= groupsX; x++)
-    {
+    for (int x = 1; x <= groupsX; x++) {
       averagedValue = 0;
-      for (int i = 1; i <= coarse; i++)
-      {
-        averagedValue += array[(x-1)*coarse + i][y];
+      for (int i = 1; i <= coarse; i++) {
+        averagedValue += array[(x - 1) * coarse + i][y];
       }
       averagedValue = averagedValue / coarse;
-      //tempArrayX[(y*(groupsX + addX)) + x] = averagedValue;
-      //std::cout << "Writing " << averagedValue << " to array pos " << x << ";" << y << std::endl;
+      // tempArrayX[(y*(groupsX + addX)) + x] = averagedValue;
+      // std::cout << "Writing " << averagedValue << " to array pos " << x << ";" << y << std::endl;
       tempStorageX[x][y] = averagedValue;
     }
     averagedValue = 0;
-    //Collect the remaining restX cells into one
-    if (addX != 0)
-    {
+    // Collect the remaining restX cells into one
+    if (addX != 0) {
       averagedValue = 0;
-      for (int i = 1; i <= restX; i++)
-      {
-        averagedValue += array[groupsX*coarse + i][y];
+      for (int i = 1; i <= restX; i++) {
+        averagedValue += array[groupsX * coarse + i][y];
       }
       averagedValue = averagedValue / restX;
-      //tempArrayX[y*(groupsX + addX) + groupsX] = averagedValue;
-      //std::cout << "Writing X Rest " << averagedValue << " to array pos " << groupsX + addX -1 << ";" << y << std::endl;
+      // tempArrayX[y*(groupsX + addX) + groupsX] = averagedValue;
+      // std::cout << "Writing X Rest " << averagedValue << " to array pos " << groupsX + addX -1 << ";" << y << std::endl;
       tempStorageX[(groupsX + addX)][y] = averagedValue;
     }
   }
-  //std::cout << "\nThe Array in X direction collapsed:\n";
-  //print2DArray(tempArrayX, groupsX + addX, ny);
-  //printFloat2D(tempStorageX, groupsX + addX, ny);
-  //Average the values in y direction
-  //RealType* tempArrayY = new RealType[(groupsX + addX) * (groupsY + addY)];
+  // std::cout << "\nThe Array in X direction collapsed:\n";
+  // print2DArray(tempArrayX, groupsX + addX, ny);
+  // printFloat2D(tempStorageX, groupsX + addX, ny);
+  // Average the values in y direction
+  // RealType* tempArrayY = new RealType[(groupsX + addX) * (groupsY + addY)];
   Tools::Float2D<RealType> tempStorageY(groupsX + addX + 2, groupsY + addY + 2, true);
-  for (int x = 1; x <= groupsX + addX; x++)
-  {
+  for (int x = 1; x <= groupsX + addX; x++) {
     averagedValue = 0;
-    for (int y = 1; y <= groupsY; y++)
-    {
+    for (int y = 1; y <= groupsY; y++) {
       averagedValue = 0;
-      for (int i = 1; i <= coarse; i++)
-      {
-        //averagedValue += tempArrayX[(y*coarse) + (i*(groupsX + addX)) + x];
-        averagedValue += tempStorageX[x][(y-1)*coarse + i];
+      for (int i = 1; i <= coarse; i++) {
+        // averagedValue += tempArrayX[(y*coarse) + (i*(groupsX + addX)) + x];
+        averagedValue += tempStorageX[x][(y - 1) * coarse + i];
       }
       averagedValue = averagedValue / coarse;
-      //std::cout << "\n";
+      // std::cout << "\n";
       //std::cout << "Writing " << averagedValue << " to array pos " << x << ";" << y << std::endl;
-      //tempArrayY[(y*(groupsX + addX)) + x] = averagedValue;
+      // tempArrayY[(y*(groupsX + addX)) + x] = averagedValue;
       tempStorageY[x][y] = averagedValue;
     }
     // Collect the remaining restY rows below
-    if (addY != 0)
-    {
+    if (addY != 0) {
       averagedValue = 0;
-      for (int i = 1; i <= restY; i++)
-      {
-        averagedValue += tempStorageX[x][groupsY*coarse + i];
-        //averagedValue += tempArrayX[x + (groupsY*coarse) + (i*(groupsX+addX))];
+      for (int i = 1; i <= restY; i++) {
+        averagedValue += tempStorageX[x][groupsY * coarse + i];
+        // averagedValue += tempArrayX[x + (groupsY*coarse) + (i*(groupsX+addX))];
       }
       averagedValue = averagedValue / restY;
-      //std::cout << "Writing Y Rest " << averagedValue << " to array pos " << x << ";" << groupsY + addY - 1 << std::endl;
+      // std::cout << "Writing Y Rest " << averagedValue << " to array pos " << x << ";" << groupsY + addY - 1 << std::endl;
       tempStorageY[x][groupsY + addY] = averagedValue;
-      //tempArrayX[(groupsY + addY)*(x) + x] = averagedValue;
+      // tempArrayX[(groupsY + addY)*(x) + x] = averagedValue;
     }
   }
-  //std::cout << "\nThe array in y direction collapsed: " << std::endl;
-  //printFloat2D(tempStorageY, groupsX + addX, groupsY + addY);
-  //std::cout << "All done\n" << std::endl;
+  // std::cout << "\nThe array in y direction collapsed: " << std::endl;
+  // printFloat2D(tempStorageY, groupsX + addX, groupsY + addY);
+  // std::cout << "All done\n" << std::endl;
   return tempStorageY;
 }
 
@@ -197,9 +178,9 @@ int main(int argc, char** argv) {
   if (checkpointFile.empty()) {
     auto tsunamiScenario = new Scenarios::TsunamiScenario();
     // tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
-    tsunamiScenario->readScenario("/dss/dsshome1/lxc02/di29way/Scenarios/tohoku_2011/tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "/dss/dsshome1/lxc02/di29way/Scenarios/tohoku_2011/tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
+    tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
     scenario = tsunamiScenario;
-    //scenario = new Scenarios::ArtificialTsunamiScenario();
+    // scenario = new Scenarios::ArtificialTsunamiScenario();
   } else {
     scenario = new Scenarios::CheckpointScenario(checkpointFile);
   }
@@ -253,18 +234,23 @@ int main(int argc, char** argv) {
     addY    = (restY != 0) ? 1 : 0;
   }
   // bathymetry copy
-  double* bathymetry = new double[waveBlock->getNx() * waveBlock->getNy()];
-  for (int i = 0; i < waveBlock->getNx() * waveBlock->getNy(); i++) {
-    int x = i % waveBlock->getNx();
-    int y = i / waveBlock->getNx();
-    bathymetry[i] = waveBlock->getBathymetry()[x][y];
+  auto* bathymetry = new RealType[(waveBlock->getNx() + 2) * (waveBlock->getNy() + 2)];
+  if (coarse <= 0) {
+
+    for (int i = 0; i < (waveBlock->getNx() + 2) * (waveBlock->getNy() + 2); i++) {
+      int x         = i / (waveBlock->getNx() + 2);
+      int y         = i % (waveBlock->getNx() + 2);
+      bathymetry[i] = waveBlock->getBathymetry()[x][y];
+    }
   }
-  Tools::Float2D<RealType> bathyCopy(waveBlock->getNx(), waveBlock->getNy(), bathymetry);
-  Writers::NetCDFWriter writer
+  Tools::Float2D<RealType> coarseArr(coarseArray(waveBlock->getBathymetry(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+
+  Tools::Float2D<RealType> bathyCopy(waveBlock->getNx() + 2, waveBlock->getNy() + 2, bathymetry);
+  Writers::NetCDFWriter    writer
     = checkpointFile.empty()
         ? Writers::NetCDFWriter(
           baseName,
-          ((coarse <= 0) ? bathyCopy : coarseArray(waveBlock->getBathymetry(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY)),
+          ((coarse <= 0) ? bathyCopy : coarseArr),
           boundarySize,
           boundaryConditions,
           ((coarse <= 0) ? numberOfGridCellsX : (groupsX + addX)),
@@ -283,98 +269,94 @@ int main(int argc, char** argv) {
     // Coarse output here
     if (coarse > 0) {
       // average the values in the arrays
-      writer.writeTimeStep(
-        coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
-        coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
-        coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
-        0.0
-      );
+      Tools::Float2D<RealType> waterHeight(coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> dischargeHu(coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> dischargeHv(coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      writer.writeTimeStep(waterHeight, dischargeHu, dischargeHv, 0.0);
     } else {
       writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
     }
-    double simulationTime = scenario->getStartTime();
-    progressBar.update(simulationTime);
-    // skip until correct checkpoint
-    int cp = 1;
-    while (simulationTime > checkPoints[cp] && cp <= numberOfCheckPoints) {
-      cp++;
-    }
+  }
+  double simulationTime = scenario->getStartTime();
+  progressBar.update(simulationTime);
+  // skip until correct checkpoint
+  int cp = 1;
+  while (simulationTime > checkPoints[cp] && cp <= numberOfCheckPoints) {
+    cp++;
+  }
 
-    Tools::Logger::logger.printStartMessage();
-    Tools::Logger::logger.initWallClockTime(time(NULL));
+  Tools::Logger::logger.printStartMessage();
+  Tools::Logger::logger.initWallClockTime(time(NULL));
 
-    unsigned int iterations = 0;
-    // Loop over checkpoints
-    for (; cp <= numberOfCheckPoints; cp++) {
-      // Do time steps until next checkpoint is reached
-      while (simulationTime < checkPoints[cp]) {
-        // Reset CPU-Communication clock
-        Tools::Logger::logger.resetClockToCurrentTime("CPU-Communication");
+  unsigned int iterations = 0;
+  // Loop over checkpoints
+  for (; cp <= numberOfCheckPoints; cp++) {
+    // Do time steps until next checkpoint is reached
+    while (simulationTime < checkPoints[cp]) {
+      // Reset CPU-Communication clock
+      Tools::Logger::logger.resetClockToCurrentTime("CPU-Communication");
 
-        // Reset the cpu clock
-        Tools::Logger::logger.resetClockToCurrentTime("CPU");
-        // Set values in ghost cells
-        // waveBlock->setGhostLayer();
-        // Compute numerical flux on each edge
-        waveBlock->computeNumericalFluxes();
-        RealType maxTimeStepWidth = waveBlock->getMaxTimeStep();
-        // std::cout << "GetMaxTimestep called Value: " << maxTimeStepWidth << std::endl;
-        //  Update the cell values
-        waveBlock->updateUnknowns(maxTimeStepWidth);
-        // Update the cpu time in the logger
-        Tools::Logger::logger.updateTime("CPU");
-        Tools::Logger::logger.updateTime("CPU-Communication");
+      // Reset the cpu clock
+      Tools::Logger::logger.resetClockToCurrentTime("CPU");
+      // Set values in ghost cells
+      // waveBlock->setGhostLayer();
+      // Compute numerical flux on each edge
+      waveBlock->computeNumericalFluxes();
+      RealType maxTimeStepWidth = waveBlock->getMaxTimeStep();
+      // std::cout << "GetMaxTimestep called Value: " << maxTimeStepWidth << std::endl;
+      //  Update the cell values
+      waveBlock->updateUnknowns(maxTimeStepWidth);
+      // Update the cpu time in the logger
+      Tools::Logger::logger.updateTime("CPU");
+      Tools::Logger::logger.updateTime("CPU-Communication");
 
-        // Print the current simulation time
-        progressBar.clear();
-        Tools::Logger::logger.printSimulationTime(
-          simulationTime, "[" + std::to_string(iterations) + "]: Simulation with max. global dt " + std::to_string(maxTimeStepWidth) + " at time"
-        );
-
-        // Update simulation time with time step width
-        simulationTime += maxTimeStepWidth;
-        iterations++;
-        progressBar.update(simulationTime);
-      }
-
-      // Print current simulation time of the output
+      // Print the current simulation time
       progressBar.clear();
-      Tools::Logger::logger.printOutputTime(simulationTime);
+      Tools::Logger::logger.printSimulationTime(
+        simulationTime, "[" + std::to_string(iterations) + "]: Simulation with max. global dt " + std::to_string(maxTimeStepWidth) + " at time"
+      );
+
+      // Update simulation time with time step width
+      simulationTime += maxTimeStepWidth;
+      iterations++;
       progressBar.update(simulationTime);
-      // Coarse output
-      if (coarse > 0) {
-        // average the values in the arrays
-        writer.writeTimeStep(
-          coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
-          coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
-          coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY),
-          simulationTime
-        );
-      } else {
-        writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
-      }
     }
 
+    // Print current simulation time of the output
     progressBar.clear();
-    Tools::Logger::logger.printStatisticsMessage();
-    Tools::Logger::logger.printTime("CPU", "CPU Time");
-    Tools::Logger::logger.printTime("CPU-Communication", "CPU + Communication Time");
-    Tools::Logger::logger.getDefaultOutputStream(
-    ) << "Average time per Cell: "
-      << Tools::Logger::logger.getTime("CPU") / (numberOfGridCellsX * numberOfGridCellsY) << " seconds" << std::endl;
-    Tools::Logger::logger.getDefaultOutputStream() << "Average time per Iteration: " << Tools::Logger::logger.getTime("CPU") / iterations << " seconds" << std::endl;
-    Tools::Logger::logger.printWallClockTime(time(NULL));
-    Tools::Logger::logger.printIterationsDone(iterations);
-    // print number of threads
+    Tools::Logger::logger.printOutputTime(simulationTime);
+    progressBar.update(simulationTime);
+    // Coarse output
+    if (coarse > 0) {
+      // average the values in the arrays
+      Tools::Float2D<RealType> waterHeight(coarseArray(waveBlock->getWaterHeight(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> dischargeHu(coarseArray(waveBlock->getDischargeHu(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      Tools::Float2D<RealType> dischargeHv(coarseArray(waveBlock->getDischargeHv(), coarse, waveBlock->getNx(), waveBlock->getNy(), groupsX, restX, groupsY, restY));
+      writer.writeTimeStep(waterHeight, dischargeHu, dischargeHv, simulationTime);
+    } else {
+      writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
+    }
+  }
+
+  progressBar.clear();
+  Tools::Logger::logger.printStatisticsMessage();
+  Tools::Logger::logger.printTime("CPU", "CPU Time");
+  Tools::Logger::logger.printTime("CPU-Communication", "CPU + Communication Time");
+  Tools::Logger::logger.getDefaultOutputStream(
+  ) << "Average time per Cell: "
+    << Tools::Logger::logger.getTime("CPU") / (numberOfGridCellsX * numberOfGridCellsY) << " seconds" << std::endl;
+  Tools::Logger::logger.getDefaultOutputStream() << "Average time per Iteration: " << Tools::Logger::logger.getTime("CPU") / iterations << " seconds" << std::endl;
+  Tools::Logger::logger.printWallClockTime(time(NULL));
+  Tools::Logger::logger.printIterationsDone(iterations);
+  // print number of threads
 #ifdef ENABLE_OPENMP
-    Tools::Logger::logger.getDefaultOutputStream() << "Number of threads: " << omp_get_max_threads() << std::endl;
+  Tools::Logger::logger.getDefaultOutputStream() << "Number of threads: " << omp_get_max_threads() << std::endl;
 #endif
 
-    Tools::Logger::logger.printFinishMessage();
+  Tools::Logger::logger.printFinishMessage();
 
-    delete waveBlock;
-    delete[] checkPoints;
+  delete waveBlock;
+  delete[] checkPoints;
 
-    return EXIT_SUCCESS;
-  }
+  return EXIT_SUCCESS;
 }
