@@ -3,16 +3,6 @@
 #include <iostream>
 #include <Tools/Coarse.h>
 
-void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY) {
-  std::cout << "\nPrinting Float2D:" << std::endl;
-  for (int y = 0; y < dimY + 2; y++) {
-    for (int x = 0; x < dimX + 2; x++) {
-      std::cout << array[x][y] << "\t";
-    }
-    std::cout << "\n";
-  }
-}
-
 TEST_CASE("Coarse Array Test") {
   SECTION("Simple Test with all -10, coarse by 2x2") {
     Tools::Float2D<RealType> array(12, 12, true);
