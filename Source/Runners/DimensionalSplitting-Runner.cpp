@@ -13,6 +13,9 @@
 #include "Tools/ProgressBar.hpp"
 #include "Writers/NetCDFWriter.hpp"
 #include "Writers/Writer.hpp"
+#ifdef ENABLE_OPENMP
+#include <omp.h>
+#endif
 
 
 int main(int argc, char** argv) {
@@ -56,8 +59,9 @@ int main(int argc, char** argv) {
 
   if (checkpointFile.empty()) {
     auto tsunamiScenario = new Scenarios::TsunamiScenario();
-    //tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
+    // tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
     tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
+    //tsunamiScenario->readScenario("artificialtsunami_bathymetry_1000.nc", "artificialtsunami_displ_1000.nc");
     scenario = tsunamiScenario;
   } else {
     scenario = new Scenarios::CheckpointScenario(checkpointFile);
@@ -73,7 +77,6 @@ int main(int argc, char** argv) {
       return 1;
     }
   }
-
 
 
   if (endSimulationTime >= 0) {
@@ -116,7 +119,7 @@ int main(int argc, char** argv) {
 
   Tools::ProgressBar progressBar(endSimulationTime);
   progressBar.update(0.0);
-  if (checkpointFile.empty()){
+  if (checkpointFile.empty()) {
     writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), 0.0);
   }
 
@@ -138,7 +141,8 @@ int main(int argc, char** argv) {
     */
 
   Tools::Logger::logger.printStartMessage();
-  Tools::Logger::logger.initWallClockTime(time(NULL));
+  double wallClockTime = 1;
+  Tools::Logger::logger.initWallClockTime(wallClockTime);
 
   unsigned int iterations = 0;
 
@@ -152,6 +156,10 @@ int main(int argc, char** argv) {
       // Reset the cpu clock
       Tools::Logger::logger.resetClockToCurrentTime("CPU");
 
+#if defined(ENABLE_OPENMP)
+      double start_time = omp_get_wtime();
+#endif
+
       // Set values in ghost cells
       waveBlock->setGhostLayer();
 
@@ -162,6 +170,11 @@ int main(int argc, char** argv) {
 
       // Update the cell values
       waveBlock->updateUnknowns(maxTimeStepWidth);
+
+#if defined(ENABLE_OPENMP)
+      double end_time = omp_get_wtime();
+      wallClockTime += end_time - start_time;
+#endif
 
       // Update the cpu time in the logger
       Tools::Logger::logger.updateTime("CPU");
@@ -187,13 +200,22 @@ int main(int argc, char** argv) {
     // Write output
     writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
   }
-
   progressBar.clear();
   Tools::Logger::logger.printStatisticsMessage();
   Tools::Logger::logger.printTime("CPU", "CPU Time");
   Tools::Logger::logger.printTime("CPU-Communication", "CPU + Communication Time");
-  Tools::Logger::logger.printWallClockTime(time(NULL));
+  Tools::Logger::logger.getDefaultOutputStream(
+  ) << "Average time per Cell: "
+    << Tools::Logger::logger.getTime("CPU") / (numberOfGridCellsX * numberOfGridCellsY) << " seconds" << std::endl;
+  Tools::Logger::logger.getDefaultOutputStream() << "Average time per Iteration: " << Tools::Logger::logger.getTime("CPU") / iterations << " seconds" << std::endl;
+  Tools::Logger::logger.printWallClockTime(wallClockTime);
+
+
   Tools::Logger::logger.printIterationsDone(iterations);
+  // print number of threads
+#ifdef ENABLE_OPENMP
+  Tools::Logger::logger.getDefaultOutputStream() << "Number of threads: " << omp_get_max_threads() << std::endl;
+#endif
 
   Tools::Logger::logger.printFinishMessage();
 

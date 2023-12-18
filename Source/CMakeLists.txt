@@ -20,7 +20,7 @@ if(ENABLE_SINGLE_PRECISION)
     target_compile_definitions(${META_PROJECT_NAME} PUBLIC ENABLE_SINGLE_PRECISION)
 endif()
 
-option(ENABLE_OPENMP "Enable shared-memory parallelization of intra-block iterations using OpenMP." OFF)
+option(ENABLE_OPENMP "Enable shared-memory parallelization of intra-block iterations using OpenMP." ON)
 if(ENABLE_OPENMP)
     find_package(OpenMP REQUIRED)
     target_link_libraries(${META_PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
