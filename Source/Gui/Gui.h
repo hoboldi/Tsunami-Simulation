@@ -1,3 +1,6 @@
+#include "imgui.h"
+#include "imgui/backends/imgui_impl_glfw.h"
+#include "imgui/backends/imgui_impl_opengl3.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -11,7 +14,7 @@ namespace Gui {
   class Gui {
   public:
     explicit Gui(Tools::Float2D<RealType>& b);
-    void update(const Tools::Float2D<RealType>& h) const;
+    void update(const Tools::Float2D<RealType>& h);
     ~Gui();
 
   private:
@@ -20,7 +23,10 @@ namespace Gui {
     GLuint VBO, VAO;
     GLuint vertexShader;
     GLuint fragmentShader;
-    GLint minLoc, maxLoc;
+    GLint minColorLoc, maxColorLoc;
+    float* colorMin, *colorMax;
+    float clipMin, clipMax;
+    GLint clipMaxLoc, clipMinLoc;
     Tools::Float2D<RealType>& b;
     void setupShaders();
   };

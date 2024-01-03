@@ -215,8 +215,9 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.printStartMessage();
   double wallClockTime = 1;
   Tools::Logger::logger.initWallClockTime(wallClockTime);
-
+#if defined(ENABLE_GUI)
   Gui::Gui gui = Gui::Gui(bathyCopy);
+#endif
 
 
   unsigned int iterations = 0;

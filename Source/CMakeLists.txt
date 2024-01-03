@@ -113,6 +113,8 @@ if(ENABLE_GUI)
     find_package(OpenGL REQUIRED)
     find_package(GLEW REQUIRED)
     find_package(glfw3 REQUIRED)
+    include_directories(Gui/imgui Gui/imgui/backends)
+    # only add imgui glfw and glew to the target
     target_link_libraries(${META_PROJECT_NAME} PUBLIC OpenGL::GL GLEW::GLEW glfw)
 endif()
 

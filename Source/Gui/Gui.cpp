@@ -11,18 +11,22 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
   VAO(0),
   vertexShader(0),
   fragmentShader(0),
-  b(b) {
+  colorMin(new float[4]{0.462f, 0.7f, 0.917f, 1.0f}),
+  colorMax(new float[4]{1.0f, 0.0f, 0.0f, 1.0f}),
+  clipMin(0.0f),
+  clipMax(4.0f),
+  b(b){
   if (!glfwInit()) {
     std::cout << "Failed to initialize GLFW" << std::endl;
     exit(EXIT_FAILURE);
   }
-  // 4x antialiasing
+  // 16x antialiasing
   glfwWindowHint(GLFW_SAMPLES, 16);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   // Open a window and create its OpenGL context
-  window = glfwCreateWindow(1024, 768, "SWE", NULL, NULL);
+  window = glfwCreateWindow(1200, 800, "SWE", NULL, NULL);
   if (window == NULL) {
     glfwTerminate();
     exit(EXIT_FAILURE);
@@ -35,6 +39,20 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
     exit(EXIT_FAILURE);
   }
 
+  // Setup Dear ImGui context
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO& io = ImGui::GetIO();
+  (void)io;
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+                                                        // Setup Dear ImGui style
+  ImGui::StyleColorsDark();
+  // ImGui::StyleColorsLight();
+
+  // Setup Platform/Renderer backends
+  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplOpenGL3_Init("#version 330 core");
+
   setupShaders();
   glUseProgram(programID);
 
@@ -46,6 +64,7 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * b.getSize(), b.getData(), GL_STATIC_DRAW);
+  // important that this comes after glBufferData
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, 0, 0);
 
@@ -56,9 +75,14 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
   glUniform1f(widthLoc, static_cast<GLfloat>(b.getCols()));
   glUniform1f(heightLoc, static_cast<GLfloat>(b.getRows()));
 
-  // setup min and max uniforms (not used currently)
-  minLoc = glGetUniformLocation(programID, "minValue");
-  maxLoc = glGetUniformLocation(programID, "maxValue");
+
+  // setup color uniforms
+  minColorLoc = glGetUniformLocation(programID, "minColor");
+  maxColorLoc = glGetUniformLocation(programID, "maxColor");
+
+  // setup clip max uniform
+  clipMaxLoc = glGetUniformLocation(programID, "clipMax");
+  clipMinLoc = glGetUniformLocation(programID, "clipMin");
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
@@ -74,12 +98,28 @@ Gui::Gui::~Gui() {
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader);
 
+  // Cleanup
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
+
+  glfwDestroyWindow(window);
+
   glfwTerminate();
 }
-void Gui::Gui::update(const Tools::Float2D<RealType>& h) const {
+void Gui::Gui::update(const Tools::Float2D<RealType>& h){
 
   glClear(GL_COLOR_BUFFER_BIT);
   glUseProgram(programID);
+
+  // Poll for and process events
+  glfwPollEvents();
+
+  // Start the Dear ImGui frame
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+
 
   unsigned long dataSize = b.getSize();
 
@@ -92,13 +132,19 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h) const {
   }
 
 
-//  // Find the min and max values in the data and apply log scaling
-//  GLfloat minValue = *std::min_element(data.begin(), data.end());
-//  GLfloat maxValue = *std::max_element(data.begin(), data.end());
-//  std::cout << "min: " << minValue << " max: " << maxValue << std::endl;
-//
-//  glUniform1f(minLoc, minValue);
-//  glUniform1f(maxLoc, maxValue);
+  ImGui::Begin("Hello, world!");
+  ImGui::ColorEdit4("Color for Min value", colorMin, ImGuiColorEditFlags_NoInputs);
+  ImGui::ColorEdit4("Color for Max value", colorMax, ImGuiColorEditFlags_NoInputs);
+  ImGui::DragFloat("Min Value", &clipMin, 0.005f, -FLT_MAX, FLT_MAX, "%.3f", ImGuiSliderFlags_None);
+  ImGui::DragFloat("Max Value", &clipMax, 0.005f, -FLT_MAX, FLT_MAX, "%.3f", ImGuiSliderFlags_None);
+  ImGui::End();
+
+  glUniform4f(minColorLoc, colorMin[0], colorMin[1], colorMin[2], colorMin[3]);
+  glUniform4f(maxColorLoc, colorMax[0], colorMax[1], colorMax[2], colorMax[3]);
+
+  glUniform1f(clipMaxLoc, clipMax);
+  glUniform1f(clipMinLoc, clipMin);
+
   // Update vertex buffer object with new data
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -107,14 +153,15 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h) const {
 
 
   // Draw the data
-  glPointSize(0.5f);
+  glPointSize(1.0f);
   glDrawArrays(GL_POINTS, 0, (int)dataSize);
   glBindVertexArray(0);
+
+  ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
   // Swap the front and back buffers
   glfwSwapBuffers(window);
-
-  // Poll for and process events
-  glfwPollEvents();
 
 
   GLenum error = glGetError();
@@ -152,9 +199,20 @@ in float VertexValue;  // Receive the value from the vertex shader
 
 out vec4 FragColor;
 
-void main() {
+uniform vec4 minColor; // Color for the minimum value
+uniform vec4 maxColor; // Color for the maximum value
 
-  FragColor = vec4(1.0 - VertexValue ,0.0, VertexValue, 1.0);
+uniform float clipMax; // Clip value at max
+uniform float clipMin; // Clip value at min
+
+
+void main() {
+  // Clamp the value between the min and max values
+  float color = clamp(VertexValue, clipMin, clipMax);
+  // Map the value to the range 0.0 - 1.0
+  color = (color - clipMin) / (clipMax - clipMin);
+  // Linearly interpolate between the two colors
+  FragColor = mix(minColor, maxColor, color);
 }
 )";
 
