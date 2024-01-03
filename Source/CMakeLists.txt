@@ -106,6 +106,16 @@ if(ENABLE_DIMENSIONAL_SPLITTING)
     target_link_libraries(${META_PROJECT_NAME}-DimSplitRunner PRIVATE ${META_PROJECT_NAME})
 endif()
 
+option(ENABLE_GUI "Enable the GUI for the SWE-Visualizer." ON)
+if(ENABLE_GUI)
+    target_compile_definitions(${META_PROJECT_NAME} PUBLIC ENABLE_GUI)
+    # GUI with GLFW AND GLEW
+    find_package(OpenGL REQUIRED)
+    find_package(GLEW REQUIRED)
+    find_package(glfw3 REQUIRED)
+    target_link_libraries(${META_PROJECT_NAME} PUBLIC OpenGL::GL GLEW::GLEW glfw)
+endif()
+
 if(ENABLE_MPI)
     add_executable(${META_PROJECT_NAME}-MPI-Runner Runners/MPI-Runner.cpp)
     target_link_libraries(${META_PROJECT_NAME}-MPI-Runner PRIVATE ${META_PROJECT_NAME})

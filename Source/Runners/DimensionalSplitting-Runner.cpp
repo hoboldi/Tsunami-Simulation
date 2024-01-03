@@ -15,6 +15,7 @@
 #include "Writers/NetCDFWriter.hpp"
 #include "Writers/Writer.hpp"
 #include "Tools/Coarse.h"
+#include "Gui/Gui.h"
 #ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
@@ -104,7 +105,7 @@ int main(int argc, char** argv) {
     tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
     //tsunamiScenario->readScenario("artificialtsunami_bathymetry_1000.nc", "artificialtsunami_displ_1000.nc");
     scenario = tsunamiScenario;
-    // scenario = new Scenarios::ArtificialTsunamiScenario();
+    //scenario = new Scenarios::ArtificialTsunamiScenario();
   } else {
     scenario = new Scenarios::CheckpointScenario(checkpointFile);
   }
@@ -135,6 +136,8 @@ int main(int argc, char** argv) {
 
   auto waveBlock = new Blocks::DimensionalSplitting(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY);
   waveBlock->initialiseScenario(0, 0, *scenario);
+
+
 
   double* checkPoints = new double[numberOfCheckPoints + 1];
 
@@ -213,6 +216,9 @@ int main(int argc, char** argv) {
   double wallClockTime = 1;
   Tools::Logger::logger.initWallClockTime(wallClockTime);
 
+  Gui::Gui gui = Gui::Gui(bathyCopy);
+
+
   unsigned int iterations = 0;
   // Loop over checkpoints
   for (; cp <= numberOfCheckPoints; cp++) {
@@ -240,6 +246,10 @@ int main(int argc, char** argv) {
 #if defined(ENABLE_OPENMP)
       double end_time = omp_get_wtime();
       wallClockTime += end_time - start_time;
+#endif
+
+#if defined(ENABLE_GUI)
+      gui.update(waveBlock->getWaterHeight());
 #endif
 
       // Update the cpu time in the logger

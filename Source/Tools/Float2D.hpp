@@ -124,6 +124,8 @@ namespace Tools {
 
     T* getData() { return data_; }
 
+    int getSize() const { return rows_ * cols_; }
+
     int getRows() const { return rows_; }
 
     int getCols() const { return cols_; }
