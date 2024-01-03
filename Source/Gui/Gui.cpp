@@ -1,8 +1,5 @@
 #include "Gui.h"
 
-#include <algorithm>
-#include <complex>
-
 
 Gui::Gui::Gui(Tools::Float2D<RealType>& b):
   window(nullptr),
@@ -25,6 +22,7 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   // Open a window and create its OpenGL context
   window = glfwCreateWindow(1200, 800, "SWE", NULL, NULL);
   if (window == NULL) {
@@ -107,7 +105,7 @@ Gui::Gui::~Gui() {
 
   glfwTerminate();
 }
-void Gui::Gui::update(const Tools::Float2D<RealType>& h){
+void Gui::Gui::update(const Tools::Float2D<RealType>& h, double time){
 
   glClear(GL_COLOR_BUFFER_BIT);
   glUseProgram(programID);
@@ -132,11 +130,18 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h){
   }
 
 
-  ImGui::Begin("Hello, world!");
+  ImGui::Begin("Color Map");
   ImGui::ColorEdit4("Color for Min value", colorMin, ImGuiColorEditFlags_NoInputs);
   ImGui::ColorEdit4("Color for Max value", colorMax, ImGuiColorEditFlags_NoInputs);
   ImGui::DragFloat("Min Value", &clipMin, 0.005f, -FLT_MAX, FLT_MAX, "%.3f", ImGuiSliderFlags_None);
   ImGui::DragFloat("Max Value", &clipMax, 0.005f, -FLT_MAX, FLT_MAX, "%.3f", ImGuiSliderFlags_None);
+  ImGui::End();
+
+  // metadata display
+  ImGui::Begin("Metadata");
+  ImGui::Text("Time: %f", time);
+  ImGui::Text("Width: %d", b.getCols() -2);
+  ImGui::Text("Height: %d", b.getRows() -2);
   ImGui::End();
 
   glUniform4f(minColorLoc, colorMin[0], colorMin[1], colorMin[2], colorMin[3]);

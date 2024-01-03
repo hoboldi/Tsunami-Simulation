@@ -7,14 +7,25 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
+#include <complex>
 #include "Tools/Float2D.hpp"
 #include "Tools/RealType.hpp"
 
 namespace Gui {
   class Gui {
   public:
+    /**
+     * @brief Construct a new Gui object
+     * @param b bathymetry to display
+     */
     explicit Gui(Tools::Float2D<RealType>& b);
-    void update(const Tools::Float2D<RealType>& h);
+    /**
+     * @brief Update the display
+     * @param h water height
+     * @param time current time
+     */
+    void update(const Tools::Float2D<RealType>& h, double time);
     ~Gui();
 
   private:

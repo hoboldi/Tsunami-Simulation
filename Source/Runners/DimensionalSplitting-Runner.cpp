@@ -250,7 +250,7 @@ int main(int argc, char** argv) {
 #endif
 
 #if defined(ENABLE_GUI)
-      gui.update(waveBlock->getWaterHeight());
+      gui.update(waveBlock->getWaterHeight(), simulationTime+maxTimeStepWidth);
 #endif
 
       // Update the cpu time in the logger
