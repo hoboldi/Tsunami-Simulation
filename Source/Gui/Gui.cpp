@@ -17,7 +17,7 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
     exit(EXIT_FAILURE);
   }
   // 4x antialiasing
-  glfwWindowHint(GLFW_SAMPLES, 4);
+  glfwWindowHint(GLFW_SAMPLES, 16);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -114,7 +114,7 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h) const {
   glfwSwapBuffers(window);
 
   // Poll for and process events
-  // glfwPollEvents();
+  glfwPollEvents();
 
 
   GLenum error = glGetError();
