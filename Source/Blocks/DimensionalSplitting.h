@@ -3,7 +3,7 @@
 #include "Solvers/FWaveSolver.h"
 namespace Blocks {
   class DimensionalSplitting: public Block {
-  private:
+  protected:
     //! net-updates for the heights of the cells on the x-stride.
     Tools::Float2D<RealType> hNetUpdatesXLeft_;
     Tools::Float2D<RealType> hNetUpdatesXRight_;
