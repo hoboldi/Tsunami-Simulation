@@ -1,7 +1,6 @@
-#include "TsunamiScenario.h"
+#include "WorldScenario.h"
 
 #include <cfloat>
-
 
 unsigned long indexi = 0;
 unsigned long indexj = 0;
@@ -16,7 +15,7 @@ namespace Scenarios {
   std::vector<std::vector<interval>> getInterval() { return intervals; }
 } // namespace Scenarios
 
-void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::string displacement) const {
+void Scenarios::WorldScenario::PreEarthquake::readWorld(std::string bathymetry) const {
   // Read Bathymetry
   int bncid, bvarid;
   int retval;
@@ -160,94 +159,14 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
   }
   // close the file
   nc_close(bncid);
-  int dncid, dvarid;
 
-  retval = nc_open(displacement.c_str(), NC_NOWRITE, &dncid);
-  assert(retval == NC_NOERR);
-
-  // Get the variables
-  int    dx_dimid, dy_dimid;
-  int    dx_varid, dy_varid, dz_varid;
-  size_t dxlen, dylen = 0;
-
-  // Get dimension ids
-  retval = nc_inq_dimid(dncid, "x", &dx_dimid);
-  assert(retval == NC_NOERR);
-  retval = nc_inq_dimid(dncid, "y", &dy_dimid);
-  assert(retval == NC_NOERR);
-
-  // Get variable ids
-  retval = nc_inq_varid(dncid, "x", &dx_varid);
-  assert(retval == NC_NOERR);
-  retval = nc_inq_varid(dncid, "y", &dy_varid);
-  assert(retval == NC_NOERR);
-  retval = nc_inq_varid(dncid, "z", &dz_varid);
-  assert(retval == NC_NOERR);
-
-  // Get dimension lengths
-  retval = nc_inq_dimlen(dncid, dx_dimid, &dxlen);
-  assert(retval == NC_NOERR);
-  retval = nc_inq_dimlen(dncid, dy_dimid, &dylen);
-  assert(retval == NC_NOERR);
-
-  double dx_data[dxlen];
-  double dy_data[dylen];
-  auto*  dz_data = new double[dxlen * dylen];
-
-  retval = nc_get_var_double(dncid, dx_varid, dx_data);
-  assert(retval == NC_NOERR);
-  retval = nc_get_var_double(dncid, dy_varid, dy_data);
-  assert(retval == NC_NOERR);
-  retval = nc_get_var_double(dncid, dz_varid, dz_data);
-  assert(retval == NC_NOERR);
-
-  std::vector<double> dxData(dxlen);
-  std::vector<double> dyData(dylen);
-  std::vector<double> dzData(dxlen * dylen);
-
-
-  for (size_t i = 0; i < dxlen; i++) {
-    dxData[i] = dx_data[i];
-  }
-  for (size_t i = 0; i < dylen; i++) {
-    dyData[i] = dy_data[i];
-  }
-  for (size_t i = 0; i < dxlen * dylen; i++) {
-    dzData[i] = dz_data[i];
-  }
-
-
-  // Calculate Displaced Intervals
-  for (size_t i = 0; i < dxData.size(); ++i) {
-    for (size_t j = 0; j < dyData.size(); ++j) {
-      RealType x, y, z;
-      x = dxData[i];
-      y = dyData[j];
-      z = dzData[j * dxData.size() + i];
-      while (x < intervals[indexi][indexj].xleft) {
-        indexi--;
-      }
-      while (x > intervals[indexi][indexj].xright) {
-        indexi++;
-      }
-      while (y < intervals[indexi][indexj].yleft) {
-        indexj--;
-      }
-      while (y > intervals[indexi][indexj].yright) {
-        indexj++;
-      }
-      intervals[indexi][indexj].b += z;
-    }
-  }
   indexi = 0;
   indexj = 0;
-  nc_close(dncid);
 
-  delete[] dz_data;
   delete[] bz_data;
 }
 
-RealType Scenarios::TsunamiScenario::getWaterHeight(RealType x, RealType y) const {
+RealType Scenarios::WorldScenario::PreEarthquake::getWaterHeight(RealType x, RealType y) const {
   x += offsetx;
   y += offsety;
   while (x < intervals[indexi][indexj].xleft) {
@@ -265,7 +184,7 @@ RealType Scenarios::TsunamiScenario::getWaterHeight(RealType x, RealType y) cons
   return intervals[indexi][indexj].h;
 }
 
-RealType Scenarios::TsunamiScenario::getBathymetry([[maybe_unused]] RealType x, [[maybe_unused]] RealType y) const {
+RealType Scenarios::WorldScenario::PreEarthquake::getBathymetry([[maybe_unused]] RealType x, [[maybe_unused]] RealType y) const {
   x += offsetx;
   y += offsety;
   while (x < intervals[indexi][indexj].xleft) {
@@ -288,24 +207,4 @@ RealType Scenarios::TsunamiScenario::getBathymetry([[maybe_unused]] RealType x, 
   }
 
   return intervals[indexi][indexj].b;
-}
-
-double Scenarios::TsunamiScenario::getEndSimulationTime() const { return endSimulationTime; }
-
-void Scenarios::TsunamiScenario::setEndSimulationTime(double time) {
-  assert(time >= 0);
-  endSimulationTime = time;
-}
-
-
-RealType Scenarios::TsunamiScenario::getBoundaryPos(BoundaryEdge edge) const {
-  if (edge == BoundaryEdge::Left) {
-    return RealType(0.0);
-  } else if (edge == BoundaryEdge::Right) {
-    return sizex;
-  } else if (edge == BoundaryEdge::Bottom) {
-    return RealType(0.0);
-  } else {
-    return sizey;
-  }
 }
