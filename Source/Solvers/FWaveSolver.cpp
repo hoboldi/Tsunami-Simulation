@@ -41,9 +41,6 @@ void Solvers::FWaveSolver::computeNetUpdates(
     return;
   }
 
-  RealType hRoe = calculateHRoe(leftState, rightState);
-  RealType uRoe = calculateURoe(leftState, rightState);
-
   std::pair<RealType, RealType> eigenvalues = calculateEigenvalues(leftState, rightState);
   std::pair<RealType, RealType> effectOfBathymetry = calculateEffectOfBathymetry(leftState, rightState, bLeft_, bRight_);
   std::pair<RealType, RealType> alphas = calculateAlphas(eigenvalues, leftState, rightState, effectOfBathymetry);
