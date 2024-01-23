@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
 
   if (checkpointFile.empty()) {
     auto tsunamiScenario = new Scenarios::TsunamiScenario();
-    // tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
+     //tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
     tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
     //tsunamiScenario->readScenario("artificialtsunami_bathymetry_1000.nc", "artificialtsunami_displ_1000.nc");
     scenario = tsunamiScenario;
@@ -133,8 +133,8 @@ int main(int argc, char** argv) {
   // Compute the size of a single cell
   RealType cellSizeX = (scenario->getBoundaryPos(BoundaryEdge::Right) - scenario->getBoundaryPos(BoundaryEdge::Left)) / numberOfGridCellsX;
   RealType cellSizeY = (scenario->getBoundaryPos(BoundaryEdge::Top) - scenario->getBoundaryPos(BoundaryEdge::Bottom)) / numberOfGridCellsY;
-  std::pair<int, int> startCell = {numberOfGridCellsX-5, 200};
-  std::pair<int, int> endCell   = {5, numberOfGridCellsY - 5};
+  std::pair<int, int> startCell = {numberOfGridCellsX-800, 700};
+  std::pair<int, int> endCell   = {20, numberOfGridCellsY - 200};
   auto waveBlock = new Blocks::ReducedDimSplittingBlock(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY, startCell, endCell);
   waveBlock->initialiseScenario(0, 0, *scenario);
 
