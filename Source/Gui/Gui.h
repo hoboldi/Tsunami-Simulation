@@ -1,14 +1,16 @@
-#include "imgui.h"
-#include "imgui/backends/imgui_impl_glfw.h"
-#include "imgui/backends/imgui_impl_opengl3.h"
+#pragma once
+#include <algorithm>
+#include <complex>
+#include <fstream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <fstream>
 #include <sstream>
 #include <vector>
-#include <algorithm>
-#include <complex>
+
+#include "imgui.h"
+#include "imgui/backends/imgui_impl_glfw.h"
+#include "imgui/backends/imgui_impl_opengl3.h"
 #include "Tools/Float2D.hpp"
 #include "Tools/RealType.hpp"
 
@@ -28,18 +30,19 @@ namespace Gui {
     void update(const Tools::Float2D<RealType>& h, double time);
     ~Gui();
 
+
   private:
-    GLFWwindow* window;
-    GLuint programID;
-    GLuint VBO, VAO;
-    GLuint vertexShader;
-    GLuint fragmentShader;
-    GLint minColorLoc, maxColorLoc;
-    float* colorMin, *colorMax;
-    float clipMin, clipMax;
-    GLint clipMaxLoc, clipMinLoc;
+    GLFWwindow*               window;
+    GLuint                    programID;
+    GLuint                    VBO, VAO;
+    GLuint                    vertexShader;
+    GLuint                    fragmentShader;
+    GLint                     minColorLoc, maxColorLoc;
+    float *                   colorMin, *colorMax;
+    float                     clipMin, clipMax;
+    GLint                     clipMaxLoc, clipMinLoc;
     Tools::Float2D<RealType>& b;
-    void setupShaders();
+    void                      setupShaders();
   };
 
 } // namespace Gui

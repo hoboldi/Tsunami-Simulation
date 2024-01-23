@@ -12,7 +12,8 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
   colorMax(new float[4]{1.0f, 0.0f, 0.0f, 1.0f}),
   clipMin(0.0f),
   clipMax(4.0f),
-  b(b){
+  b(b)
+{
   if (!glfwInit()) {
     std::cout << "Failed to initialize GLFW" << std::endl;
     exit(EXIT_FAILURE);
@@ -61,7 +62,7 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
   glBindVertexArray(VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * b.getSize(), b.getData(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 1002 * 1002, nullptr, GL_STATIC_DRAW);
   // important that this comes after glBufferData
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, 0, 0);
@@ -69,7 +70,6 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
   // setup width and height uniforms
   GLint widthLoc  = glGetUniformLocation(programID, "width");
   GLint heightLoc = glGetUniformLocation(programID, "height");
-  std::cout << "widthLoc: " << b.getCols() << " heightLoc: " << b.getRows() << std::endl;
   glUniform1f(widthLoc, static_cast<GLfloat>(b.getCols()));
   glUniform1f(heightLoc, static_cast<GLfloat>(b.getRows()));
 
@@ -212,6 +212,16 @@ uniform float clipMin; // Clip value at min
 
 
 void main() {
+  // if value is FLT_MAX, set color to black
+  if (VertexValue == -3.4028234663852886E+38) {
+    FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    return;
+  }
+  // if value is -FLT_MAX, set color to white
+  if (VertexValue == 3.4028234663852886E+38) {
+    FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    return;
+  }
   // Clamp the value between the min and max values
   float color = clamp(VertexValue, clipMin, clipMax);
   // Map the value to the range 0.0 - 1.0

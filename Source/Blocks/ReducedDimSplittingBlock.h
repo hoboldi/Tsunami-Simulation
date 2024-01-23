@@ -1,12 +1,26 @@
 #pragma once
 #include "DimensionalSplitting.h"
 #include "Solvers/FWaveSolver.h"
+#if defined(ENABLE_GUI)
+#include "Gui/Gui.h"
+#endif
 
 namespace Blocks {
   class ReducedDimSplittingBlock : public DimensionalSplitting {
   public:
     ReducedDimSplittingBlock(int nx, int ny, RealType dx, RealType dy, std::pair<int, int> startCell, std::pair<int, int> endCell);
     ~ReducedDimSplittingBlock() override = default;
+#if defined(ENABLE_GUI)
+    /**
+     * @brief Find the search area for the reduced dimensional splitting with GUI visualization
+     */
+    void findSearchArea(Gui::Gui& gui);
+#endif
+    /**
+     * @brief Find the search area for the reduced dimensional splitting
+     */
+    void findSearchArea();
+
 
   private:
     // pair of coordinates of the startcell for the search (epicenter)
@@ -17,10 +31,7 @@ namespace Blocks {
     std::pair<int, int> bottomCorner_;
     // pair of coordinates of the top right corner of the resulting search area
     std::pair<int, int> topCorner_;
-    /**
-     * @brief Find the search area for the reduced dimensional splitting
-     */
-    void findSearchArea();
+
 
   };
 

@@ -3,19 +3,20 @@
 #include <string>
 
 #include "Blocks/DimensionalSplitting.h"
+#include "Blocks/ReducedDimSplittingBlock.h"
 #include "BoundaryEdge.hpp"
+#include "Gui/Gui.h"
 #include "Readers/NetCDFReader.h"
 #include "Scenarios/ArtificialTsunamiScenario.h"
 #include "Scenarios/CheckpointScenario.h"
 #include "Scenarios/RadialDamBreakScenario.hpp"
 #include "Scenarios/TsunamiScenario.h"
 #include "Tools/Args.hpp"
+#include "Tools/Coarse.h"
 #include "Tools/Logger.hpp"
 #include "Tools/ProgressBar.hpp"
 #include "Writers/NetCDFWriter.hpp"
 #include "Writers/Writer.hpp"
-#include "Tools/Coarse.h"
-#include "Gui/Gui.h"
 #ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
@@ -110,7 +111,6 @@ int main(int argc, char** argv) {
     scenario = new Scenarios::CheckpointScenario(checkpointFile);
   }
 
-
   if (checkpointFile.empty()) {
     // Ihhgitt!!
     if (boundaryConditions == 1111 || boundaryConditions == 1112 || boundaryConditions == 1121 || boundaryConditions == 1122 || boundaryConditions == 1211 || boundaryConditions == 1212 || boundaryConditions == 1221 || boundaryConditions == 1222 || boundaryConditions == 2111 || boundaryConditions == 2112 || boundaryConditions == 2121 || boundaryConditions == 2122 || boundaryConditions == 2211 || boundaryConditions == 2212 || boundaryConditions == 2221 || boundaryConditions == 2222) {
@@ -133,8 +133,9 @@ int main(int argc, char** argv) {
   // Compute the size of a single cell
   RealType cellSizeX = (scenario->getBoundaryPos(BoundaryEdge::Right) - scenario->getBoundaryPos(BoundaryEdge::Left)) / numberOfGridCellsX;
   RealType cellSizeY = (scenario->getBoundaryPos(BoundaryEdge::Top) - scenario->getBoundaryPos(BoundaryEdge::Bottom)) / numberOfGridCellsY;
-
-  auto waveBlock = new Blocks::DimensionalSplitting(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY);
+  std::pair<int, int> startCell = {numberOfGridCellsX-5, 200};
+  std::pair<int, int> endCell   = {5, numberOfGridCellsY - 5};
+  auto waveBlock = new Blocks::ReducedDimSplittingBlock(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY, startCell, endCell);
   waveBlock->initialiseScenario(0, 0, *scenario);
 
 
@@ -215,8 +216,10 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.printStartMessage();
   double wallClockTime = 1;
   Tools::Logger::logger.initWallClockTime(wallClockTime);
+
 #if defined(ENABLE_GUI)
   Gui::Gui gui = Gui::Gui(bathyCopy);
+  waveBlock->findSearchArea(gui);
 #endif
 
 
