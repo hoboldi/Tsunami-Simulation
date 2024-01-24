@@ -21,6 +21,10 @@ namespace Blocks {
      */
     void findSearchArea();
 
+    void computeNumericalFluxes() override;
+
+    void updateUnknowns(RealType dt) override;
+
 
   private:
     // pair of coordinates of the startcell for the search (epicenter)

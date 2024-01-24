@@ -133,8 +133,8 @@ int main(int argc, char** argv) {
   // Compute the size of a single cell
   RealType cellSizeX = (scenario->getBoundaryPos(BoundaryEdge::Right) - scenario->getBoundaryPos(BoundaryEdge::Left)) / numberOfGridCellsX;
   RealType cellSizeY = (scenario->getBoundaryPos(BoundaryEdge::Top) - scenario->getBoundaryPos(BoundaryEdge::Bottom)) / numberOfGridCellsY;
-  std::pair<int, int> startCell = {numberOfGridCellsX-800, 700};
-  std::pair<int, int> endCell   = {20, numberOfGridCellsY - 200};
+  std::pair<int, int> startCell = { 90, 625};
+  std::pair<int, int> endCell   = {910, 610};
   auto waveBlock = new Blocks::ReducedDimSplittingBlock(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY, startCell, endCell);
   waveBlock->initialiseScenario(0, 0, *scenario);
 
