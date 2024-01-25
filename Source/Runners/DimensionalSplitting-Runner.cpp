@@ -40,6 +40,21 @@ void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY) {
 }
 
 /**
+ * @brief A method to convert an entered magnitude on the richter scale (R) to the magnitude in moment notation (M)
+ * This is necessary to calculate further, and uses the approximative equations to convert via the logarithmic energy of the earthquake
+ * - Richter: Log E = 11.8 + 1.5 R
+ * - Moment Magnitude: Log E = 5.24 + 1.44 M
+ * 
+ * @param richter [in] The magnitude on the richter scale
+ * @return moment [out] The magnitude on the moment-magnitude scale
+ */
+RealType richterToMagnitude(RealType richter)
+{
+  RealType energy = 11.8 + (1.5 * richter);
+  return (energy - 5.24) / 1.44;
+}
+
+/**
  * @brief This method can be used to convert an array of sizes nx / ny to a coarsed version with the averaged values according to Sheet 4 Task 5
  *
  * @param array [in] The array to be coarsed
@@ -52,8 +67,6 @@ void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY) {
  * @param restY [in] The amount of leftover cells in Y direction that don't form a full group
  * @return [out] The array of coarsed values which can then be printed
  */
-
-
 int main(int argc, char** argv) {
   Tools::Args args;
   args.addOption("grid-size-x", 'x', "Number of cells in x direction");
@@ -68,6 +81,12 @@ int main(int argc, char** argv) {
   );
   args.addOption("checkpoint-file", 'c', "Checkpoint file to read initial values from");
   args.addOption("coarse", 'a', "Parameter for the coarse output, averaging the next <param> cells");
+  args.addOption("magnitude", 'm', "The moment-megnitude of the eartquake");
+  args.addOption("richter-scale", 'r', "The magnitude on the richter scale, this should not be used as it will be subject to many approximation errors");
+  args.addOption("destinationX", 'd', "The X coordinate of the destination city");
+  args.addOption("destinationY", 's', " The y coordinate of the destination city");
+  args.addOption("epicenterX", 'e', "The X coordinate of the epicenter");
+  args.addOption("epicenterY", 'f', "The Y coordinate of the epicenter");
 
   Tools::Args::Result ret = args.parse(argc, argv);
   if (ret == Tools::Args::Result::Help) {
@@ -88,6 +107,25 @@ int main(int argc, char** argv) {
   int         boundaryConditions = args.getArgument<int>("boundary-conditions", 1111); // Default is 1111: Outflow for all Edges
   std::string checkpointFile     = args.getArgument<std::string>("checkpoint-file", "");
   int         coarse             = args.getArgument<int>("coarse", 0);                 // Default is 0 if no coarse should be used
+  RealType    magnitude          = args.getArgument<RealType("magnitude", 0);
+  RealType    richter            = args.getArgument<RealType>("richter-scale", 0);
+  int         destinationX       = args.getArgument<int>("destinationX", 0);
+  int         destinationY       = args.getArgument<int>("destinationY", 0); 
+  int         epicenterX         = args.getArgument<int>("epicenterX", 0); 
+  int         epicenterY         = args.getArgument<int>("epicenterY", 0);
+
+  //Error message if the user wants to use the WorldScenario, but forgets a value
+  if (epicenterX != 0 || epicenterY != 0 || destinationX != 0 || destinationY != 0 || magnitude != 0 || richter != 0)
+  {
+      if (magnitude == 0 && richter == 0)
+      {
+        std::cout << "Error, no magnitude entered in neither format. Please use the -m option to enter your desired moment-megnitude!";
+      }
+      if (magnitude == 0 && richter != 0)
+      {
+        magnitude = richterToMagnitude(richter);
+      }
+  }
 
   std::vector<RealType> coarseHeights;
   std::vector<RealType> coarseHus;

@@ -32,16 +32,19 @@
 #include <cmath>
 
 RealType Scenarios::RadialDamBreakScenario::getWaterHeight(RealType x, RealType y) const {
+  if(x >= 400 && x <= 600 && y >= 200 && y <= 300) {
+    return 0;
+  }
   return RealType((sqrt((x - 500.0) * (x - 500.0) + (y - 500.0) * (y - 500.0)) < 100.0) ? 15.0 : 10.0);
 }
 
 RealType Scenarios::RadialDamBreakScenario::getBathymetry([[maybe_unused]] RealType x, [[maybe_unused]] RealType y)
   const {
   if(x >= 400 && x <= 600 && y >= 200 && y <= 300) {
-    return 1;
+    return 10;
   }
   else{
-    return -1;
+    return -10;
   }
 }
 

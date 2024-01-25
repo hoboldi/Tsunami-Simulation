@@ -119,7 +119,13 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
   intervals[0][0].xright = bxData[0];
   intervals[0][0].yright = byData[0];
   intervals[0][0].b      = bzData[0];
-  intervals[0][0].h      = -fmin(intervals[0][0].b, 0);
+  RealType bathy = intervals[0][0].b;
+  if(bathy < 20 && bathy >= 0){
+    bathy = 20;
+  }else if(bathy > -20 && bathy < 0){
+    bathy = -20;
+  }
+  intervals[0][0].h      = -fmin(bathy, 0);
 
   // First Line and Column
   for (size_t i = 1; i < bxData.size(); ++i) {
@@ -130,7 +136,13 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
     intervals[i][0].xright = i != bxData.size() - 1 ? bxData[i] : DBL_MAX;
     intervals[i][0].yright = byData[0];
     intervals[i][0].b      = bzData[i];
-    intervals[i][0].h      = -fmin(intervals[i][0].b, 0);
+    bathy = intervals[i][0].b;
+    if(bathy < 20 && bathy >= 0){
+      bathy = 20;
+    }else if(bathy > -20 && bathy < 0){
+      bathy = -20;
+    }
+    intervals[i][0].h      = -fmin(bathy, 0);
   }
 
   for (size_t j = 1; j < byData.size(); ++j) {
@@ -141,7 +153,13 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
     intervals[0][j].xright = bxData[0];
     intervals[0][j].yright = j != byData.size() - 1 ? byData[j] : DBL_MAX;
     intervals[0][j].b      = bzData[j * bxData.size()];
-    intervals[0][j].h      = -fmin(intervals[0][j].b, 0);
+    bathy = intervals[0][j].b;
+    if(bathy < 20 && bathy >= 0){
+      bathy = 20;
+    }else if(bathy > -20 && bathy < 0){
+      bathy = -20;
+    }
+    intervals[0][j].h      = -fmin(bathy, 0);
   }
 
 
@@ -155,7 +173,13 @@ void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::strin
       intervals[i][j].xright = i != bxData.size() - 1 ? bxData[i] : DBL_MAX;
       intervals[i][j].yright = j != byData.size() - 1 ? byData[j] : DBL_MAX;
       intervals[i][j].b      = bzData[j * bxData.size() + i];
-      intervals[i][j].h      = -fmin(intervals[i][j].b, 0);
+      bathy = intervals[i][j].b;
+      if(bathy < 20 && bathy >= 0){
+        bathy = 20;
+      }else if(bathy > -20 && bathy < 0){
+        bathy = -20;
+      }
+      intervals[i][j].h      = -fmin(bathy, 0);
     }
   }
   // close the file
