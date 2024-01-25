@@ -20,7 +20,6 @@ RealType Scenarios::EarthquakeScenario::getStartingWaveHeight() const
     // H1 and H2 are the wave heights in 2 places, h1 and h2 being the corresponding water heights
     // Since we only try and calculate until a water height of 50m, we use that as the value for h1, and h2 being tha depth in the epicenter-cell
     RealType startingHeight = (maxHeight * std::pow(50, 1.0/4)) / std::pow(heightInEpicenter, 1.0/4);
-
 }
 
 RealType Scenarios::EarthquakeScenario::getMaxWaveHeight() const
