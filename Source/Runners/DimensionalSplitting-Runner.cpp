@@ -220,6 +220,8 @@ int main(int argc, char** argv) {
 #if defined(ENABLE_GUI)
   Gui::Gui gui = Gui::Gui(bathyCopy);
   waveBlock->findSearchArea(gui);
+#else
+  waveBlock->findSearchArea();
 #endif
 
 
