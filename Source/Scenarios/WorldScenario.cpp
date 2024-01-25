@@ -15,7 +15,7 @@ namespace Scenarios {
   std::vector<std::vector<interval>> getInterval() { return intervals; }
 } // namespace Scenarios
 
-void Scenarios::WorldScenario::PreEarthquake::readWorld(std::string bathymetry) const {
+void Scenarios::WorldScenario::readWorld(std::string bathymetry) const {
   // Read Bathymetry
   int bncid, bvarid;
   int retval;
@@ -118,7 +118,13 @@ void Scenarios::WorldScenario::PreEarthquake::readWorld(std::string bathymetry) 
   intervals[0][0].xright = bxData[0];
   intervals[0][0].yright = byData[0];
   intervals[0][0].b      = bzData[0];
-  intervals[0][0].h      = -fmin(intervals[0][0].b, 0);
+  RealType bathy = intervals[0][0].b;
+  if(bathy < 20 && bathy >= 0){
+    bathy = 20;
+  }else if(bathy > -20 && bathy < 0){
+    bathy = -20;
+  }
+  intervals[0][0].h      = -fmin(bathy, 0);
 
   // First Line and Column
   for (size_t i = 1; i < bxData.size(); ++i) {
@@ -129,7 +135,13 @@ void Scenarios::WorldScenario::PreEarthquake::readWorld(std::string bathymetry) 
     intervals[i][0].xright = i != bxData.size() - 1 ? bxData[i] : DBL_MAX;
     intervals[i][0].yright = byData[0];
     intervals[i][0].b      = bzData[i];
-    intervals[i][0].h      = -fmin(intervals[i][0].b, 0);
+    bathy = intervals[i][0].b;
+    if(bathy < 20 && bathy >= 0){
+      bathy = 20;
+    }else if(bathy > -20 && bathy < 0){
+      bathy = -20;
+    }
+    intervals[i][0].h      = -fmin(bathy, 0);
   }
 
   for (size_t j = 1; j < byData.size(); ++j) {
@@ -140,7 +152,13 @@ void Scenarios::WorldScenario::PreEarthquake::readWorld(std::string bathymetry) 
     intervals[0][j].xright = bxData[0];
     intervals[0][j].yright = j != byData.size() - 1 ? byData[j] : DBL_MAX;
     intervals[0][j].b      = bzData[j * bxData.size()];
-    intervals[0][j].h      = -fmin(intervals[0][j].b, 0);
+    bathy = intervals[0][j].b;
+    if(bathy < 20 && bathy >= 0){
+      bathy = 20;
+    }else if(bathy > -20 && bathy < 0){
+      bathy = -20;
+    }
+    intervals[0][j].h      = -fmin(bathy, 0);
   }
 
 
@@ -154,19 +172,24 @@ void Scenarios::WorldScenario::PreEarthquake::readWorld(std::string bathymetry) 
       intervals[i][j].xright = i != bxData.size() - 1 ? bxData[i] : DBL_MAX;
       intervals[i][j].yright = j != byData.size() - 1 ? byData[j] : DBL_MAX;
       intervals[i][j].b      = bzData[j * bxData.size() + i];
-      intervals[i][j].h      = -fmin(intervals[i][j].b, 0);
+      bathy = intervals[i][j].b;
+      if(bathy < 20 && bathy >= 0){
+        bathy = 20;
+      }else if(bathy > -20 && bathy < 0){
+        bathy = -20;
+      }
+      intervals[i][j].h      = -fmin(bathy, 0);
     }
   }
   // close the file
   nc_close(bncid);
-
   indexi = 0;
   indexj = 0;
 
   delete[] bz_data;
 }
 
-RealType Scenarios::WorldScenario::PreEarthquake::getWaterHeight(RealType x, RealType y) const {
+RealType Scenarios::WorldScenario::getWaterHeight(RealType x, RealType y) const {
   x += offsetx;
   y += offsety;
   while (x < intervals[indexi][indexj].xleft) {
@@ -184,7 +207,8 @@ RealType Scenarios::WorldScenario::PreEarthquake::getWaterHeight(RealType x, Rea
   return intervals[indexi][indexj].h;
 }
 
-RealType Scenarios::WorldScenario::PreEarthquake::getBathymetry([[maybe_unused]] RealType x, [[maybe_unused]] RealType y) const {
+
+RealType Scenarios::WorldScenario::getBathymetry([[maybe_unused]] RealType x, [[maybe_unused]] RealType y) const {
   x += offsetx;
   y += offsety;
   while (x < intervals[indexi][indexj].xleft) {
@@ -207,4 +231,27 @@ RealType Scenarios::WorldScenario::PreEarthquake::getBathymetry([[maybe_unused]]
   }
 
   return intervals[indexi][indexj].b;
+}
+
+void Scenarios::WorldScenario::adjustDomain(RealType bottomLeft, RealType topRight, bool isOverEdge) {
+
+}
+
+double Scenarios::WorldScenario::getEndSimulationTime() const { return endSimulationTime; }
+
+void Scenarios::WorldScenario::setEndSimulationTime(double time) {
+  assert(time >= 0);
+  endSimulationTime = time;
+}
+
+RealType Scenarios::WorldScenario::getBoundaryPos(BoundaryEdge edge) const {
+  if (edge == BoundaryEdge::Left) {
+    return RealType(0.0);
+  } else if (edge == BoundaryEdge::Right) {
+    return sizex;
+  } else if (edge == BoundaryEdge::Bottom) {
+    return RealType(0.0);
+  } else {
+    return sizey;
+  }
 }

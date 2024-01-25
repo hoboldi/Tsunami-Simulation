@@ -9,6 +9,7 @@
 #include "Scenarios/CheckpointScenario.h"
 #include "Scenarios/RadialDamBreakScenario.hpp"
 #include "Scenarios/TsunamiScenario.h"
+#include "Scenarios/WorldScenario.h"
 #include "Tools/Args.hpp"
 #include "Tools/Logger.hpp"
 #include "Tools/ProgressBar.hpp"
@@ -99,12 +100,12 @@ int main(int argc, char** argv) {
   Scenarios::Scenario* scenario;
 
   if (checkpointFile.empty()) {
-    auto tsunamiScenario = new Scenarios::TsunamiScenario();
-    // tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
-    tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
-    //tsunamiScenario->readScenario("artificialtsunami_bathymetry_1000.nc", "artificialtsunami_displ_1000.nc");
+    auto tsunamiScenario = new Scenarios::WorldScenario();
+    tsunamiScenario->readWorld("GEBCO_2023_TID.nc");
     scenario = tsunamiScenario;
-    // scenario = new Scenarios::ArtificialTsunamiScenario();
+    //TO CALL PATHFINDER
+    //PATHFINDER TO CALL PostEarthquake to Get new domain
+
   } else {
     scenario = new Scenarios::CheckpointScenario(checkpointFile);
   }

@@ -7,28 +7,16 @@
 #include <iostream>
 #include <netcdf.h>
 #include <netcdf>
-#include <netcdfcpp.h>
 #include <string>
 #include <utility>
 #include <vector>
+#include "Tools/Interval.h"
 
 #include "Scenario.hpp"
 
+typedef Tools::interval interval;
+
 namespace Scenarios {
-
-
-  struct interval {
-    RealType xleft;
-    RealType xright;
-    RealType yleft;
-    RealType yright;
-    RealType h;
-    RealType b;
-  };
-
-
-
-
 
   std::vector<std::vector<interval>> getInterval();
 

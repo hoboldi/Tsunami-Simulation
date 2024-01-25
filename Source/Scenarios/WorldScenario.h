@@ -7,32 +7,24 @@
 #include <iostream>
 #include <netcdf.h>
 #include <netcdf>
-#include <netcdfcpp.h>
 #include <string>
 #include <utility>
 #include <vector>
+#include "Tools/Interval.h"
 
 #include "Scenario.hpp"
 
+typedef Tools::interval interval;
+
 namespace Scenarios {
-
-
-  struct interval {
-    RealType xleft;
-    RealType xright;
-    RealType yleft;
-    RealType yright;
-    RealType h;
-    RealType b;
-  };
 
   std::vector<std::vector<interval>> getInterval();
 
 
-  namespace WorldScenario {
-    class PreEarthquake: public Scenario {
+
+    class WorldScenario: public Scenario {
     public:
-      ~PreEarthquake() override = default;
+      ~WorldScenario() override = default;
 
       /**
        * @brief A method to read from two netcdf files oen for bathymetry and for displacement.
@@ -43,14 +35,6 @@ namespace Scenarios {
 
       RealType getWaterHeight(RealType x, RealType y) const override;
       RealType getBathymetry(RealType x, RealType y) const override;
-    };
-
-    class PostEarthquake: public Scenario {
-    public:
-      ~PostEarthquake() override = default;
-
-      RealType getWaterHeight(RealType x, RealType y) const override;
-      RealType getBathymetry(RealType x, RealType y) const override;
 
       double getEndSimulationTime() const override;
       void   setEndSimulationTime(double time);
@@ -58,9 +42,7 @@ namespace Scenarios {
       RealType getBoundaryPos(BoundaryEdge edge) const override;
     private:
       double endSimulationTime;
+
+      void   adjustDomain(RealType bottomLeft, RealType topRight, bool isOverEdge);
     };
-  }
-
-
-
 } // namespace Scenarios

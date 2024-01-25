@@ -22,17 +22,17 @@ void Solvers::FWaveSolver::computeNetUpdates(
   RealType bLeft_ = bLeft;
   RealType bRight_ = bRight;
   //Left cell dry, right cell wet
-  if (bLeft >= 0 && bRight < 0) {
+  if (hLeft <= 0) {
     leftState[0] = rightState[0];
     leftState[1] = -rightState[1];
     bLeft_ = bRight;
   }
   //Left cell wet, right cell dry
-  else if (bLeft < 0 && bRight >= 0) {
+  else if (hRight <= 0) {
     rightState[0] = leftState[0];
     rightState[1] = -leftState[1];
     bRight_ = bLeft;
-  } else if (bLeft >= 0 && bRight >= 0) {
+  } else if (hLeft <= 0 && hRight <= 0) {
     o_hUpdateLeft = 0;
     o_huUpdateLeft = 0;
     o_hUpdateRight = 0;
@@ -40,6 +40,7 @@ void Solvers::FWaveSolver::computeNetUpdates(
     o_maxWaveSpeed = 0;
     return;
   }
+
   std::vector<RealType> eigenvalues = calculateEigenvalues(leftState, rightState);
   std::vector<RealType> effectOfBathymetry = calculateEffectOfBathymetry(leftState, rightState, bLeft_, bRight_);
   std::vector<RealType> alphas = calculateAlphas(eigenvalues, leftState, rightState, effectOfBathymetry);
@@ -55,12 +56,12 @@ void Solvers::FWaveSolver::computeNetUpdates(
   o_huUpdateRight = netUpdates[1][1];
   o_maxWaveSpeed = std::max(std::fabs(eigenvalues[0]), std::fabs(eigenvalues[1]));
   //Left cell dry, right cell wet
-  if (bLeft >= 0 && bRight < 0) {
+  if (hLeft <= 0) {
     o_hUpdateLeft = 0;
     o_huUpdateLeft = 0;
   }
   //Left cell wet, right cell dry
-  else if (bLeft < 0 && bRight >= 0) {
+  else if (hRight <= 0) {
     o_hUpdateRight = 0;
     o_huUpdateRight = 0;
   }

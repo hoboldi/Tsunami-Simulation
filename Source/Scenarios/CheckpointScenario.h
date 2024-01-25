@@ -8,7 +8,6 @@
 #include <iostream>
 #include <netcdf.h>
 #include <netcdf>
-#include <netcdfcpp.h>
 #include <string>
 #include <utility>
 #include <vector>
