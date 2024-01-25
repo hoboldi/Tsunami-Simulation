@@ -25,9 +25,10 @@ namespace Scenarios {
    * NetCDF Read Scenario
    */
   class TsunamiScenario: public Scenario {
+  private:
+    
   public:
     ~TsunamiScenario() override = default;
-
 
     RealType getWaterHeight(RealType x, RealType y) const override;
     RealType getBathymetry(RealType x, RealType y) const override;

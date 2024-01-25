@@ -1,18 +1,18 @@
+#pragma once
 #include "WorldScenario.h"
 
 #include <cfloat>
 
-unsigned long indexi = 0;
-unsigned long indexj = 0;
-double        offsetx;
-double        offsety;
-double        sizex;
-double        sizey;
-
+unsigned long indexiW = 0;
+unsigned long indexjW = 0;
+double        offsetxW;
+double        offsetyW;
+double        sizexW;
+double        sizeyW;
 
 namespace Scenarios {
-  std::vector<std::vector<interval>> intervals;
-  std::vector<std::vector<interval>> getInterval() { return intervals; }
+  std::vector<std::vector<interval>> intervalsW;
+  std::vector<std::vector<interval>> getIntervalW() { return intervalsW; }
 } // namespace Scenarios
 
 void Scenarios::WorldScenario::readWorld(std::string bathymetry) const {
@@ -22,7 +22,7 @@ void Scenarios::WorldScenario::readWorld(std::string bathymetry) const {
 
   retval = nc_open(bathymetry.c_str(), NC_NOWRITE, &bncid);
   assert(retval == NC_NOERR);
-
+  std::cout << "We're here" << std::endl;
   // Get the variables
   int    bx_dimid, by_dimid;
   int    bx_varid, by_varid, bz_varid;
@@ -59,24 +59,24 @@ void Scenarios::WorldScenario::readWorld(std::string bathymetry) const {
   retval = nc_get_var_double(bncid, bz_varid, bz_data);
   assert(retval == NC_NOERR);
 
-  offsetx = bx_data[0];
-  offsety = by_data[0];
+  offsetxW = bx_data[0];
+  offsetyW = by_data[0];
   if (bx_data[bxlen - 1] < 0) {
-    sizex = fabs(bx_data[0]) - fabs(bx_data[bxlen - 1]);
+    sizexW = fabs(bx_data[0]) - fabs(bx_data[bxlen - 1]);
   } else {
     if (bx_data[0] < 0) {
-      sizex = fabs(bx_data[bxlen - 1]) + fabs(bx_data[0]);
+      sizexW = fabs(bx_data[bxlen - 1]) + fabs(bx_data[0]);
     } else {
-      sizex = bx_data[bxlen - 1] - bx_data[0];
+      sizexW = bx_data[bxlen - 1] - bx_data[0];
     }
   }
   if (by_data[bylen - 1] < 0) {
-    sizey = fabs(by_data[0]) - fabs(by_data[bylen - 1]);
+    sizeyW = fabs(by_data[0]) - fabs(by_data[bylen - 1]);
   } else {
     if (by_data[0] < 0) {
-      sizey = fabs(by_data[bylen - 1]) + fabs(by_data[0]);
+      sizeyW = fabs(by_data[bylen - 1]) + fabs(by_data[0]);
     } else {
-      sizey = by_data[bylen - 1] - by_data[0];
+      sizeyW = by_data[bylen - 1] - by_data[0];
     }
   }
 
@@ -103,134 +103,135 @@ void Scenarios::WorldScenario::readWorld(std::string bathymetry) const {
     assert(byData[i] < byData[i + 1]);
   }
 
-  // Initialize Intervals
+  // Initialize intervalsW
   for (size_t i = 0; i < bxData.size(); ++i) {
     std::vector<interval> oneGrid;
     oneGrid.resize(byData.size());
-    intervals.push_back(oneGrid);
+    intervalsW.push_back(oneGrid);
   }
 
-  // Calculate Original Intervals
+  // Calculate Original intervalsW
 
   // i = 0, j = 0
-  intervals[0][0].xleft  = -DBL_MAX;
-  intervals[0][0].yleft  = -DBL_MAX;
-  intervals[0][0].xright = bxData[0];
-  intervals[0][0].yright = byData[0];
-  intervals[0][0].b      = bzData[0];
-  RealType bathy = intervals[0][0].b;
+  intervalsW[0][0].xleft  = -DBL_MAX;
+  intervalsW[0][0].yleft  = -DBL_MAX;
+  intervalsW[0][0].xright = bxData[0];
+  intervalsW[0][0].yright = byData[0];
+  intervalsW[0][0].b      = bzData[0];
+  RealType bathy = intervalsW[0][0].b;
   if(bathy < 20 && bathy >= 0){
     bathy = 20;
   }else if(bathy > -20 && bathy < 0){
     bathy = -20;
   }
-  intervals[0][0].h      = -fmin(bathy, 0);
+  intervalsW[0][0].h      = -fmin(bathy, 0);
 
   // First Line and Column
   for (size_t i = 1; i < bxData.size(); ++i) {
-    intervals[i - 1][0].xright = (intervals[i - 1][0].xright + bxData[i]) * 0.5;
+    intervalsW[i - 1][0].xright = (intervalsW[i - 1][0].xright + bxData[i]) * 0.5;
 
-    intervals[i][0].xleft  = intervals[i - 1][0].xright;
-    intervals[i][0].yleft  = -DBL_MAX;
-    intervals[i][0].xright = i != bxData.size() - 1 ? bxData[i] : DBL_MAX;
-    intervals[i][0].yright = byData[0];
-    intervals[i][0].b      = bzData[i];
-    bathy = intervals[i][0].b;
+    intervalsW[i][0].xleft  = intervalsW[i - 1][0].xright;
+    intervalsW[i][0].yleft  = -DBL_MAX;
+    intervalsW[i][0].xright = i != bxData.size() - 1 ? bxData[i] : DBL_MAX;
+    intervalsW[i][0].yright = byData[0];
+    intervalsW[i][0].b      = bzData[i];
+    bathy = intervalsW[i][0].b;
     if(bathy < 20 && bathy >= 0){
       bathy = 20;
     }else if(bathy > -20 && bathy < 0){
       bathy = -20;
     }
-    intervals[i][0].h      = -fmin(bathy, 0);
+    intervalsW[i][0].h      = -fmin(bathy, 0);
   }
 
   for (size_t j = 1; j < byData.size(); ++j) {
-    intervals[0][j - 1].yright = (intervals[0][j - 1].yright + byData[j]) * 0.5;
+    intervalsW[0][j - 1].yright = (intervalsW[0][j - 1].yright + byData[j]) * 0.5;
 
-    intervals[0][j].xleft  = -DBL_MAX;
-    intervals[0][j].yleft  = intervals[0][j - 1].yright;
-    intervals[0][j].xright = bxData[0];
-    intervals[0][j].yright = j != byData.size() - 1 ? byData[j] : DBL_MAX;
-    intervals[0][j].b      = bzData[j * bxData.size()];
-    bathy = intervals[0][j].b;
+    intervalsW[0][j].xleft  = -DBL_MAX;
+    intervalsW[0][j].yleft  = intervalsW[0][j - 1].yright;
+    intervalsW[0][j].xright = bxData[0];
+    intervalsW[0][j].yright = j != byData.size() - 1 ? byData[j] : DBL_MAX;
+    intervalsW[0][j].b      = bzData[j * bxData.size()];
+    bathy = intervalsW[0][j].b;
     if(bathy < 20 && bathy >= 0){
       bathy = 20;
     }else if(bathy > -20 && bathy < 0){
       bathy = -20;
     }
-    intervals[0][j].h      = -fmin(bathy, 0);
+    intervalsW[0][j].h      = -fmin(bathy, 0);
   }
 
 
   for (size_t i = 1; i < bxData.size(); ++i) {
     for (size_t j = 1; j < byData.size(); ++j) {
-      intervals[i - 1][j].xright = (intervals[i - 1][j].xright + bxData[i]) * 0.5;
-      intervals[i][j - 1].yright = (intervals[i][j - 1].yright + byData[j]) * 0.5;
+      intervalsW[i - 1][j].xright = (intervalsW[i - 1][j].xright + bxData[i]) * 0.5;
+      intervalsW[i][j - 1].yright = (intervalsW[i][j - 1].yright + byData[j]) * 0.5;
 
-      intervals[i][j].xleft  = intervals[i - 1][j].xright;
-      intervals[i][j].yleft  = intervals[i][j - 1].yright;
-      intervals[i][j].xright = i != bxData.size() - 1 ? bxData[i] : DBL_MAX;
-      intervals[i][j].yright = j != byData.size() - 1 ? byData[j] : DBL_MAX;
-      intervals[i][j].b      = bzData[j * bxData.size() + i];
-      bathy = intervals[i][j].b;
+      intervalsW[i][j].xleft  = intervalsW[i - 1][j].xright;
+      intervalsW[i][j].yleft  = intervalsW[i][j - 1].yright;
+      intervalsW[i][j].xright = i != bxData.size() - 1 ? bxData[i] : DBL_MAX;
+      intervalsW[i][j].yright = j != byData.size() - 1 ? byData[j] : DBL_MAX;
+      intervalsW[i][j].b      = bzData[j * bxData.size() + i];
+      bathy = intervalsW[i][j].b;
       if(bathy < 20 && bathy >= 0){
         bathy = 20;
       }else if(bathy > -20 && bathy < 0){
         bathy = -20;
       }
-      intervals[i][j].h      = -fmin(bathy, 0);
+      intervalsW[i][j].h      = -fmin(bathy, 0);
     }
   }
   // close the file
   nc_close(bncid);
-  indexi = 0;
-  indexj = 0;
+  indexiW = 0;
+  indexjW = 0;
 
   delete[] bz_data;
+  std::cout << "Just a test" << std::endl;
 }
 
 RealType Scenarios::WorldScenario::getWaterHeight(RealType x, RealType y) const {
-  x += offsetx;
-  y += offsety;
-  while (x < intervals[indexi][indexj].xleft) {
-    indexi--;
+  x += offsetxW;
+  y += offsetyW;
+  while (x < intervalsW[indexiW][indexjW].xleft) {
+    indexiW--;
   }
-  while (x > intervals[indexi][indexj].xright) {
-    indexi++;
+  while (x > intervalsW[indexiW][indexjW].xright) {
+    indexiW++;
   }
-  while (y < intervals[indexi][indexj].yleft) {
-    indexj--;
+  while (y < intervalsW[indexiW][indexjW].yleft) {
+    indexjW--;
   }
-  while (y > intervals[indexi][indexj].yright) {
-    indexj++;
+  while (y > intervalsW[indexiW][indexjW].yright) {
+    indexjW++;
   }
-  return intervals[indexi][indexj].h;
+  return intervalsW[indexiW][indexjW].h;
 }
 
 
 RealType Scenarios::WorldScenario::getBathymetry([[maybe_unused]] RealType x, [[maybe_unused]] RealType y) const {
-  x += offsetx;
-  y += offsety;
-  while (x < intervals[indexi][indexj].xleft) {
-    indexi--;
+  x += offsetxW;
+  y += offsetyW;
+  while (x < intervalsW[indexiW][indexjW].xleft) {
+    indexiW--;
   }
-  while (x > intervals[indexi][indexj].xright) {
-    indexi++;
+  while (x > intervalsW[indexiW][indexjW].xright) {
+    indexiW++;
   }
-  while (y < intervals[indexi][indexj].yleft) {
-    indexj--;
+  while (y < intervalsW[indexiW][indexjW].yleft) {
+    indexjW--;
   }
-  while (y > intervals[indexi][indexj].yright) {
-    indexj++;
+  while (y > intervalsW[indexiW][indexjW].yright) {
+    indexjW++;
   }
-  if (intervals[indexi][indexj].b < 20 && intervals[indexi][indexj].b >= 0) {
+  if (intervalsW[indexiW][indexjW].b < 20 && intervalsW[indexiW][indexjW].b >= 0) {
     return 20;
   }
-  if (intervals[indexi][indexj].b > -20 && intervals[indexi][indexj].b < 0) {
+  if (intervalsW[indexiW][indexjW].b > -20 && intervalsW[indexiW][indexjW].b < 0) {
     return -20;
   }
 
-  return intervals[indexi][indexj].b;
+  return intervalsW[indexiW][indexjW].b;
 }
 
 void Scenarios::WorldScenario::adjustDomain(RealType bottomLeft, RealType topRight, bool isOverEdge) {
@@ -248,10 +249,10 @@ RealType Scenarios::WorldScenario::getBoundaryPos(BoundaryEdge edge) const {
   if (edge == BoundaryEdge::Left) {
     return RealType(0.0);
   } else if (edge == BoundaryEdge::Right) {
-    return sizex;
+    return sizexW;
   } else if (edge == BoundaryEdge::Bottom) {
     return RealType(0.0);
   } else {
-    return sizey;
+    return sizeyW;
   }
 }

@@ -43,7 +43,7 @@ namespace Scenarios {
     * 
     * @return RealType 
     */
-   RealType Scenarios::EarthquakeScenario::getStartingWaveHeight() const;
+   RealType getStartingWaveHeight() const;
 
    /**
     * @brief A Method used to calculate the estimated max wave height based on data found in https://www.scirp.org/journal/paperinformation?paperid=76149#:~:text=The%20tsunami%20heights%20documented%20correspond,to%20high%2Dmagnitude%20seismic%20events.
@@ -52,7 +52,7 @@ namespace Scenarios {
     * 
     * @return height: The max wave height calculated 
     */
-   RealType Scenarios::EarthquakeScenario::getMaxWaveHeight() const;
+   RealType getMaxWaveHeight() const;
  };
 
 } // namespace Scenarios

@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
   int         boundaryConditions = args.getArgument<int>("boundary-conditions", 1111); // Default is 1111: Outflow for all Edges
   std::string checkpointFile     = args.getArgument<std::string>("checkpoint-file", "");
   int         coarse             = args.getArgument<int>("coarse", 0);                 // Default is 0 if no coarse should be used
-  RealType    magnitude          = args.getArgument<RealType("magnitude", 0);
+  RealType    magnitude          = args.getArgument<RealType>("magnitude", 0);
   RealType    richter            = args.getArgument<RealType>("richter-scale", 0);
   int         destinationX       = args.getArgument<int>("destinationX", 0);
   int         destinationY       = args.getArgument<int>("destinationY", 0); 
