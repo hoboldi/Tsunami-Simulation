@@ -14,7 +14,13 @@ Scenarios::EarthquakeScenario::EarthquakeScenario(int epicenterX, int epicenterY
 
 RealType Scenarios::EarthquakeScenario::getStartingWaveHeight() const
 {
-    
+    RealType maxHeight = getMaxWaveHeight();
+    // We use the equation found here: https://en.wikipedia.org/wiki/Green%27s_law#:~:text=In%20fluid%20dynamics%2C%20Green's%20law,gradually%20varying%20depth%20and%20width.
+    // H1 * foruth root of h1 = H2 * fourth root of h2
+    // H1 and H2 are the wave heights in 2 places, h1 and h2 being the corresponding water heights
+    // Since we only try and calculate until a water height of 50m, we use that as the value for h1, and h2 being tha depth in the epicenter-cell
+    RealType startingHeight = (maxHeight * std::pow(50, 1.0/4)) / std::pow(heightInEpicenter, 1.0/4);
+
 }
 
 RealType Scenarios::EarthquakeScenario::getMaxWaveHeight() const
