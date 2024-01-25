@@ -66,8 +66,6 @@ RealType richterToMagnitude(RealType richter)
  * @param restY [in] The amount of leftover cells in Y direction that don't form a full group
  * @return [out] The array of coarsed values which can then be printed
  */
-
-
 int main(int argc, char** argv) {
   Tools::Args args;
   args.addOption("grid-size-x", 'x', "Number of cells in x direction");
