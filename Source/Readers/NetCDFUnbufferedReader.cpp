@@ -39,7 +39,7 @@ Readers::NetCDFUnbufferedReader::NetCDFUnbufferedReader(const std::string& filen
 
 
 }
-double Readers::NetCDFUnbufferedReader::readUnbuffered(const int x, const int y) const {
+double Readers::NetCDFUnbufferedReader::readUnbuffered(int x, int y) const {
   double data;
   size_t indexptr[2] = {static_cast<size_t>(x), static_cast<size_t>(y)};
   int retval = nc_get_var1_double(fileID_, zVarID_, indexptr, &data);

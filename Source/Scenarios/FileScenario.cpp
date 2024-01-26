@@ -12,7 +12,7 @@ Scenarios::FileScenario::FileScenario(const std::string& bathymetry, int numCell
   dx_ = xDim / numCellsX;
   dy_ = yDim / numCellsY;
 }
-RealType Scenarios::FileScenario::getBathymetry(const RealType x, const RealType y) const {
+inline RealType Scenarios::FileScenario::getBathymetry(const RealType x, const RealType y) const {
   if(x < 0 || x > xDim || y < 0 || y > yDim){
     return 0;
   }
@@ -27,7 +27,7 @@ RealType Scenarios::FileScenario::getBathymetry(const RealType x, const RealType
     return val;
   }
 }
-RealType Scenarios::FileScenario::getWaterHeight(const RealType x, const RealType y) const {
+inline RealType Scenarios::FileScenario::getWaterHeight(const RealType x, const RealType y) const {
   if(x < 0 || x > xDim || y < 0 || y > yDim){
     return 0;
   }

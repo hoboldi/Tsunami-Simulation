@@ -8,7 +8,7 @@ namespace Readers{
     public:
       explicit NetCDFUnbufferedReader(const std::string& filename);
 
-      double readUnbuffered(const int x, const int y) const;
+      [[nodiscard]] double readUnbuffered(int x, int y) const;
 
       size_t getXDim() const { return xDim; }
       size_t getYDim() const { return yDim; }
