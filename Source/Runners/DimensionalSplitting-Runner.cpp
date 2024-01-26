@@ -7,15 +7,16 @@
 #include "Readers/NetCDFReader.h"
 #include "Scenarios/ArtificialTsunamiScenario.h"
 #include "Scenarios/CheckpointScenario.h"
+#include "Scenarios/FileScenario.h"
 #include "Scenarios/RadialDamBreakScenario.hpp"
 #include "Scenarios/TsunamiScenario.h"
 #include "Scenarios/WorldScenario.h"
 #include "Tools/Args.hpp"
+#include "Tools/Coarse.h"
 #include "Tools/Logger.hpp"
 #include "Tools/ProgressBar.hpp"
 #include "Writers/NetCDFWriter.hpp"
 #include "Writers/Writer.hpp"
-#include "Tools/Coarse.h"
 #ifdef ENABLE_OPENMP
 #include <omp.h>
 #endif
@@ -138,8 +139,8 @@ int main(int argc, char** argv) {
   Scenarios::Scenario* scenario;
 
   if (checkpointFile.empty()) {
-    auto tsunamiScenario = new Scenarios::WorldScenario();
-    tsunamiScenario->readWorld("GEBCO_2023_TID.nc");
+    auto tsunamiScenario = new Scenarios::FileScenario("GEBCO_2023_TID.nc", numberOfGridCellsX, numberOfGridCellsY);
+    //tsunamiScenario->readWorld();
     scenario = tsunamiScenario;
     //TO CALL PATHFINDER
     //PATHFINDER TO CALL PostEarthquake to Get new domain
@@ -173,7 +174,9 @@ int main(int argc, char** argv) {
   RealType cellSizeY = (scenario->getBoundaryPos(BoundaryEdge::Top) - scenario->getBoundaryPos(BoundaryEdge::Bottom)) / numberOfGridCellsY;
 
   auto waveBlock = new Blocks::DimensionalSplitting(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY);
+  Tools::Logger::logger.printString("Init Waveblock");
   waveBlock->initialiseScenario(0, 0, *scenario);
+  Tools::Logger::logger.printString("Init finished");
 
   double* checkPoints = new double[numberOfCheckPoints + 1];
 
