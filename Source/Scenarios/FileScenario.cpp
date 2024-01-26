@@ -5,8 +5,9 @@
 #include "FileScenario.h"
 
 #include <cmath>
-Scenarios::FileScenario::FileScenario(const std::string& bathymetry, int numCellsX, int numCellsY):
-  reader_(bathymetry){
+Scenarios::FileScenario::FileScenario(const std::string& bathymetry, int numCellsX, int numCellsY, int offsetX):
+  reader_(bathymetry),
+  offsetX_(offsetX){
   xDim = static_cast<double>(reader_.getYDim());
   yDim = static_cast<double>(reader_.getXDim());
   dx_ = xDim / numCellsX;
@@ -16,7 +17,9 @@ inline RealType Scenarios::FileScenario::getBathymetry(const RealType x, const R
   if(x < 0 || x > xDim || y < 0 || y > yDim){
     return 0;
   }
-  int    y_index = (x ) + 0.5 * dx_;
+
+  int    y_index = (offsetX_ + x) + 0.5 * dx_;
+  y_index %= static_cast<int>(xDim);
   int    x_index = (y ) + 0.5 * dy_;
   double val     = reader_.readUnbuffered(x_index, y_index);
   if (val < 20 && val >= 0) {
@@ -31,7 +34,8 @@ inline RealType Scenarios::FileScenario::getWaterHeight(const RealType x, const 
   if(x < 0 || x > xDim || y < 0 || y > yDim){
     return 0;
   }
-  int   y_index = (x ) + 0.5 * dx_;
+  int   y_index = (offsetX_ + x) + 0.5 * dx_;
+  y_index %= static_cast<int>(xDim);
   int   x_index = (y) + 0.5 * dy_;
   double val     = reader_.readUnbuffered(x_index, y_index);
 
