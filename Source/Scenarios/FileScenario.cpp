@@ -18,9 +18,9 @@ inline RealType Scenarios::FileScenario::getBathymetry(const RealType x, const R
     return 0;
   }
 
-  int    y_index = (offsetX_ + x) + 0.5 * dx_;
+  int    y_index = (offsetX_ + x);
   y_index %= static_cast<int>(xDim);
-  int    x_index = (y ) + 0.5 * dy_;
+  int    x_index = (y );
   double val     = reader_.readUnbuffered(x_index, y_index);
   if (val < 20 && val >= 0) {
     return 20;
@@ -34,9 +34,9 @@ inline RealType Scenarios::FileScenario::getWaterHeight(const RealType x, const 
   if(x < 0 || x > xDim || y < 0 || y > yDim){
     return 0;
   }
-  int   y_index = (offsetX_ + x) + 0.5 * dx_;
+  int   y_index = (offsetX_ + x);
   y_index %= static_cast<int>(xDim);
-  int   x_index = (y) + 0.5 * dy_;
+  int   x_index = (y);
   double val     = reader_.readUnbuffered(x_index, y_index);
 
   if (val < 20 && val >= 0) {
