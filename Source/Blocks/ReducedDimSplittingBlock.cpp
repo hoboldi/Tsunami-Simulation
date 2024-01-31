@@ -301,3 +301,10 @@ void Blocks::ReducedDimSplittingBlock::updateUnknowns(RealType dt) {
     }
   }
 }
+void Blocks::ReducedDimSplittingBlock::setStartCell(std::pair<int, int> startCell) {
+  startCell_ = startCell;
+}
+
+void Blocks::ReducedDimSplittingBlock::setEndCell(std::pair<int, int> endCell) {
+  endCell_ = endCell;
+}

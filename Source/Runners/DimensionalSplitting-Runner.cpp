@@ -218,8 +218,13 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.initWallClockTime(wallClockTime);
 
 #if defined(ENABLE_GUI)
-  Gui::Gui gui = Gui::Gui(bathyCopy);
+  Gui::Gui gui = Gui::Gui(waveBlock->getBathymetry(), scenario->getBoundaryPos(BoundaryEdge::Right), scenario->getBoundaryPos(BoundaryEdge::Top));
+  auto startEnd = gui.getStartEnd(waveBlock->getWaterHeight());
+  waveBlock->setStartCell(startEnd.first);
+  waveBlock->setEndCell(startEnd.second);
+  std::cout << "Start: " << std::endl;
   waveBlock->findSearchArea(gui);
+  std::cout << "found search area" << std::endl;
 #else
   waveBlock->findSearchArea();
 #endif

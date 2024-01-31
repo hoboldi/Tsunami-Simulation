@@ -21,6 +21,9 @@ namespace Blocks {
      */
     void findSearchArea();
 
+    void setStartCell(std::pair<int, int> startCell);
+    void setEndCell(std::pair<int, int> endCell);
+
     void computeNumericalFluxes() override;
 
     void updateUnknowns(RealType dt) override;
