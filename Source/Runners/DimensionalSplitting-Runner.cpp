@@ -141,9 +141,15 @@ int main(int argc, char** argv) {
   if (checkpointFile.empty()) {
     if (magnitude != 0)
     {
+      /*replaced world scenario with the File Scenario, this si jsut for the sake of testing
+
       auto worldScenario = new Scenarios::WorldScenario(epicenterX, epicenterY, magnitude);
       worldScenario->readWorld("GEBCO_2023_TID.nc");
       scenario = worldScenario;
+      */
+      auto fileScenario = new Scenarios::FileScenario("GEBCO_2023_TID.nc", numberOfGridCellsX, numberOfGridCellsY, 0, epicenterX, epicenterY, magnitude);
+      fileScenario->readWorld();
+      scenario = fileScenario;
     }
     else
     {
