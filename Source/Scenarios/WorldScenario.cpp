@@ -204,7 +204,7 @@ RealType Scenarios::WorldScenario::getStartingWaveHeight() const
     // H1 * foruth root of h1 = H2 * fourth root of h2
     // H1 and H2 are the wave heights in 2 places, h1 and h2 being the corresponding water heights
     // Since we only try and calculate until a water height of 50m, we use that as the value for h1, and h2 being tha depth in the epicenter-cell
-    RealType startingHeight = (maxHeight * std::pow(50, 1.0/4)) / std::pow(heightInEpicenter, 1.0/4);
+    RealType startingHeight = (maxHeight * std::pow(50, 1.0/4)) / std::pow(-1 * getBathymetry(x, y), 1.0/4);
 }
 
 RealType Scenarios::WorldScenario::getMaxWaveHeight() const
@@ -234,6 +234,12 @@ RealType Scenarios::WorldScenario::getWaterHeight(RealType x, RealType y) const 
   while (y > intervalsW[indexiW][indexjW].yright) {
     indexjW++;
   }
+  //Starting wave height if epicenter is in the same interval
+  if (epicenterX >= intervalsW[indexiW][indexjW].xleft && epicenterX <= intervalsW[indexiW][indexjW].xright && epicenterY >= intervalsW[indexiW][indexjW].yleft && epicenterY <= intervalsW[indexiW][indexjW].yright)
+  {
+    return getStartingWaveHeight();
+  }
+  //Normal height return when epicenter not in same cell
   return intervalsW[indexiW][indexjW].h;
 }
 
