@@ -15,6 +15,13 @@ namespace Scenarios {
   std::vector<std::vector<interval>> getIntervalW() { return intervalsW; }
 } // namespace Scenarios
 
+Scenarios::WorldScenario::WorldScenario(RealType epicenterX, RealType epicenterY, RealType magnitude, RealType bathymetryInEpicenter)
+{
+    this->epicenterX = epicenterX;
+    this-> epicenterY = epicenterY;
+    this->magnitude = magnitude;
+}
+
 void Scenarios::WorldScenario::readWorld(std::string bathymetry) const {
   // Read Bathymetry
   int bncid, bvarid;
@@ -188,6 +195,28 @@ void Scenarios::WorldScenario::readWorld(std::string bathymetry) const {
 
   delete[] bz_data;
   std::cout << "Just a test" << std::endl;
+}
+
+RealType Scenarios::WorldScenario::getStartingWaveHeight() const
+{
+    RealType maxHeight = getMaxWaveHeight();
+    // We use the equation found here: https://en.wikipedia.org/wiki/Green%27s_law#:~:text=In%20fluid%20dynamics%2C%20Green's%20law,gradually%20varying%20depth%20and%20width.
+    // H1 * foruth root of h1 = H2 * fourth root of h2
+    // H1 and H2 are the wave heights in 2 places, h1 and h2 being the corresponding water heights
+    // Since we only try and calculate until a water height of 50m, we use that as the value for h1, and h2 being tha depth in the epicenter-cell
+    RealType startingHeight = (maxHeight * std::pow(50, 1.0/4)) / std::pow(heightInEpicenter, 1.0/4);
+}
+
+RealType Scenarios::WorldScenario::getMaxWaveHeight() const
+{
+    if (magnitude < 6.51)
+    {
+        return 0;
+    }
+    else
+    {
+        return (7,6875 * magnitude) - 50,0417;
+    }
 }
 
 RealType Scenarios::WorldScenario::getWaterHeight(RealType x, RealType y) const {

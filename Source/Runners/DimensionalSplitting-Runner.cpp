@@ -138,9 +138,18 @@ int main(int argc, char** argv) {
   Scenarios::Scenario* scenario;
 
   if (checkpointFile.empty()) {
-    auto tsunamiScenario = new Scenarios::WorldScenario();
-    tsunamiScenario->readWorld("GEBCO_2023_TID.nc");
-    scenario = tsunamiScenario;
+    if (magnitude != 0)
+    {
+      auto worldScenario = new Scenarios::WorldScenario(epicenterX, epicenterY, magnitude);
+      worldScenario->readWorld("GEBCO_2023_TID.nc");
+      scenario = worldScenario;
+    }
+    else
+    {
+      auto tsunamiScenario = new Scenarios::TsunamiScenario();
+      tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
+      scenario = tsunamiScenario;
+    }
     //TO CALL PATHFINDER
     //PATHFINDER TO CALL PostEarthquake to Get new domain
 

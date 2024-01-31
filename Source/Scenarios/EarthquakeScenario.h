@@ -9,14 +9,14 @@ namespace Scenarios {
 
  class EarthquakeScenario: public Scenario {
  private:
-    int epicenterX;
-    int epicenterY;
+    RealType epicenterX;
+    RealType epicenterY;
     RealType magnitude;
     RealType startingWaveHeight;
     RealType heightInEpicenter;
  public:
  //Important: We calculate using the moment magnitude Mw, not the magnitude of the richter scale, since it's more accurate and prominent in scientific circles
-    EarthquakeScenario(int epicenterX, int epicenterY, RealType Magnitude, RealType bathymetryInEpicenter);
+    EarthquakeScenario(RealType epicenterX, RealType epicenterY, RealType Magnitude, RealType bathymetryInEpicenter);
    ~EarthquakeScenario() override = default;
 
    RealType getWaterHeight(RealType x, RealType y) const override;

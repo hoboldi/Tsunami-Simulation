@@ -4,7 +4,7 @@
 
 #include <cmath>
 
-Scenarios::EarthquakeScenario::EarthquakeScenario(int epicenterX, int epicenterY, RealType magnitude, RealType bathymetryInEpicenter)
+Scenarios::EarthquakeScenario::EarthquakeScenario(RealType epicenterX, RealType epicenterY, RealType magnitude, RealType bathymetryInEpicenter)
 {
     this->epicenterX = epicenterX;
     this-> epicenterY = epicenterY;
