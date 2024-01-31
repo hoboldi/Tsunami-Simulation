@@ -85,6 +85,8 @@ void Blocks::ReducedDimSplittingBlock::findSearchArea(Gui::Gui& gui) {
 
         int newX = current->x + dx;
         int newY = current->y + dy;
+        if(newX < 0 || newX >= nx_ || newY < 0 || newY >= ny_)
+          continue; // Skip out of bounds cells
 
         // Check for valid cell, no obstacle, and not visited
         if (b_[newX][newY] < 0 && heightView[newX][newY] != FLT_MAX ) {

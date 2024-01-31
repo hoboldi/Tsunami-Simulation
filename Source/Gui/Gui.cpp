@@ -12,7 +12,7 @@ Gui::Gui::Gui(const Tools::Float2D<RealType>& b, int width, int height) :
   colorMax(new float[4]{1.0f, 0.0f, 0.0f, 1.0f}),
   clipMin(0.0f),
   clipMax(4.0f),
-  b_{b}
+  b_{b, false}
 {
   if (!glfwInit()) {
     std::cout << "Failed to initialize GLFW" << std::endl;
@@ -132,8 +132,8 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h, double time){
   unsigned long dataSize = b_.getSize();
 
   auto data = new GLfloat[dataSize + 2 * b_.getCols() + 2 * b_.getRows()];
-  int x = b_.getCols();
-  int y = b_.getRows();
+  int x = b_.getCols() -2;
+  int y = b_.getRows() -2;
   // copy data from 2d h to 1d data
   for (int i = 0; i < x; ++i) {
     for (int j = 0; j < y; ++j) {
@@ -330,6 +330,9 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Gui::Gui::getStartEnd(const 
     mousePosInWindow.y = (b_.getRows() - 2) - mousePosInWindow.y;
     ImGuiIO& io = ImGui::GetIO();
     if (!io.WantCaptureMouse && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+      if(mousePosInWindow.x < 0 || mousePosInWindow.x > b_.getCols() - 2 || mousePosInWindow.y < 0 || mousePosInWindow.y > b_.getRows() - 2){
+        continue;
+      }
       if (!startSet && start.first == -1 && start.second == -1) {
         start    = {mousePosInWindow.x, mousePosInWindow.y};
         startSet = true;
