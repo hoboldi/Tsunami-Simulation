@@ -129,18 +129,17 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h, double time){
   ImGui::NewFrame();
 
 
-  unsigned long dataSize = b_.getSize();
+  unsigned long dataSize = b_.getSize() * sizeof(GLfloat);
 
-  auto data = new GLfloat[dataSize + 2 * b_.getCols() + 2 * b_.getRows()];
-  int x = b_.getCols() -2;
-  int y = b_.getRows() -2;
+  auto data = new GLfloat[dataSize];
+  int x = b_.getCols();
+  int y = b_.getRows();
   // copy data from 2d h to 1d data
   for (int i = 0; i < x; ++i) {
     for (int j = 0; j < y; ++j) {
       data[i* x + j] = static_cast<GLfloat>(h[j][i] + b_[j][i]);
     }
   }
-
 
   ImGui::Begin("Color Map");
   ImGui::ColorEdit4("Color for Min value", colorMin, ImGuiColorEditFlags_NoInputs);
@@ -165,7 +164,7 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h, double time){
   // Update vertex buffer object with new data
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * dataSize, data, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   // calculate point size based on window size and data size
@@ -273,11 +272,11 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Gui::Gui::getStartEnd(const 
   bool endSet = false;
 
 
-  unsigned long dataSize = h.getSize();
+  unsigned long dataSize = h.getSize() * sizeof(GLfloat);
   std::cout << "dataSize: " << dataSize<< " " << b_.getCols() << " " << b_.getRows() << std::endl;
   std::cout << "h size: " << h.getSize() << " " << h.getCols() << " " << h.getRows() << std::endl;
 
-  auto data = new GLfloat[dataSize + 2 * b_.getCols() + 2 * b_.getRows()];
+  auto data = new GLfloat[dataSize];
   int x = b_.getCols();
   int y = b_.getRows();
   // copy data from 2d h to 1d data
@@ -311,7 +310,7 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Gui::Gui::getStartEnd(const 
     ImGui::NewFrame();
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * dataSize, data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     ImGui::Begin("Pick start and end points");
     ImGui::Text("Width: %d", b_.getCols() - 2);
