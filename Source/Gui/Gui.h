@@ -44,6 +44,7 @@ namespace Gui {
     float                     clipMin, clipMax;
     GLint                     clipMaxLoc, clipMinLoc;
     const Tools::Float2D<RealType> b_;
+    GLfloat*                  data;
     void                      setupShaders();
   };
 

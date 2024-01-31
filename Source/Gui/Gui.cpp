@@ -54,6 +54,9 @@ Gui::Gui::Gui(const Tools::Float2D<RealType>& b, int width, int height) :
                                                         // Setup Dear ImGui style
   ImGui::StyleColorsDark();
   // ImGui::StyleColorsLight();
+  unsigned long dataSize = b_.getSize() * sizeof(GLfloat);
+
+  data = new GLfloat[dataSize];
 
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -97,6 +100,7 @@ Gui::Gui::Gui(const Tools::Float2D<RealType>& b, int width, int height) :
 }
 Gui::Gui::~Gui() {
   // Cleanup resources (delete shaders, buffers, etc.)
+  delete[] data;
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
   glDeleteProgram(programID);
@@ -128,10 +132,8 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h, double time){
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-
   unsigned long dataSize = b_.getSize() * sizeof(GLfloat);
 
-  auto data = new GLfloat[dataSize];
   int x = b_.getCols();
   int y = b_.getRows();
   // copy data from 2d h to 1d data
@@ -189,7 +191,7 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h, double time){
   if (error != GL_NO_ERROR) {
     std::cout << "OpenGL error: " << error << std::endl;
   }
-  delete[] data;
+
 }
 void Gui::Gui::setupShaders() {
 
@@ -276,7 +278,6 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Gui::Gui::getStartEnd(const 
   std::cout << "dataSize: " << dataSize<< " " << b_.getCols() << " " << b_.getRows() << std::endl;
   std::cout << "h size: " << h.getSize() << " " << h.getCols() << " " << h.getRows() << std::endl;
 
-  auto data = new GLfloat[dataSize];
   int x = b_.getCols();
   int y = b_.getRows();
   // copy data from 2d h to 1d data
@@ -372,6 +373,6 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Gui::Gui::getStartEnd(const 
     // Swap the front and back buffers
     glfwSwapBuffers(window);
   }
-  delete[] data;
+
   return std::make_pair(start, end);
 }
