@@ -151,8 +151,8 @@ void Blocks::Block::initialiseScenario(
   offsetY_ = offsetY;
 
   // Initialize water height and discharge
-  for (int i = 1; i <= nx_; i++) {
-    for (int j = 1; j <= ny_; j++) {
+  for (int j = 1; j <= nx_; j++) {
+    for (int i = 1; i <= ny_; i++) {
       RealType x = offsetX + (i - RealType(0.5)) * dx_;
       RealType y = offsetY + (j - RealType(0.5)) * dy_;
       h_[i][j]   = scenario.getWaterHeight(x, y);
@@ -162,8 +162,8 @@ void Blocks::Block::initialiseScenario(
   }
 
   // Initialize bathymetry
-  for (int i = 0; i <= nx_ + 1; i++) {
-    for (int j = 0; j <= ny_ + 1; j++) {
+  for (int j = 0; j <= nx_ + 1; j++) {
+    for (int i = 0; i <= ny_ + 1; i++) {
       b_[i][j] = scenario.getBathymetry(offsetX + (i - RealType(0.5)) * dx_, offsetY + (j - RealType(0.5f)) * dy_);
     }
   }
