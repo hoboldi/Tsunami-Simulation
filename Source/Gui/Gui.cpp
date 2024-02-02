@@ -376,3 +376,8 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Gui::Gui::getStartEnd(const 
 
   return std::make_pair(start, end);
 }
+
+void Gui::Gui::setBathymetry(Tools::Float2D<RealType>& b) {
+  b_ = b;
+}
+

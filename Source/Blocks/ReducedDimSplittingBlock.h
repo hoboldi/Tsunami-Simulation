@@ -28,6 +28,11 @@ namespace Blocks {
 
     void updateUnknowns(RealType dt) override;
 
+    /**
+     * @brief Shifts the data-arrays b and h by half of their lengths to the right. The right half of the arrays is then wrapped around to the left half.
+     */
+    void shiftData();
+
 
   private:
     // pair of coordinates of the startcell for the search (epicenter)

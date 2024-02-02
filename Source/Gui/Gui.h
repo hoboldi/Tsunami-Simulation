@@ -32,6 +32,8 @@ namespace Gui {
     std::pair<std::pair<int, int>, std::pair<int, int>> getStartEnd(const Tools::Float2D<RealType>& h);
     ~Gui();
 
+    void setBathymetry(Tools::Float2D<RealType>& b);
+
 
   private:
     GLFWwindow*               window;
@@ -43,7 +45,7 @@ namespace Gui {
     float *                   colorMin, *colorMax;
     float                     clipMin, clipMax;
     GLint                     clipMaxLoc, clipMinLoc;
-    const Tools::Float2D<RealType> b_;
+    Tools::Float2D<RealType> b_;
     GLfloat*                  data;
     void                      setupShaders();
   };

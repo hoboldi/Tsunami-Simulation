@@ -32,6 +32,15 @@ struct CompareCell {
 std::pair<int, int> Cell::goal;
 
 void Blocks::ReducedDimSplittingBlock::findSearchArea(Gui::Gui& gui) {
+  //if the x-distance between start and end cell is bigger than nx/2, shift the data and get a pacific focused map
+  if(abs(startCell_.first - endCell_.first) > nx_ / 2) {
+    shiftData();
+    startCell_.first = (startCell_.first + nx_ / 2) % nx_;
+    endCell_.first = (endCell_.first + nx_ / 2) % nx_;
+    gui.setBathymetry(b_);
+    gui.update(h_, 0.0);
+  }
+
   Tools::Float2D<RealType> heightView(h_, false);
   Cell::goal = endCell_;
 
@@ -109,6 +118,13 @@ void Blocks::ReducedDimSplittingBlock::findSearchArea(Gui::Gui& gui) {
   topCorner_.second    = std::min(ny_ - 1, maxY + offset);
 }
 void Blocks::ReducedDimSplittingBlock::findSearchArea() {
+  //if the x-distance between start and end cell is bigger than nx/2, shift the data and get a pacific focused map
+  if(abs(startCell_.first - endCell_.first) > nx_ / 2) {
+    shiftData();
+    startCell_.first = (startCell_.first + nx_ / 2) % nx_;
+    endCell_.first = (endCell_.first + nx_ / 2) % nx_;
+  }
+
   Tools::Float2D<RealType> heightView(h_, false);
   Cell::goal = endCell_;
 
@@ -309,4 +325,31 @@ void Blocks::ReducedDimSplittingBlock::setStartCell(std::pair<int, int> startCel
 
 void Blocks::ReducedDimSplittingBlock::setEndCell(std::pair<int, int> endCell) {
   endCell_ = endCell;
+}
+void Blocks::ReducedDimSplittingBlock::shiftData() {
+  // shift bathymetry half of nx to the right and roll the rest to the left
+  for (int j = 0; j < ny_; ++j) {
+    b_[0][j] = b_[nx_ / 2][j];
+  }
+  for(int i = 1; i < nx_ / 2; i++) {
+    for (int j = 0; j < ny_; ++j) {
+      double tmp = b_[i][j];
+      b_[i][j] = b_[i + nx_ / 2][j];
+      b_[i + nx_ / 2][j] = tmp;
+    }
+  }
+
+
+  // shift h_ half of nx to the right and roll the rest to the left
+  for(int j = 0; j < ny_; ++j) {
+    h_[0][j] = h_[nx_ / 2][j];
+  }
+  for(int i = 1; i < nx_ / 2; i++) {
+    for (int j = 0; j < ny_; ++j) {
+      double tmp = h_[i][j];
+      h_[i][j] = h_[i + nx_ / 2][j];
+      h_[i + nx_ / 2][j] = tmp;
+    }
+  }
+
 }
