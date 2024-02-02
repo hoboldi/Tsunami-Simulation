@@ -15,7 +15,7 @@ namespace Scenarios {
   std::vector<std::vector<interval>> getIntervalW() { return intervalsW; }
 } // namespace Scenarios
 
-Scenarios::WorldScenario::WorldScenario(RealType epicenterX, RealType epicenterY, RealType magnitude, RealType bathymetryInEpicenter)
+Scenarios::WorldScenario::WorldScenario(RealType epicenterX, RealType epicenterY, RealType magnitude)
 {
     this->epicenterX = epicenterX;
     this-> epicenterY = epicenterY;
@@ -204,7 +204,7 @@ RealType Scenarios::WorldScenario::getStartingWaveHeight() const
     // H1 * foruth root of h1 = H2 * fourth root of h2
     // H1 and H2 are the wave heights in 2 places, h1 and h2 being the corresponding water heights
     // Since we only try and calculate until a water height of 50m, we use that as the value for h1, and h2 being tha depth in the epicenter-cell
-    RealType startingHeight = (maxHeight * std::pow(50, 1.0/4)) / std::pow(-1 * getBathymetry(x, y), 1.0/4);
+    RealType startingHeight = (maxHeight * std::pow(50, 1.0/4)) / std::pow(-1 * getBathymetry(epicenterX, epicenterY), 1.0/4);
 }
 
 RealType Scenarios::WorldScenario::getMaxWaveHeight() const

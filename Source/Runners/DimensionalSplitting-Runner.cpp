@@ -148,7 +148,6 @@ int main(int argc, char** argv) {
       scenario = worldScenario;
       */
       auto fileScenario = new Scenarios::FileScenario("GEBCO_2023_TID.nc", numberOfGridCellsX, numberOfGridCellsY, 0, epicenterX, epicenterY, magnitude);
-      fileScenario->readWorld();
       scenario = fileScenario;
     }
     else
@@ -158,7 +157,6 @@ int main(int argc, char** argv) {
       scenario = tsunamiScenario;
     }
     //auto tsunamiScenario = new Scenarios::FileScenario("GEBCO_2023_TID.nc", numberOfGridCellsX, numberOfGridCellsY, 0);
-    //tsunamiScenario->readWorld();
     //scenario = tsunamiScenario;
     //TO CALL PATHFINDER
     //PATHFINDER TO CALL PostEarthquake to Get new domain

@@ -24,7 +24,7 @@ RealType Scenarios::FileScenario::getStartingWaveHeight() const
     // H1 * foruth root of h1 = H2 * fourth root of h2
     // H1 and H2 are the wave heights in 2 places, h1 and h2 being the corresponding water heights
     // Since we only try and calculate until a water height of 50m, we use that as the value for h1, and h2 being tha depth in the epicenter-cell
-    RealType startingHeight = (maxHeight * std::pow(50, 1.0/4)) / std::pow(-1 * getBathymetry(x, y), 1.0/4);
+    RealType startingHeight = (maxHeight * std::pow(50, 1.0/4)) / std::pow(-1 * getBathymetry(epicenterX, epicenterY), 1.0/4);
 }
 
 RealType Scenarios::FileScenario::getMaxWaveHeight() const
@@ -40,13 +40,6 @@ RealType Scenarios::FileScenario::getMaxWaveHeight() const
 }
 
 inline RealType Scenarios::FileScenario::getBathymetry(const RealType x, const RealType y) const {
-  if(x < 0 || x > xDim || y < 0 || y > yDim){
-    return 0;
-  }
-  if (x == epicenterX && y == epicenterY)
-  {
-    return getStartingWaveHeight();
-  }
   int    y_index = (offsetX_ + x);
   y_index %= static_cast<int>(xDim);
   int    x_index = (y );
@@ -63,6 +56,10 @@ inline RealType Scenarios::FileScenario::getBathymetry(const RealType x, const R
 inline RealType Scenarios::FileScenario::getWaterHeight(const RealType x, const RealType y) const {
   if(x < 0 || x > xDim || y < 0 || y > yDim){
     return 0;
+  }
+  if (x == epicenterX && y == epicenterY)
+  {
+    return getStartingWaveHeight();
   }
   int   y_index = (offsetX_ + x);
   y_index %= static_cast<int>(xDim);
