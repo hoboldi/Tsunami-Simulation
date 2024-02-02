@@ -80,7 +80,7 @@ RealType convertEnteredXtoMappedX(RealType maxX, RealType enteredX)
     RealType movingFactor = maxX / 360;
     rx += movingFactor * enteredX;
   }
-  else
+  else if (enteredX != 0)
   {
     std::cout << "Invalid coordinates! The longitude x goes only from -180° (West) to 180° (East)! Setting x value to 0" << std::endl;
     rx = 0;
@@ -113,7 +113,7 @@ RealType convertEnteredYtoMappedY(RealType maxY, RealType enteredY)
     RealType movingFactor = maxY / 360;
     rY += movingFactor * enteredY;
   }
-  else
+  else if (enteredY != 0)
   {
     std::cout << "Invalid coordinates! The lattitude y goes only from -90° (South) to 90° (North)! Setting y value to 0" << std::endl;
     rY = 0;
