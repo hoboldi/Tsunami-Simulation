@@ -56,6 +56,72 @@ RealType richterToMagnitude(RealType richter)
 }
 
 /**
+ * @brief This method is used to convert the human entered coordinates in longitude (geographic coordinates) to their equivalent used on our map
+ * The P(0,0) for us is in the bottom left, the max Point in the top right
+ * Longitude goes from -180° (west) to 180° degrees (east)
+ * 
+ * @param maxX [in] the maximum x used in our internal system
+ * @param enteredX [in] the x entered by the user
+ * @return rx [out] the x we computed, used for our future calculations
+ */
+RealType convertEnteredXtoMappedX(RealType maxX, RealType enteredX)
+{
+  // We set the start to the middle of our map, which is also the base-case for entered x = 0
+  RealType rx = maxX / 2;
+  //Which means that the value is in westwards direction, so in the first half of our map
+  if (enteredX < 0 && enteredX >= -180)
+  {
+    RealType movingFactor = maxX / 360;
+    rx -= movingFactor * enteredX * (-1);
+  }
+  //Right at the middle
+  else if (enteredX > 0 && enteredX <= 180)
+  {
+    RealType movingFactor = maxX / 360;
+    rx += movingFactor * enteredX;
+  }
+  else
+  {
+    std::cout << "Invalid coordinates! The longitude x goes only from -180° (West) to 180° (East)! Setting x value to 0" << std::endl;
+    rx = 0;
+  }
+  return rx;
+}
+
+/**
+ * @brief This method is used to convert the human entered coordinates in lattitude (geographic coordinates) to their equivalent used on our map
+ * The P(0,0) for us is in the bottom left, the max Point in the top right
+ * Longitude goes from -90° (south) to 90 degrees (north)
+ * 
+ * @param maxY [in] the maximum x used in our internal system
+ * @param enteredY [in] the x entered by the user
+ * @return rY [out] the x we computed, used for our future calculations
+ */
+RealType convertEnteredYtoMappedY(RealType maxY, RealType enteredY)
+{
+  // We set the start to the middle of our map, which is also the base-case for entered x = 0
+  RealType rY = maxY / 2;
+  //Which means that the value is in southwards direction, so in the bottom half of our map
+  if (enteredY < 0 && enteredY >= -90)
+  {
+    RealType movingFactor = maxY / 180;
+    rY -= movingFactor * enteredY * (-1);
+  }
+  //Right at the middle
+  else if (enteredY > 0 && enteredY <= 180)
+  {
+    RealType movingFactor = maxY / 360;
+    rY += movingFactor * enteredY;
+  }
+  else
+  {
+    std::cout << "Invalid coordinates! The lattitude y goes only from -90° (South) to 90° (North)! Setting y value to 0" << std::endl;
+    rY = 0;
+  }
+  return rY;
+}
+
+/**
  * @brief This method can be used to convert an array of sizes nx / ny to a coarsed version with the averaged values according to Sheet 4 Task 5
  *
  * @param array [in] The array to be coarsed
@@ -126,6 +192,19 @@ int main(int argc, char** argv) {
       {
         magnitude = richterToMagnitude(richter);
       }
+  }
+
+  if (magnitude != 0)
+  {
+    if (magnitude < 6.51)
+    {
+      std::cout << "Magnitude too small, can't compute Tsunami wave" << std::endl;
+      return 5;
+    }
+    epicenterX = convertEnteredXtoMappedX(numberOfGridCellsX, epicenterX);
+    epicenterY = convertEnteredYtoMappedY(numberOfGridCellsY, epicenterY);
+    destinationX = convertEnteredXtoMappedX(numberOfGridCellsX, destinationY);
+    destinationY = convertEnteredYtoMappedY(numberOfGridCellsY, destinationY);
   }
 
   std::vector<RealType> coarseHeights;
