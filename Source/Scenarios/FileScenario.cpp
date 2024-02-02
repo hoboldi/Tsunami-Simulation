@@ -24,7 +24,10 @@ RealType Scenarios::FileScenario::getStartingWaveHeight() const
     // H1 * foruth root of h1 = H2 * fourth root of h2
     // H1 and H2 are the wave heights in 2 places, h1 and h2 being the corresponding water heights
     // Since we only try and calculate until a water height of 50m, we use that as the value for h1, and h2 being tha depth in the epicenter-cell
-    RealType startingHeight = (maxHeight * std::pow(50, 1.0/4)) / std::pow(-1 * getBathymetry(epicenterX, epicenterY), 1.0/4);
+    RealType startingHeight = (maxHeight * std::pow(50, 1.0/4)) / std::pow(-1 * getBathymetry(epicenterX * dx_, epicenterY * dy_), 1.0/4);
+    //print wave height
+    std::cout << "Starting: " << startingHeight << std::endl;
+    return startingHeight;
 }
 
 RealType Scenarios::FileScenario::getMaxWaveHeight() const
@@ -60,8 +63,15 @@ inline RealType Scenarios::FileScenario::getWaterHeight(const RealType x, const 
   if(x < 0 || x > xDim || y < 0 || y > yDim){
     return 0;
   }
-  if (x == epicenterX && y == epicenterY)
+  //print values x, y and epicenter
+  //std::cout << "x: " << x << " y: " << y << " epicenterX: " << epicenterX  << " epicenterY: " << epicenterY << std::endl;
+
+  if (abs(x - epicenterX * dx_) < 50 && abs(y - epicenterY * dy_) < 50)
   {
+    //print test
+    std::cout << "Starting: " << getStartingWaveHeight() << std::endl;
+    std::cout << "Bathymetrie: " << getBathymetry(x, y) << std::endl;
+
     return getStartingWaveHeight();
   }
   int   y_index = (offsetX_ + x);
