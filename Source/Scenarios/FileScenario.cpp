@@ -40,6 +40,9 @@ RealType Scenarios::FileScenario::getMaxWaveHeight() const
 }
 
 inline RealType Scenarios::FileScenario::getBathymetry(const RealType x, const RealType y) const {
+    if(x < 0 || x > xDim || y < 0 || y > yDim){
+        return 0;
+    }
   int    y_index = (offsetX_ + x);
   y_index %= static_cast<int>(xDim);
   int    x_index = (y );
@@ -67,9 +70,9 @@ inline RealType Scenarios::FileScenario::getWaterHeight(const RealType x, const 
   double val     = reader_.readUnbuffered(x_index, y_index);
 
   if (val < 20 && val >= 0) {
-    return 0;
-  } else if (val >= -20 && val < 0) {
     return -20;
+  } else if (val >= -20 && val < 0) {
+    return 20;
   } else {
     return -fmin(val, 0);
   }
