@@ -197,6 +197,7 @@ int main(int argc, char** argv) {
       }
   }
 
+
   if (magnitude != 0)
   {
     if (magnitude < 6.51)
@@ -204,10 +205,14 @@ int main(int argc, char** argv) {
       std::cout << "Magnitude too small, can't compute Tsunami wave" << std::endl;
       return 5;
     }
+
     epicenterX = convertEnteredXtoMappedX(numberOfGridCellsX, epicenterX);
     epicenterY = convertEnteredYtoMappedY(numberOfGridCellsY, epicenterY);
     destinationX = convertEnteredXtoMappedX(numberOfGridCellsX, destinationY);
     destinationY = convertEnteredYtoMappedY(numberOfGridCellsY, destinationY);
+
+    //print the values for the user to see
+    std::cout << "EpicenterX: " << epicenterX << " EpicenterY: " << epicenterY << " DestinationX: " << destinationX << " DestinationY: " << destinationY << std::endl;
   }
 
   std::vector<RealType> coarseHeights;
