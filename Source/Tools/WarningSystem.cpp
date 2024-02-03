@@ -28,16 +28,11 @@
 
 #include "WarningSystem.h"
 
-Tools::WarningSystem::WarningSystem(bool used) {
-  this->used = used;
-}
+Tools::WarningSystem::WarningSystem(){}
 
-Tools::WarningSystem::WarningSystem(int destinationX, int destinationY, double threshold) {
+Tools::WarningSystem::WarningSystem(int destinationX, int destinationY) {
   this->destinationX = destinationX;
   this->destinationY = destinationY;
-  this->originalLevel = 0;
-  this->threshold = threshold;
-  this->used = true;
 }
 
 void Tools::WarningSystem::setOriginalLevel(double newLevel) {
@@ -48,6 +43,10 @@ void Tools::WarningSystem::setOriginalLevel(double newLevel) {
 
 void Tools::WarningSystem::setThreshold(double newThreshold) {
   this->threshold = newThreshold;
+}
+
+void Tools::WarningSystem::setUsed(bool newUsed) {
+  this->used = newUsed;
 }
 
 void Tools::WarningSystem::update(double waterHeight) {

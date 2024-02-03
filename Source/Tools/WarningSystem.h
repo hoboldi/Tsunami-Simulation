@@ -42,12 +42,13 @@ namespace Tools {
    bool used;
 
  public:
-   WarningSystem(bool used);
-   WarningSystem(int destinationX, int destinationY, double threshold);
+   WarningSystem();
+   WarningSystem(int destinationX, int destinationY);
    ~WarningSystem() = default;
 
    void setThreshold(double newThreshold);
    void setOriginalLevel(double newLevel);
+   void setUsed(bool newUsed);
 
    void update(double waterHeight);
  };

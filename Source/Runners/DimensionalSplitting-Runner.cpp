@@ -92,9 +92,10 @@ RealType convertEnteredXtoMappedX(RealType maxX, RealType enteredX)
 }
 
 /**
- * @brief This method is used to convert the human entered coordinates in lattitude (geographic coordinates) to their equivalent used on our map
+ * @brief This method is used to convert the human entered coordinates (geographic coordinates) into their equivalent used on our map
  * The P(0,0) for us is in the bottom left, the max Point in the top right
- * Longitude goes from -90° (south) to 90 degrees (north)
+ * Latitude goes from -90° (south) to 90 degrees (north)
+ * Longitude goes from -180° (east) to 180 degrees (west)
  *
  * @param maxY [in] the maximum x used in our internal system
  * @param enteredY [in] the x entered by the user
@@ -118,7 +119,7 @@ RealType convertEnteredYtoMappedY(RealType maxY, RealType enteredY)
   }
   else if (enteredY != 0)
   {
-    std::cout << "Invalid coordinates! The lattitude y goes only from -90° (South) to 90° (North)! Setting y value to 0" << std::endl;
+    std::cout << "Invalid coordinates! The latitude y goes only from -90° (South) to 90° (North)! Setting y value to 0" << std::endl;
     rY = 0;
   }
   return rY;
@@ -150,14 +151,15 @@ int main(int argc, char** argv) {
     "Set Boundary Conditions represented by an 4 digit Integer of 1s and 2s. (1: Outflow, 2: Wall).\n First Digit: Left Boundary\n Second Digit: Right Boundary\n Third Digit: Bottom Boundary\n Fourth Digit: Top Boundary"
   );
   args.addOption("checkpoint-file", 'c', "Checkpoint file to read initial values from");
-  args.addOption("coarse", 'a', "Parameter for the coarse output, averaging the next <param> cells");
+  args.addOption("coarse", 'k', "Parameter for the coarse output, averaging the next <param> cells");
   args.addOption("magnitude", 'm', "The moment-megnitude of the eartquake");
   args.addOption("richter-scale", 'r', "The magnitude on the richter scale, this should not be used as it will be subject to many approximation errors");
-  args.addOption("destinationX", 'd', "The X coordinate of the destination city");
-  args.addOption("destinationY", 's', " The y coordinate of the destination city");
-  args.addOption("epicenterX", 'e', "The X coordinate of the epicenter");
-  args.addOption("epicenterY", 'f', "The Y coordinate of the epicenter");
-  args.addOption("threshold", 'l', "The threshold variable represents the critical water level change that, when surpassed, triggers a warning in the tsunami detection system");
+  args.addOption("destinationLatitude", 'a', "The latitude coordinate of the destination city");
+  args.addOption("destinationLongitude", 'b', " The longitude coordinate of the destination city");
+  args.addOption("epicenterLatitude", 'e', "The latitude coordinate of the epicenter");
+  args.addOption("epicenterLongitude", 'f', "The longitude coordinate of the epicenter");
+  args.addOption("limit", 'l', "The limit variable represents the critical water level change that, when surpassed, triggers a warning in the tsunami detection system");
+  args.addOption("scenarios",'s',"The user can use a pre-chosen scenario. The given scenarios have ids 1 to 3");
 
   Tools::Args::Result ret = args.parse(argc, argv);
   if (ret == Tools::Args::Result::Help) {
@@ -170,21 +172,30 @@ int main(int argc, char** argv) {
   // Create the scenario
 
 
-  int         numberOfGridCellsX = args.getArgument<int>("grid-size-x", 10);
-  int         numberOfGridCellsY = args.getArgument<int>("grid-size-y", 10);
+  int         numberOfGridCellsX = args.getArgument<int>("grid-size-x", 100);
+  int         numberOfGridCellsY = args.getArgument<int>("grid-size-y", 100);
   std::string baseName           = args.getArgument<std::string>("output-basepath", "SWE");
   int numberOfCheckPoints = args.getArgument<int>("number-of-checkpoints", 20); //! Number of checkpoints for visualization (at each checkpoint in time, an output file is written).
-  double      endSimulationTime  = args.getArgument<double>("simulation-time", 10);
+  double      endSimulationTime  = args.getArgument<double>("simulation-time", 1000);
   int         boundaryConditions = args.getArgument<int>("boundary-conditions", 1111); // Default is 1111: Outflow for all Edges
   std::string checkpointFile     = args.getArgument<std::string>("checkpoint-file", "");
   int         coarse             = args.getArgument<int>("coarse", 0);                 // Default is 0 if no coarse should be used
-  RealType    magnitude          = args.getArgument<RealType>("magnitude", 0);
+  RealType    magnitude          = args.getArgument<RealType>("magnitude", 7);
   RealType    richter            = args.getArgument<RealType>("richter-scale", 0);
-  int         destinationX       = args.getArgument<int>("destinationX", 0);
-  int         destinationY       = args.getArgument<int>("destinationY", 0);
-  int         epicenterX         = args.getArgument<int>("epicenterX", 0);
-  int         epicenterY         = args.getArgument<int>("epicenterY", 0);
-  double      threshold         =  args.getArgument<double>("threshold", 1);
+  int         destinationX       = args.getArgument<int>("destinationLatitude", 0);
+  int         destinationY       = args.getArgument<int>("destinationLongitude", 0);
+  int         epicenterX         = args.getArgument<int>("epicenterLatitude", 0);
+  int         epicenterY         = args.getArgument<int>("epicenterLongitude", 0);
+  double      threshold          = args.getArgument<double>("limit", -1);
+  int         scenarioID         = args.getArgument<int>("scenarios",0);
+
+
+  //Error message if the user choose wrong coordinates
+  if(destinationX > 90  || destinationX < -90 || epicenterX > 90 || epicenterX < -90 || destinationY > 180 || destinationY < -180 || epicenterY > 180 || epicenterY < -180)
+  {
+    std::cout << "Error, the latitude or longitude coordinates were false chosen";
+  }
+
 
   //Error message if the user wants to use the WorldScenario, but forgets a value
   if (epicenterX != 0 || epicenterY != 0 || destinationX != 0 || destinationY != 0 || magnitude != 0 || richter != 0)
@@ -192,6 +203,7 @@ int main(int argc, char** argv) {
       if (magnitude == 0 && richter == 0)
       {
         std::cout << "Error, no magnitude entered in neither format. Please use the -m option to enter your desired moment-megnitude!";
+        return 5;
       }
       if (magnitude == 0 && richter != 0)
       {
@@ -210,7 +222,7 @@ int main(int argc, char** argv) {
 
     epicenterX = convertEnteredXtoMappedX(numberOfGridCellsX, epicenterX);
     epicenterY = convertEnteredYtoMappedY(numberOfGridCellsY, epicenterY);
-    destinationX = convertEnteredXtoMappedX(numberOfGridCellsX, destinationY);
+    destinationX = convertEnteredXtoMappedX(numberOfGridCellsX, destinationX);
     destinationY = convertEnteredYtoMappedY(numberOfGridCellsY, destinationY);
 
     //print the values for the user to see
@@ -222,44 +234,22 @@ int main(int argc, char** argv) {
   std::vector<RealType> coarseHvs;
 
   Tools::Logger::logger.printWelcomeMessage();
-  Tools::WarningSystem warningSystem(false);
+
 
   // Print information about the grid
   Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
   Scenarios::Scenario* scenario;
 
+
   if (checkpointFile.empty()) {
-    if (magnitude != 0)
-    {
-      /*replaced world scenario with the File Scenario, this si jsut for the sake of testing
-
-      auto worldScenario = new Scenarios::WorldScenario(epicenterX, epicenterY, magnitude);
-      worldScenario->readWorld("GEBCO_2023_TID.nc");
-      scenario = worldScenario;
-      */
-      auto fileScenario = new Scenarios::FileScenario("GEBCO_2023_TID.nc", numberOfGridCellsX, numberOfGridCellsY, 0, epicenterX, epicenterY, magnitude);
-      scenario = fileScenario;
-      warningSystem = new Tools::WarningSystem(destinationX,destinationY,threshold);
-      warningSystem.setThreshold(threshold);
-    }
-    else
-    {
-      auto tsunamiScenario = new Scenarios::TsunamiScenario();
-      tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
-      scenario = tsunamiScenario;
-    }
-    //auto tsunamiScenario = new Scenarios::FileScenario("GEBCO_2023_TID.nc", numberOfGridCellsX, numberOfGridCellsY, 0);
-    //scenario = tsunamiScenario;
-    //TO CALL PATHFINDER
-    //PATHFINDER TO CALL PostEarthquake to Get new domain
-
+    auto fileScenario = new Scenarios::FileScenario("GEBCO_2023_sub_ice_topo.nc", numberOfGridCellsX, numberOfGridCellsY, 0, epicenterX, epicenterY, magnitude);
+    scenario = fileScenario;
   } else {
     scenario = new Scenarios::CheckpointScenario(checkpointFile);
   }
 
 
   if (checkpointFile.empty()) {
-    // Ihhgitt!!
     if (boundaryConditions == 1111 || boundaryConditions == 1112 || boundaryConditions == 1121 || boundaryConditions == 1122 || boundaryConditions == 1211 || boundaryConditions == 1212 || boundaryConditions == 1221 || boundaryConditions == 1222 || boundaryConditions == 2111 || boundaryConditions == 2112 || boundaryConditions == 2121 || boundaryConditions == 2122 || boundaryConditions == 2211 || boundaryConditions == 2212 || boundaryConditions == 2221 || boundaryConditions == 2222) {
       scenario->setBoundaryType(boundaryConditions);
     } else {
@@ -366,18 +356,59 @@ int main(int argc, char** argv) {
   double wallClockTime = 1;
   Tools::Logger::logger.initWallClockTime(wallClockTime);
 
-  warningSystem.setOriginalLevel(waveBlock->getWaterHeight()[destinationX][destinationY]);
+
+
 #if defined(ENABLE_GUI)
   Gui::Gui gui = Gui::Gui(waveBlock->getBathymetry(), scenario->getBoundaryPos(BoundaryEdge::Right), scenario->getBoundaryPos(BoundaryEdge::Top));
   auto startEnd = gui.getStartEnd(waveBlock->getWaterHeight());
+
+  //TODO Warning system if GUI is used
   waveBlock->setStartCell(startEnd.first);
   waveBlock->setEndCell(startEnd.second);
   std::cout << "Start: " << std::endl;
   waveBlock->findSearchArea(gui);
   std::cout << "found search area" << std::endl;
 #else
+
+  switch (scenarioID) {
+  case 1:
+    epicenterX = (double) numberOfGridCellsX / 6055.0 * 10000.0;
+    epicenterY = (double) numberOfGridCellsY / 8944.0 * 10000.0;
+    waveBlock->setStartCell(std::make_pair(epicenterX,epicenterY));
+    destinationX = (double)numberOfGridCellsX / 5972.0 * 10000.0;
+    destinationY = (double) numberOfGridCellsY / 8861.0 * 10000.0;
+    waveBlock->setEndCell(std::make_pair(destinationX,destinationY));
+    break;
+  case 2:
+    waveBlock->setStartCell(startEnd.first);
+    waveBlock->setEndCell(startEnd.second);
+    //TODO Change coordinates
+    break;
+  case 3:
+    waveBlock->setStartCell(startEnd.first);
+    waveBlock->setEndCell(startEnd.second);
+    //TODO Change coordinates
+    break;
+  default:
+    waveBlock->setStartCell(std::make_pair(epicenterX,epicenterY));
+    waveBlock->setEndCell(std::make_pair(destinationX,destinationY));
+    break;
+  }
   waveBlock->findSearchArea();
 #endif
+
+  Tools::WarningSystem warningSystem{destinationX,destinationY};
+  if(threshold == -1) {
+    warningSystem.setThreshold(threshold);
+    warningSystem.setOriginalLevel(0);
+    warningSystem.setUsed(false);
+    destinationX = 0;
+    destinationY = 0;
+  } else {
+    warningSystem.setThreshold(threshold);
+    warningSystem.setOriginalLevel(waveBlock->getWaterHeight()[destinationX][destinationY]);
+    warningSystem.setUsed(true);
+  }
 
 
   unsigned int iterations = 0;
@@ -422,6 +453,8 @@ int main(int argc, char** argv) {
       Tools::Logger::logger.printSimulationTime(
         simulationTime, "[" + std::to_string(iterations) + "]: Simulation with max. global dt " + std::to_string(maxTimeStepWidth) + " at time"
       );
+
+      //Update the Warning System with the new WaterHeight
       warningSystem.update(waveBlock->getWaterHeight()[destinationX][destinationY]);
 
       // Update simulation time with time step width
