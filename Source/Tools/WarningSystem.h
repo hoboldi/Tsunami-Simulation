@@ -40,6 +40,7 @@ namespace Tools {
    double originalLevel;
    double threshold;
    bool used;
+   bool alarmed;
 
  public:
    WarningSystem();
@@ -50,7 +51,7 @@ namespace Tools {
    void setOriginalLevel(double newLevel);
    void setUsed(bool newUsed);
 
-   void update(double waterHeight);
+   bool update(double waterHeight);
  };
 
 } // namespace Tools

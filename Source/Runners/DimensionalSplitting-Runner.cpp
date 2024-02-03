@@ -455,7 +455,10 @@ int main(int argc, char** argv) {
       );
 
       //Update the Warning System with the new WaterHeight
-      warningSystem.update(waveBlock->getWaterHeight()[destinationX][destinationY]);
+      if(warningSystem.update(waveBlock->getWaterHeight()[destinationX][destinationY])){
+        goto endSimulation;
+      }
+
 
       // Update simulation time with time step width
       simulationTime += maxTimeStepWidth;
@@ -478,6 +481,7 @@ int main(int argc, char** argv) {
       writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
     }
   }
+  endSimulation:
   progressBar.clear();
   Tools::Logger::logger.printStatisticsMessage();
   Tools::Logger::logger.printTime("CPU", "CPU Time");
