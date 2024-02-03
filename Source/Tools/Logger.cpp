@@ -247,9 +247,9 @@ void Tools::Logger::printElementUpdatesDone(
 }
 
 void Tools::Logger::printAlarm(double change) {
-  std::cout << "ALARM!\n The sea level change is: " << change << ".\n";
+  std::cout << "ALARM!\n The sea level change is: " << change << " m.\n";
 }
 
 void Tools::Logger::printSafeLevel(double change) {
-  std::cout << "The sea level is safe with water level change: " << change << ".\n";
+  std::cout << "The sea level is safe with water level change: " << change << " m.\n";
 }

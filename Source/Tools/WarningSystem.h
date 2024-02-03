@@ -40,6 +40,7 @@ namespace Tools {
    double originalLevel;
    double threshold;
    bool used;
+   bool alarmed;
 
  public:
    WarningSystem(bool used);
@@ -49,7 +50,13 @@ namespace Tools {
    void setThreshold(double newThreshold);
    void setOriginalLevel(double newLevel);
 
-   void update(double waterHeight);
+   /**
+    * @brief Update the warning system
+    * @param waterHeight The current water height
+    * @param stopSimulation A pointer to a boolean that indicates if the simulation should be stopped
+    * @return True if the simulation should be stopped
+    */
+   bool update(double waterHeight);
  };
 
 } // namespace Tools
