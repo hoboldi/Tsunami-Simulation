@@ -32,7 +32,7 @@ Gui::Gui::Gui(const Tools::Float2D<RealType>& b, int width, int height) :
   }
   std::cout << "width: " << width << " height: " << height << std::endl;
   // Open a window and create its OpenGL context
-  window = glfwCreateWindow(width, height, "SWE", NULL, NULL);
+  window = glfwCreateWindow(1500, 700, "SWE", NULL, NULL);
   if (window == NULL) {
     glfwTerminate();
     exit(EXIT_FAILURE);
@@ -86,6 +86,11 @@ Gui::Gui::Gui(const Tools::Float2D<RealType>& b, int width, int height) :
   glUniform1f(widthLoc, static_cast<GLfloat>(b.getCols()));
   glUniform1f(heightLoc, static_cast<GLfloat>(b.getRows()));
 
+  // print point size
+  std::pair<int, int> windowSize;
+  glfwGetWindowSize(window, &windowSize.first, &windowSize.second);
+  float pointSize = std::fmin(windowSize.first / (float)b_.getCols(), windowSize.second / (float)b_.getRows());
+  std::cout << "point size: " << pointSize << std::endl;
 
   // setup color uniforms
   minColorLoc = glGetUniformLocation(programID, "minColor");

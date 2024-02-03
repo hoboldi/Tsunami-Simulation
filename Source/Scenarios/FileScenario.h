@@ -41,5 +41,6 @@ namespace Scenarios {
       double xDim, yDim;
       int dx_, dy_;
       int offsetX_;
+      int numCellsX, numCellsY;
   };
 } // namespace Scenarios
