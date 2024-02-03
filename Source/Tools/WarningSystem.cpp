@@ -46,6 +46,10 @@ void Tools::WarningSystem::setOriginalLevel(double newLevel) {
   }
 }
 
+void Tools::WarningSystem::setThreshold(double newThreshold) {
+  this->threshold = newThreshold;
+}
+
 void Tools::WarningSystem::update(double waterHeight) {
   if(used) {
     if(std::abs(originalLevel - waterHeight) >= threshold) {

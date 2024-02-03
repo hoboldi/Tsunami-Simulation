@@ -238,6 +238,7 @@ int main(int argc, char** argv) {
       auto fileScenario = new Scenarios::FileScenario("GEBCO_2023_sub_ice_topo.nc", numberOfGridCellsX, numberOfGridCellsY, 0, epicenterX, epicenterY, magnitude);
       scenario = fileScenario;
       warningSystem = new Tools::WarningSystem(destinationX,destinationY,threshold);
+      warningSystem.setThreshold(threshold);
     }
     else
     {
