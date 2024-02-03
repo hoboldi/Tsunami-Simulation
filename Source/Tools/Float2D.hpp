@@ -111,7 +111,22 @@ namespace Tools {
         allocateMemory_ = true;
       }
     }
+    Float2D(const Float2D<T>& data, bool shallowCopy):
+      rows_(data.rows_),
+      cols_(data.cols_),
+      allocateMemory_(!shallowCopy) {
 
+      if (shallowCopy) {
+        data_           = data.data_;
+        allocateMemory_ = false;
+      } else {
+        data_ = new T[rows_ * cols_];
+        for (int i = 0; i < rows_ * cols_; i++) {
+          data_[i] = data.data_[i];
+        }
+        allocateMemory_ = true;
+      }
+    }
     ~Float2D() {
       if (allocateMemory_) {
         delete[] data_;
@@ -123,6 +138,8 @@ namespace Tools {
     const T* operator[](int i) const { return (data_ + (rows_ * i)); }
 
     T* getData() { return data_; }
+
+    const T* getData() const { return data_; }
 
     int getSize() const { return rows_ * cols_; }
 

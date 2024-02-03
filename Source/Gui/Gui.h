@@ -21,14 +21,18 @@ namespace Gui {
      * @brief Construct a new Gui object
      * @param b bathymetry to display
      */
-    explicit Gui(Tools::Float2D<RealType>& b);
+    explicit Gui(const Tools::Float2D<RealType>& b, int width, int height);
     /**
      * @brief Update the display
      * @param h water height
      * @param time current time
      */
     void update(const Tools::Float2D<RealType>& h, double time);
+
+    std::pair<std::pair<int, int>, std::pair<int, int>> getStartEnd(const Tools::Float2D<RealType>& h);
     ~Gui();
+
+    void setBathymetry(Tools::Float2D<RealType>& b);
 
 
   private:
@@ -41,7 +45,8 @@ namespace Gui {
     float *                   colorMin, *colorMax;
     float                     clipMin, clipMax;
     GLint                     clipMaxLoc, clipMinLoc;
-    Tools::Float2D<RealType>& b;
+    Tools::Float2D<RealType> b_;
+    GLfloat*                  data;
     void                      setupShaders();
   };
 

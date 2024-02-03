@@ -21,9 +21,17 @@ namespace Blocks {
      */
     void findSearchArea();
 
+    void setStartCell(std::pair<int, int> startCell);
+    void setEndCell(std::pair<int, int> endCell);
+
     void computeNumericalFluxes() override;
 
     void updateUnknowns(RealType dt) override;
+
+    /**
+     * @brief Shifts the data-arrays b and h by half of their lengths to the right. The right half of the arrays is then wrapped around to the left half.
+     */
+    void shiftData();
 
 
   private:

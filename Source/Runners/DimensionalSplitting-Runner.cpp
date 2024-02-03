@@ -46,7 +46,7 @@ void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY) {
  * This is necessary to calculate further, and uses the approximative equations to convert via the logarithmic energy of the earthquake
  * - Richter: Log E = 11.8 + 1.5 R
  * - Moment Magnitude: Log E = 5.24 + 1.44 M
- * 
+ *
  * @param richter [in] The magnitude on the richter scale
  * @return moment [out] The magnitude on the moment-magnitude scale
  */
@@ -60,7 +60,7 @@ RealType richterToMagnitude(RealType richter)
  * @brief This method is used to convert the human entered coordinates in longitude (geographic coordinates) to their equivalent used on our map
  * The P(0,0) for us is in the bottom left, the max Point in the top right
  * Longitude goes from -180° (west) to 180° degrees (east)
- * 
+ *
  * @param maxX [in] the maximum x used in our internal system
  * @param enteredX [in] the x entered by the user
  * @return rx [out] the x we computed, used for our future calculations
@@ -93,7 +93,7 @@ RealType convertEnteredXtoMappedX(RealType maxX, RealType enteredX)
  * @brief This method is used to convert the human entered coordinates in lattitude (geographic coordinates) to their equivalent used on our map
  * The P(0,0) for us is in the bottom left, the max Point in the top right
  * Longitude goes from -90° (south) to 90 degrees (north)
- * 
+ *
  * @param maxY [in] the maximum x used in our internal system
  * @param enteredY [in] the x entered by the user
  * @return rY [out] the x we computed, used for our future calculations
@@ -179,8 +179,8 @@ int main(int argc, char** argv) {
   RealType    magnitude          = args.getArgument<RealType>("magnitude", 0);
   RealType    richter            = args.getArgument<RealType>("richter-scale", 0);
   int         destinationX       = args.getArgument<int>("destinationX", 0);
-  int         destinationY       = args.getArgument<int>("destinationY", 0); 
-  int         epicenterX         = args.getArgument<int>("epicenterX", 0); 
+  int         destinationY       = args.getArgument<int>("destinationY", 0);
+  int         epicenterX         = args.getArgument<int>("epicenterX", 0);
   int         epicenterY         = args.getArgument<int>("epicenterY", 0);
   double      threshold         =  args.getArgument<double>("threshold", 1);
 
@@ -362,6 +362,18 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.initWallClockTime(wallClockTime);
 
   warningSystem.setOriginalLevel(waveBlock->getWaterHeight()[destinationX][destinationY]);
+#if defined(ENABLE_GUI)
+  Gui::Gui gui = Gui::Gui(waveBlock->getBathymetry(), scenario->getBoundaryPos(BoundaryEdge::Right), scenario->getBoundaryPos(BoundaryEdge::Top));
+  auto startEnd = gui.getStartEnd(waveBlock->getWaterHeight());
+  waveBlock->setStartCell(startEnd.first);
+  waveBlock->setEndCell(startEnd.second);
+  std::cout << "Start: " << std::endl;
+  waveBlock->findSearchArea(gui);
+  std::cout << "found search area" << std::endl;
+#else
+  waveBlock->findSearchArea();
+#endif
+
 
   unsigned int iterations = 0;
   // Loop over checkpoints
@@ -390,6 +402,10 @@ int main(int argc, char** argv) {
 #if defined(ENABLE_OPENMP)
       double end_time = omp_get_wtime();
       wallClockTime += end_time - start_time;
+#endif
+
+#if defined(ENABLE_GUI)
+      gui.update(waveBlock->getWaterHeight(), simulationTime+maxTimeStepWidth);
 #endif
 
       // Update the cpu time in the logger

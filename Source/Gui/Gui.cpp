@@ -1,7 +1,7 @@
 #include "Gui.h"
 
 
-Gui::Gui::Gui(Tools::Float2D<RealType>& b):
+Gui::Gui::Gui(const Tools::Float2D<RealType>& b, int width, int height) :
   window(nullptr),
   programID(0),
   VBO(0),
@@ -12,7 +12,7 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
   colorMax(new float[4]{1.0f, 0.0f, 0.0f, 1.0f}),
   clipMin(0.0f),
   clipMax(4.0f),
-  b(b)
+  b_{b, false}
 {
   if (!glfwInit()) {
     std::cout << "Failed to initialize GLFW" << std::endl;
@@ -24,8 +24,15 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+  // scale width and height so that the window fits on the screen
+  while (width >= 1920 || height >= 1080) {
+    width /= 1.2;
+    height /= 1.2;
+  }
+  std::cout << "width: " << width << " height: " << height << std::endl;
   // Open a window and create its OpenGL context
-  window = glfwCreateWindow(1200, 800, "SWE", NULL, NULL);
+  window = glfwCreateWindow(width, height, "SWE", NULL, NULL);
   if (window == NULL) {
     glfwTerminate();
     exit(EXIT_FAILURE);
@@ -47,6 +54,9 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
                                                         // Setup Dear ImGui style
   ImGui::StyleColorsDark();
   // ImGui::StyleColorsLight();
+  unsigned long dataSize = b_.getSize() * sizeof(GLfloat);
+
+  data = new GLfloat[dataSize];
 
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -55,6 +65,9 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
   setupShaders();
   glUseProgram(programID);
 
+  // enable point size
+  glEnable(GL_PROGRAM_POINT_SIZE);
+
   // Set up vertex data and buffer(s) and attribute pointers
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -62,7 +75,7 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
   glBindVertexArray(VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 1002 * 1002, nullptr, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * b.getSize(), nullptr, GL_STATIC_DRAW);
   // important that this comes after glBufferData
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, 0, 0);
@@ -87,6 +100,7 @@ Gui::Gui::Gui(Tools::Float2D<RealType>& b):
 }
 Gui::Gui::~Gui() {
   // Cleanup resources (delete shaders, buffers, etc.)
+  delete[] data;
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
   glDeleteProgram(programID);
@@ -118,17 +132,16 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h, double time){
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
+  unsigned long dataSize = b_.getSize() * sizeof(GLfloat);
 
-  unsigned long dataSize = b.getSize();
-
-  auto data = std::vector<GLfloat>(b.getSize());
+  int x = b_.getCols();
+  int y = b_.getRows();
   // copy data from 2d h to 1d data
-  for (int i = 0; i < b.getRows(); ++i) {
-    for (int j = 0; j < b.getCols(); ++j) {
-      data[i * h.getRows() + j] = h[j][i] + b[j][i];
+  for (int i = 0; i < x; ++i) {
+    for (int j = 0; j < y; ++j) {
+      data[i* x + j] = static_cast<GLfloat>(h[j][i] + b_[j][i]);
     }
   }
-
 
   ImGui::Begin("Color Map");
   ImGui::ColorEdit4("Color for Min value", colorMin, ImGuiColorEditFlags_NoInputs);
@@ -140,8 +153,8 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h, double time){
   // metadata display
   ImGui::Begin("Metadata");
   ImGui::Text("Time: %f", time);
-  ImGui::Text("Width: %d", b.getCols() -2);
-  ImGui::Text("Height: %d", b.getRows() -2);
+  ImGui::Text("Width: %d", b_.getCols() -2);
+  ImGui::Text("Height: %d", b_.getRows() -2);
   ImGui::End();
 
   glUniform4f(minColorLoc, colorMin[0], colorMin[1], colorMin[2], colorMin[3]);
@@ -153,12 +166,17 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h, double time){
   // Update vertex buffer object with new data
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * dataSize, data.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+  // calculate point size based on window size and data size
+  // current window size
+  std::pair<int, int> windowSize;
+  glfwGetWindowSize(window, &windowSize.first, &windowSize.second);
+  float pointSize = std::fmin(windowSize.first / (float)b_.getCols(), windowSize.second / (float)b_.getRows());
 
   // Draw the data
-  glPointSize(1.0f);
+  glPointSize(pointSize);
   glDrawArrays(GL_POINTS, 0, (int)dataSize);
   glBindVertexArray(0);
 
@@ -173,6 +191,7 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h, double time){
   if (error != GL_NO_ERROR) {
     std::cout << "OpenGL error: " << error << std::endl;
   }
+
 }
 void Gui::Gui::setupShaders() {
 
@@ -244,3 +263,121 @@ void main() {
   glAttachShader(programID, fragmentShader);
   glLinkProgram(programID);
 }
+
+
+
+
+std::pair<std::pair<int, int>, std::pair<int, int>> Gui::Gui::getStartEnd(const Tools::Float2D<RealType>& h) {
+  std::pair<int, int> start{-1, -1};
+  std::pair<int, int> end{-1, -1};
+  bool startSet = false;
+  bool endSet = false;
+
+
+  unsigned long dataSize = h.getSize() * sizeof(GLfloat);
+  std::cout << "dataSize: " << dataSize<< " " << b_.getCols() << " " << b_.getRows() << std::endl;
+  std::cout << "h size: " << h.getSize() << " " << h.getCols() << " " << h.getRows() << std::endl;
+
+  int x = b_.getCols();
+  int y = b_.getRows();
+  // copy data from 2d h to 1d data
+  for (int i = 0; i < x; ++i) {
+    for (int j = 0; j < y; ++j) {
+      data[i* x + j] = h[j][i] + b_[j][i];
+    }
+  }
+
+  glUseProgram(programID);
+
+  glUniform4f(minColorLoc, colorMin[0], colorMin[1], colorMin[2], colorMin[3]);
+  glUniform4f(maxColorLoc, colorMax[0], colorMax[1], colorMax[2], colorMax[3]);
+
+  glUniform1f(clipMaxLoc, clipMax);
+  glUniform1f(clipMinLoc, clipMin);
+
+
+
+  bool continueLoop = true;
+  while(continueLoop){
+    glClear(GL_COLOR_BUFFER_BIT);
+    glUseProgram(programID);
+
+    // Poll for and process events
+    glfwPollEvents();
+
+    // Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    ImGui::Begin("Pick start and end points");
+    ImGui::Text("Width: %d", b_.getCols() - 2);
+    ImGui::Text("Height: %d", b_.getRows() - 2);
+
+    // current window size
+    std::pair<int, int> windowSize;
+    glfwGetWindowSize(window, &windowSize.first, &windowSize.second);
+    auto mousePosInWindow = ImGui::GetMousePos();
+    // scale the cursor to the size of h
+    mousePosInWindow.x /= windowSize.first;
+    mousePosInWindow.y /= windowSize.second;
+    // scale the cursor to the size of the window
+    mousePosInWindow.x *= b_.getCols() - 2;
+    mousePosInWindow.y *= b_.getRows() - 2;
+    mousePosInWindow.y = (b_.getRows() - 2) - mousePosInWindow.y;
+    ImGuiIO& io = ImGui::GetIO();
+    if (!io.WantCaptureMouse && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+      if(mousePosInWindow.x < 0 || mousePosInWindow.x > b_.getCols() - 2 || mousePosInWindow.y < 0 || mousePosInWindow.y > b_.getRows() - 2){
+        continue;
+      }
+      if (!startSet && start.first == -1 && start.second == -1) {
+        start    = {mousePosInWindow.x, mousePosInWindow.y};
+        startSet = true;
+      }
+      else if (!endSet && end.first == -1 && end.second == -1) {
+        end    = {mousePosInWindow.x, mousePosInWindow.y};
+        endSet = true;
+      }
+      else {
+        startSet = true;
+        endSet   = true;
+      }
+    }
+
+    ImGui::Text("Mouse Position: (%.1f, %.1f)", mousePosInWindow.x, mousePosInWindow.y);
+    ImGui::Text("Start: (%d, %d)", start.first, start.second);
+    ImGui::Text("End: (%d, %d)", end.first, end.second);
+    if (ImGui::Button("Reset")) {
+      startSet = false;
+      endSet = false;
+      start = {-1, -1};
+      end = {-1, -1};
+    }
+    if (ImGui::Button("Continue")) {
+      continueLoop = false;
+    }
+    ImGui::End();
+    // calculate point size based on window size and data size
+    float pointSize = std::fmin(windowSize.first / (float)b_.getCols(), windowSize.second / (float)b_.getRows());
+
+    // Draw the data
+    glPointSize(pointSize);
+    glDrawArrays(GL_POINTS, 0, (int)dataSize);
+    glBindVertexArray(0);
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    // Swap the front and back buffers
+    glfwSwapBuffers(window);
+  }
+
+  return std::make_pair(start, end);
+}
+
+void Gui::Gui::setBathymetry(Tools::Float2D<RealType>& b) {
+  b_ = b;
+}
+
