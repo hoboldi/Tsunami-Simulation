@@ -1,7 +1,7 @@
+#pragma once
 #include "TsunamiScenario.h"
 
 #include <cfloat>
-
 
 unsigned long indexi = 0;
 unsigned long indexj = 0;
@@ -10,12 +10,10 @@ double        offsety;
 double        sizex;
 double        sizey;
 
-
 namespace Scenarios {
   std::vector<std::vector<interval>> intervals;
   std::vector<std::vector<interval>> getInterval() { return intervals; }
-} // namespace Scenarios
-double calculateAvgOf(const double left, const double right) { return (left + right) * 0.5; }
+}
 
 void Scenarios::TsunamiScenario::readScenario(std::string bathymetry, std::string displacement) const {
   // Read Bathymetry

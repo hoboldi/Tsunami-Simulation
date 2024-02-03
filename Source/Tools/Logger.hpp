@@ -127,6 +127,9 @@ namespace Tools {
         const std::string& name,
         const std::string  iterationMessage = "Element updates per second done"
       ) const;
+
+    void printAlarm(double change);
+    void printSafeLevel(double change);
   };
 
 } // namespace Tools

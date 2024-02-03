@@ -3,16 +3,17 @@
 #include <string>
 
 #include "Blocks/DimensionalSplitting.h"
-#include "Blocks/ReducedDimSplittingBlock.h"
 #include "BoundaryEdge.hpp"
-#include "Gui/Gui.h"
 #include "Readers/NetCDFReader.h"
 #include "Scenarios/ArtificialTsunamiScenario.h"
 #include "Scenarios/CheckpointScenario.h"
+#include "Scenarios/FileScenario.h"
 #include "Scenarios/RadialDamBreakScenario.hpp"
 #include "Scenarios/TsunamiScenario.h"
+#include "Scenarios/WorldScenario.h"
 #include "Tools/Args.hpp"
 #include "Tools/Coarse.h"
+#include "Tools/WarningSystem.h"
 #include "Tools/Logger.hpp"
 #include "Tools/ProgressBar.hpp"
 #include "Writers/NetCDFWriter.hpp"
@@ -41,6 +42,87 @@ void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY) {
 }
 
 /**
+ * @brief A method to convert an entered magnitude on the richter scale (R) to the magnitude in moment notation (M)
+ * This is necessary to calculate further, and uses the approximative equations to convert via the logarithmic energy of the earthquake
+ * - Richter: Log E = 11.8 + 1.5 R
+ * - Moment Magnitude: Log E = 5.24 + 1.44 M
+ * 
+ * @param richter [in] The magnitude on the richter scale
+ * @return moment [out] The magnitude on the moment-magnitude scale
+ */
+RealType richterToMagnitude(RealType richter)
+{
+  RealType energy = 11.8 + (1.5 * richter);
+  return (energy - 5.24) / 1.44;
+}
+
+/**
+ * @brief This method is used to convert the human entered coordinates in longitude (geographic coordinates) to their equivalent used on our map
+ * The P(0,0) for us is in the bottom left, the max Point in the top right
+ * Longitude goes from -180° (west) to 180° degrees (east)
+ * 
+ * @param maxX [in] the maximum x used in our internal system
+ * @param enteredX [in] the x entered by the user
+ * @return rx [out] the x we computed, used for our future calculations
+ */
+RealType convertEnteredXtoMappedX(RealType maxX, RealType enteredX)
+{
+  // We set the start to the middle of our map, which is also the base-case for entered x = 0
+  RealType rx = maxX / 2;
+  //Which means that the value is in westwards direction, so in the first half of our map
+  if (enteredX < 0 && enteredX >= -180)
+  {
+    RealType movingFactor = maxX / 360;
+    rx -= movingFactor * enteredX * (-1);
+  }
+  //Right at the middle
+  else if (enteredX > 0 && enteredX <= 180)
+  {
+    RealType movingFactor = maxX / 360;
+    rx += movingFactor * enteredX;
+  }
+  else if (enteredX != 0)
+  {
+    std::cout << "Invalid coordinates! The longitude x goes only from -180° (West) to 180° (East)! Setting x value to 0" << std::endl;
+    rx = 0;
+  }
+  return rx;
+}
+
+/**
+ * @brief This method is used to convert the human entered coordinates in lattitude (geographic coordinates) to their equivalent used on our map
+ * The P(0,0) for us is in the bottom left, the max Point in the top right
+ * Longitude goes from -90° (south) to 90 degrees (north)
+ * 
+ * @param maxY [in] the maximum x used in our internal system
+ * @param enteredY [in] the x entered by the user
+ * @return rY [out] the x we computed, used for our future calculations
+ */
+RealType convertEnteredYtoMappedY(RealType maxY, RealType enteredY)
+{
+  // We set the start to the middle of our map, which is also the base-case for entered x = 0
+  RealType rY = maxY / 2;
+  //Which means that the value is in southwards direction, so in the bottom half of our map
+  if (enteredY < 0 && enteredY >= -90)
+  {
+    RealType movingFactor = maxY / 180;
+    rY -= movingFactor * enteredY * (-1);
+  }
+  //Right at the middle
+  else if (enteredY > 0 && enteredY <= 180)
+  {
+    RealType movingFactor = maxY / 360;
+    rY += movingFactor * enteredY;
+  }
+  else if (enteredY != 0)
+  {
+    std::cout << "Invalid coordinates! The lattitude y goes only from -90° (South) to 90° (North)! Setting y value to 0" << std::endl;
+    rY = 0;
+  }
+  return rY;
+}
+
+/**
  * @brief This method can be used to convert an array of sizes nx / ny to a coarsed version with the averaged values according to Sheet 4 Task 5
  *
  * @param array [in] The array to be coarsed
@@ -53,8 +135,6 @@ void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY) {
  * @param restY [in] The amount of leftover cells in Y direction that don't form a full group
  * @return [out] The array of coarsed values which can then be printed
  */
-
-
 int main(int argc, char** argv) {
   Tools::Args args;
   args.addOption("grid-size-x", 'x', "Number of cells in x direction");
@@ -69,6 +149,13 @@ int main(int argc, char** argv) {
   );
   args.addOption("checkpoint-file", 'c', "Checkpoint file to read initial values from");
   args.addOption("coarse", 'a', "Parameter for the coarse output, averaging the next <param> cells");
+  args.addOption("magnitude", 'm', "The moment-megnitude of the eartquake");
+  args.addOption("richter-scale", 'r', "The magnitude on the richter scale, this should not be used as it will be subject to many approximation errors");
+  args.addOption("destinationX", 'd', "The X coordinate of the destination city");
+  args.addOption("destinationY", 's', " The y coordinate of the destination city");
+  args.addOption("epicenterX", 'e', "The X coordinate of the epicenter");
+  args.addOption("epicenterY", 'f', "The Y coordinate of the epicenter");
+  args.addOption("threshold", 'l', "The threshold variable represents the critical water level change that, when surpassed, triggers a warning in the tsunami detection system");
 
   Tools::Args::Result ret = args.parse(argc, argv);
   if (ret == Tools::Args::Result::Help) {
@@ -89,27 +176,85 @@ int main(int argc, char** argv) {
   int         boundaryConditions = args.getArgument<int>("boundary-conditions", 1111); // Default is 1111: Outflow for all Edges
   std::string checkpointFile     = args.getArgument<std::string>("checkpoint-file", "");
   int         coarse             = args.getArgument<int>("coarse", 0);                 // Default is 0 if no coarse should be used
+  RealType    magnitude          = args.getArgument<RealType>("magnitude", 0);
+  RealType    richter            = args.getArgument<RealType>("richter-scale", 0);
+  int         destinationX       = args.getArgument<int>("destinationX", 0);
+  int         destinationY       = args.getArgument<int>("destinationY", 0); 
+  int         epicenterX         = args.getArgument<int>("epicenterX", 0); 
+  int         epicenterY         = args.getArgument<int>("epicenterY", 0);
+  double      threshold         =  args.getArgument<double>("threshold", 1);
+
+  //Error message if the user wants to use the WorldScenario, but forgets a value
+  if (epicenterX != 0 || epicenterY != 0 || destinationX != 0 || destinationY != 0 || magnitude != 0 || richter != 0)
+  {
+      if (magnitude == 0 && richter == 0)
+      {
+        std::cout << "Error, no magnitude entered in neither format. Please use the -m option to enter your desired moment-megnitude!";
+      }
+      if (magnitude == 0 && richter != 0)
+      {
+        magnitude = richterToMagnitude(richter);
+      }
+  }
+
+
+  if (magnitude != 0)
+  {
+    if (magnitude < 6.51)
+    {
+      std::cout << "Magnitude too small, can't compute Tsunami wave" << std::endl;
+      return 5;
+    }
+
+    epicenterX = convertEnteredXtoMappedX(numberOfGridCellsX, epicenterX);
+    epicenterY = convertEnteredYtoMappedY(numberOfGridCellsY, epicenterY);
+    destinationX = convertEnteredXtoMappedX(numberOfGridCellsX, destinationY);
+    destinationY = convertEnteredYtoMappedY(numberOfGridCellsY, destinationY);
+
+    //print the values for the user to see
+    std::cout << "EpicenterX: " << epicenterX << " EpicenterY: " << epicenterY << " DestinationX: " << destinationX << " DestinationY: " << destinationY << std::endl;
+  }
 
   std::vector<RealType> coarseHeights;
   std::vector<RealType> coarseHus;
   std::vector<RealType> coarseHvs;
 
   Tools::Logger::logger.printWelcomeMessage();
+  Tools::WarningSystem warningSystem(false);
 
   // Print information about the grid
   Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
   Scenarios::Scenario* scenario;
 
   if (checkpointFile.empty()) {
-    auto tsunamiScenario = new Scenarios::TsunamiScenario();
-     //tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
-    tsunamiScenario->readScenario("tohoku_gebco_ucsb3_2000m_hawaii_bath.nc", "tohoku_gebco_ucsb3_2000m_hawaii_displ.nc");
-    //tsunamiScenario->readScenario("artificialtsunami_bathymetry_1000.nc", "artificialtsunami_displ_1000.nc");
-    scenario = tsunamiScenario;
-    //scenario = new Scenarios::ArtificialTsunamiScenario();
+    if (magnitude != 0)
+    {
+      /*replaced world scenario with the File Scenario, this si jsut for the sake of testing
+
+      auto worldScenario = new Scenarios::WorldScenario(epicenterX, epicenterY, magnitude);
+      worldScenario->readWorld("GEBCO_2023_TID.nc");
+      scenario = worldScenario;
+      */
+      auto fileScenario = new Scenarios::FileScenario("GEBCO_2023_sub_ice_topo.nc", numberOfGridCellsX, numberOfGridCellsY, 0, epicenterX, epicenterY, magnitude);
+      scenario = fileScenario;
+      warningSystem = new Tools::WarningSystem(destinationX,destinationY,threshold);
+      warningSystem.setThreshold(threshold);
+    }
+    else
+    {
+      auto tsunamiScenario = new Scenarios::TsunamiScenario();
+      tsunamiScenario->readScenario("chile_gebco_usgs_2000m_bath.nc", "chile_gebco_usgs_2000m_displ.nc");
+      scenario = tsunamiScenario;
+    }
+    //auto tsunamiScenario = new Scenarios::FileScenario("GEBCO_2023_TID.nc", numberOfGridCellsX, numberOfGridCellsY, 0);
+    //scenario = tsunamiScenario;
+    //TO CALL PATHFINDER
+    //PATHFINDER TO CALL PostEarthquake to Get new domain
+
   } else {
     scenario = new Scenarios::CheckpointScenario(checkpointFile);
   }
+
 
   if (checkpointFile.empty()) {
     // Ihhgitt!!
@@ -133,12 +278,11 @@ int main(int argc, char** argv) {
   // Compute the size of a single cell
   RealType cellSizeX = (scenario->getBoundaryPos(BoundaryEdge::Right) - scenario->getBoundaryPos(BoundaryEdge::Left)) / numberOfGridCellsX;
   RealType cellSizeY = (scenario->getBoundaryPos(BoundaryEdge::Top) - scenario->getBoundaryPos(BoundaryEdge::Bottom)) / numberOfGridCellsY;
-  std::pair<int, int> startCell = { 90, 625};
-  std::pair<int, int> endCell   = {910, 610};
-  auto waveBlock = new Blocks::ReducedDimSplittingBlock(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY, startCell, endCell);
+
+  auto waveBlock = new Blocks::DimensionalSplitting(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY);
+  Tools::Logger::logger.printString("Init Waveblock");
   waveBlock->initialiseScenario(0, 0, *scenario);
-
-
+  Tools::Logger::logger.printString("Init finished");
 
   double* checkPoints = new double[numberOfCheckPoints + 1];
 
@@ -217,13 +361,7 @@ int main(int argc, char** argv) {
   double wallClockTime = 1;
   Tools::Logger::logger.initWallClockTime(wallClockTime);
 
-#if defined(ENABLE_GUI)
-  Gui::Gui gui = Gui::Gui(bathyCopy);
-  waveBlock->findSearchArea(gui);
-#else
-  waveBlock->findSearchArea();
-#endif
-
+  warningSystem.setOriginalLevel(waveBlock->getWaterHeight()[destinationX][destinationY]);
 
   unsigned int iterations = 0;
   // Loop over checkpoints
@@ -254,10 +392,6 @@ int main(int argc, char** argv) {
       wallClockTime += end_time - start_time;
 #endif
 
-#if defined(ENABLE_GUI)
-      gui.update(waveBlock->getWaterHeight(), simulationTime+maxTimeStepWidth);
-#endif
-
       // Update the cpu time in the logger
       Tools::Logger::logger.updateTime("CPU");
       Tools::Logger::logger.updateTime("CPU-Communication");
@@ -267,6 +401,7 @@ int main(int argc, char** argv) {
       Tools::Logger::logger.printSimulationTime(
         simulationTime, "[" + std::to_string(iterations) + "]: Simulation with max. global dt " + std::to_string(maxTimeStepWidth) + " at time"
       );
+      warningSystem.update(waveBlock->getWaterHeight()[destinationX][destinationY]);
 
       // Update simulation time with time step width
       simulationTime += maxTimeStepWidth;
