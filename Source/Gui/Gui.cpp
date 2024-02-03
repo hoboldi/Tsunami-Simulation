@@ -132,7 +132,7 @@ void Gui::Gui::update(const Tools::Float2D<RealType>& h, double time){
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  unsigned long dataSize = b_.getSize() * sizeof(GLfloat);
+  unsigned long dataSize = static_cast<unsigned long>(b_.getSize()) * sizeof(GLfloat);
 
   int x = b_.getCols();
   int y = b_.getRows();
@@ -274,7 +274,7 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Gui::Gui::getStartEnd(const 
   bool endSet = false;
 
 
-  unsigned long dataSize = h.getSize() * sizeof(GLfloat);
+  unsigned long dataSize = static_cast<unsigned long>(h.getSize()) * sizeof(GLfloat);
   std::cout << "dataSize: " << dataSize<< " " << b_.getCols() << " " << b_.getRows() << std::endl;
   std::cout << "h size: " << h.getSize() << " " << h.getCols() << " " << h.getRows() << std::endl;
 

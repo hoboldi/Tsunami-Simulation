@@ -3,7 +3,9 @@
 #include <string>
 
 #include "Blocks/DimensionalSplitting.h"
+#include "Blocks/ReducedDimSplittingBlock.h"
 #include "BoundaryEdge.hpp"
+#include "Gui/Gui.h"
 #include "Readers/NetCDFReader.h"
 #include "Scenarios/ArtificialTsunamiScenario.h"
 #include "Scenarios/CheckpointScenario.h"
@@ -13,9 +15,9 @@
 #include "Scenarios/WorldScenario.h"
 #include "Tools/Args.hpp"
 #include "Tools/Coarse.h"
-#include "Tools/WarningSystem.h"
 #include "Tools/Logger.hpp"
 #include "Tools/ProgressBar.hpp"
+#include "Tools/WarningSystem.h"
 #include "Writers/NetCDFWriter.hpp"
 #include "Writers/Writer.hpp"
 #ifdef ENABLE_OPENMP
@@ -279,7 +281,10 @@ int main(int argc, char** argv) {
   RealType cellSizeX = (scenario->getBoundaryPos(BoundaryEdge::Right) - scenario->getBoundaryPos(BoundaryEdge::Left)) / numberOfGridCellsX;
   RealType cellSizeY = (scenario->getBoundaryPos(BoundaryEdge::Top) - scenario->getBoundaryPos(BoundaryEdge::Bottom)) / numberOfGridCellsY;
 
-  auto waveBlock = new Blocks::DimensionalSplitting(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY);
+  std::pair<RealType, RealType> epicenter{epicenterX, epicenterY};
+  std::pair<RealType, RealType> destination{destinationX, destinationY};
+
+  auto waveBlock = new Blocks::ReducedDimSplittingBlock(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY,epicenter, destination);
   Tools::Logger::logger.printString("Init Waveblock");
   waveBlock->initialiseScenario(0, 0, *scenario);
   Tools::Logger::logger.printString("Init finished");
