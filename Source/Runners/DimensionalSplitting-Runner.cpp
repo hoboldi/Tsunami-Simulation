@@ -13,6 +13,7 @@
 #include "Scenarios/WorldScenario.h"
 #include "Tools/Args.hpp"
 #include "Tools/Coarse.h"
+#include "Tools/WarningSystem.h"
 #include "Tools/Logger.hpp"
 #include "Tools/ProgressBar.hpp"
 #include "Writers/NetCDFWriter.hpp"
@@ -154,6 +155,7 @@ int main(int argc, char** argv) {
   args.addOption("destinationY", 's', " The y coordinate of the destination city");
   args.addOption("epicenterX", 'e', "The X coordinate of the epicenter");
   args.addOption("epicenterY", 'f', "The Y coordinate of the epicenter");
+  args.addOption("threshold", 'l', "The threshold variable represents the critical water level change that, when surpassed, triggers a warning in the tsunami detection system");
 
   Tools::Args::Result ret = args.parse(argc, argv);
   if (ret == Tools::Args::Result::Help) {
@@ -180,6 +182,7 @@ int main(int argc, char** argv) {
   int         destinationY       = args.getArgument<int>("destinationY", 0); 
   int         epicenterX         = args.getArgument<int>("epicenterX", 0); 
   int         epicenterY         = args.getArgument<int>("epicenterY", 0);
+  double      threshold         =  args.getArgument<double>("threshold", 1);
 
   //Error message if the user wants to use the WorldScenario, but forgets a value
   if (epicenterX != 0 || epicenterY != 0 || destinationX != 0 || destinationY != 0 || magnitude != 0 || richter != 0)
@@ -212,6 +215,7 @@ int main(int argc, char** argv) {
   std::vector<RealType> coarseHvs;
 
   Tools::Logger::logger.printWelcomeMessage();
+  Tools::WarningSystem warningSystem(false);
 
   // Print information about the grid
   Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
@@ -228,6 +232,7 @@ int main(int argc, char** argv) {
       */
       auto fileScenario = new Scenarios::FileScenario("GEBCO_2023_sub_ice_topo.nc", numberOfGridCellsX, numberOfGridCellsY, 0, epicenterX, epicenterY, magnitude);
       scenario = fileScenario;
+      warningSystem = new Tools::WarningSystem(destinationX,destinationY,threshold);
     }
     else
     {
@@ -350,6 +355,8 @@ int main(int argc, char** argv) {
   double wallClockTime = 1;
   Tools::Logger::logger.initWallClockTime(wallClockTime);
 
+  warningSystem.setOriginalLevel(waveBlock->getWaterHeight()[destinationX][destinationY]);
+
   unsigned int iterations = 0;
   // Loop over checkpoints
   for (; cp <= numberOfCheckPoints; cp++) {
@@ -388,6 +395,7 @@ int main(int argc, char** argv) {
       Tools::Logger::logger.printSimulationTime(
         simulationTime, "[" + std::to_string(iterations) + "]: Simulation with max. global dt " + std::to_string(maxTimeStepWidth) + " at time"
       );
+      warningSystem.update(waveBlock->getWaterHeight()[destinationX][destinationY]);
 
       // Update simulation time with time step width
       simulationTime += maxTimeStepWidth;

@@ -245,3 +245,11 @@ void Tools::Logger::printElementUpdatesDone(
       << double(iterations) * nX * nY / timer_.at(name) << ' ' << iterationMessage << std::endl;
   }
 }
+
+void Tools::Logger::printAlarm(double change) {
+  std::cout << "ALARM!\n The sea level change is: " << change << ".\n";
+}
+
+void Tools::Logger::printSafeLevel(double change) {
+  std::cout << "The sea level is safe with water level change: " << change << ".\n";
+}
