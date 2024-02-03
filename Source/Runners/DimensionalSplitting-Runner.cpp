@@ -86,6 +86,7 @@ RealType convertEnteredXtoMappedX(RealType maxX, RealType enteredX)
     std::cout << "Invalid coordinates! The longitude x goes only from -180° (West) to 180° (East)! Setting x value to 0" << std::endl;
     rx = 0;
   }
+  std::cout << "Converted " << enteredX << " to " << rx << std::endl;
   return rx;
 }
 
@@ -119,6 +120,7 @@ RealType convertEnteredYtoMappedY(RealType maxY, RealType enteredY)
     std::cout << "Invalid coordinates! The lattitude y goes only from -90° (South) to 90° (North)! Setting y value to 0" << std::endl;
     rY = 0;
   }
+  std::cout << "Converted " << enteredY << " to " << rY << std::endl;
   return rY;
 }
 
@@ -151,10 +153,10 @@ int main(int argc, char** argv) {
   args.addOption("coarse", 'a', "Parameter for the coarse output, averaging the next <param> cells");
   args.addOption("magnitude", 'm', "The moment-megnitude of the eartquake");
   args.addOption("richter-scale", 'r', "The magnitude on the richter scale, this should not be used as it will be subject to many approximation errors");
-  args.addOption("destinationX", 'd', "The X coordinate of the destination city");
-  args.addOption("destinationY", 's', " The y coordinate of the destination city");
-  args.addOption("epicenterX", 'e', "The X coordinate of the epicenter");
-  args.addOption("epicenterY", 'f', "The Y coordinate of the epicenter");
+  args.addOption("destinationX", 'd', "The X geographical coordinate of the destination city. Negative values mean degrees west, positive degrees east");
+  args.addOption("destinationY", 's', " The y geographical coordinate of the destination city. Negative values mean degrees south, positive degrees north");
+  args.addOption("epicenterX", 'e', "The X geographical coordinate of the epicenter. Negative values mean degrees west, positive degrees east");
+  args.addOption("epicenterY", 'f', "The Y geographical coordinate of the epicenter. Negative values mean degrees south, positive degrees north");
   args.addOption("threshold", 'l', "The threshold variable represents the critical water level change that, when surpassed, triggers a warning in the tsunami detection system");
 
   Tools::Args::Result ret = args.parse(argc, argv);
@@ -178,14 +180,14 @@ int main(int argc, char** argv) {
   int         coarse             = args.getArgument<int>("coarse", 0);                 // Default is 0 if no coarse should be used
   RealType    magnitude          = args.getArgument<RealType>("magnitude", 0);
   RealType    richter            = args.getArgument<RealType>("richter-scale", 0);
-  int         destinationX       = args.getArgument<int>("destinationX", 0);
-  int         destinationY       = args.getArgument<int>("destinationY", 0); 
-  int         epicenterX         = args.getArgument<int>("epicenterX", 0); 
-  int         epicenterY         = args.getArgument<int>("epicenterY", 0);
-  double      threshold         =  args.getArgument<double>("threshold", 1);
+  RealType    destinationXUser      = args.getArgument<RealType>("destinationX", 0);
+  RealType    destinationYUser      = args.getArgument<RealType>("destinationY", 0); 
+  RealType    epicenterXUser       = args.getArgument<RealType>("epicenterX", 0); 
+  RealType    epicenterYUser       = args.getArgument<RealType>("epicenterY", 0);
+  double      threshold          =  args.getArgument<double>("threshold", 1);
 
   //Error message if the user wants to use the WorldScenario, but forgets a value
-  if (epicenterX != 0 || epicenterY != 0 || destinationX != 0 || destinationY != 0 || magnitude != 0 || richter != 0)
+  if (epicenterXUser != 0 || epicenterYUser != 0 || destinationXUser != 0 || destinationYUser != 0 || magnitude != 0 || richter != 0)
   {
       if (magnitude == 0 && richter == 0)
       {
@@ -197,6 +199,10 @@ int main(int argc, char** argv) {
       }
   }
 
+int destinationX = 0;
+int destinationY = 0;
+int epicenterX = 0;
+int epicenterY = 0;
 
   if (magnitude != 0)
   {
@@ -206,10 +212,10 @@ int main(int argc, char** argv) {
       return 5;
     }
 
-    epicenterX = convertEnteredXtoMappedX(numberOfGridCellsX, epicenterX);
-    epicenterY = convertEnteredYtoMappedY(numberOfGridCellsY, epicenterY);
-    destinationX = convertEnteredXtoMappedX(numberOfGridCellsX, destinationY);
-    destinationY = convertEnteredYtoMappedY(numberOfGridCellsY, destinationY);
+    epicenterX = convertEnteredXtoMappedX(numberOfGridCellsX, epicenterXUser);
+    epicenterY = convertEnteredYtoMappedY(numberOfGridCellsY, epicenterYUser);
+    destinationX = convertEnteredXtoMappedX(numberOfGridCellsX, destinationXUser);
+    destinationY = convertEnteredYtoMappedY(numberOfGridCellsY, destinationYUser);
 
     //print the values for the user to see
     std::cout << "EpicenterX: " << epicenterX << " EpicenterY: " << epicenterY << " DestinationX: " << destinationX << " DestinationY: " << destinationY << std::endl;
