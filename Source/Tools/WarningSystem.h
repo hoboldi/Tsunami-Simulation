@@ -46,6 +46,7 @@ namespace Tools {
    WarningSystem(int destinationX, int destinationY, double threshold);
    ~WarningSystem() = default;
 
+   void setThreshold(double newThreshold);
    void setOriginalLevel(double newLevel);
 
    void update(double waterHeight);
