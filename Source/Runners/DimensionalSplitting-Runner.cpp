@@ -184,13 +184,6 @@ int main(int argc, char** argv) {
   int         scenarioID         = args.getArgument<int>("scenarios",0);
   bool        guiCoordinates     = args.getArgument<bool>("GUICoordinates", false);
 
-
-  // Error message if the user choose wrong coordinates
-  if (destinationX > 90 || destinationX < -90 || epicenterX > 90 || epicenterX < -90 || destinationY > 180 || destinationY < -180 || epicenterY > 180 || epicenterY < -180) {
-    std::cout << "Error, the latitude or longitude coordinates were false chosen";
-  }
-
-
   // Error message if the user wants to use the WorldScenario, but forgets a value
   if (epicenterX != 0 || epicenterY != 0 || destinationX != 0 || destinationY != 0 || magnitude != 0 || richter != 0) {
     if (magnitude == 0 && richter == 0) {
@@ -232,6 +225,12 @@ int main(int argc, char** argv) {
       break;
     }
 
+    // Error message if the user choose wrong coordinates
+    if (destinationY > 90 || destinationY < -90 || epicenterY > 90 || epicenterY < -90 || destinationX > 180 || destinationX < -180 || epicenterX > 180 || epicenterX < -180) {
+      std::cout << "Error, the latitude or longitude coordinates were false chosen";
+      return 5;
+    }
+
     epicenterX   = convertEnteredXtoMappedX(numberOfGridCellsX, epicenterX);
     epicenterY   = convertEnteredYtoMappedY(numberOfGridCellsY, epicenterY);
     destinationX = convertEnteredXtoMappedX(numberOfGridCellsX, destinationX);
@@ -240,6 +239,8 @@ int main(int argc, char** argv) {
     // print the values for the user to see
     std::cout << "EpicenterX: " << epicenterX << " EpicenterY: " << epicenterY << " DestinationX: " << destinationX << " DestinationY: " << destinationY << std::endl;
   }
+
+
 
   std::vector<RealType> coarseHeights;
   std::vector<RealType> coarseHus;
