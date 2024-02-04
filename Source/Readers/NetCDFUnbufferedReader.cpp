@@ -28,7 +28,6 @@ Readers::NetCDFUnbufferedReader::NetCDFUnbufferedReader(const std::string& filen
   assert(retval == NC_NOERR);
   retval = nc_inq_dimlen(fileID_, by_dimid, &yDim);
   assert(retval == NC_NOERR);
-  std::cout << "xDim: " << xDim << " yDim: " << yDim << std::endl;
 
   // Get variable ids
   retval = nc_inq_varid(fileID_, "lat", &xVarID_);

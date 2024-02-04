@@ -12,7 +12,6 @@ Scenarios::FileScenario::FileScenario(const std::string& bathymetry, int numCell
   numCellsY(numCellsY) {
   xDim             = static_cast<double>(reader_.getYDim());
   yDim             = static_cast<double>(reader_.getXDim());
-  std::cout << "xDim: " << xDim << " yDim: " << yDim << std::endl;
   dx_              = 40075000 / numCellsX;
   dy_              = 12742000 / numCellsY;
   this->epicenterX = epicenterX;

@@ -247,9 +247,10 @@ void Tools::Logger::printElementUpdatesDone(
 }
 
 void Tools::Logger::printAlarm(double change) {
-  std::cout << "ALARM!\n The sea level change is: " << change << ".\n";
+  getTimeStream()<< indentation_ << "ALARM!" << std::endl;
+  getTimeStream()<< indentation_ << "The sea level change is: " << change << std::endl;
 }
 
 void Tools::Logger::printSafeLevel(double change) {
-  std::cout << "The sea level is safe with water level change: " << change << ".\n";
+  getTimeStream()<< indentation_ << "The sea level is safe with water level change: " << change << ".\n";
 }

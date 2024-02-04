@@ -8,13 +8,9 @@
 #ifdef ENABLE_GUI
 #include "Gui/Gui.h"
 #endif
-#include "Readers/NetCDFReader.h"
 #include "Scenarios/ArtificialTsunamiScenario.h"
 #include "Scenarios/CheckpointScenario.h"
 #include "Scenarios/FileScenario.h"
-#include "Scenarios/RadialDamBreakScenario.hpp"
-#include "Scenarios/TsunamiScenario.h"
-#include "Scenarios/WorldScenario.h"
 #include "Tools/Args.hpp"
 #include "Tools/Coarse.h"
 #include "Tools/Logger.hpp"
@@ -26,24 +22,6 @@
 #include <omp.h>
 #endif
 
-void print2DArray(RealType array[], int dimX, int dimY) {
-  for (int y = 0; y < dimY; y++) {
-    for (int x = 0; x < dimX; x++) {
-      std::cout << array[dimX * y + x] << "\t";
-    }
-    std::cout << "\n";
-  }
-}
-
-void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY) {
-  std::cout << "\nPrinting Float2D:" << std::endl;
-  for (int y = 0; y < dimY + 2; y++) {
-    for (int x = 0; x < dimX + 2; x++) {
-      std::cout << array[x][y] << "\t";
-    }
-    std::cout << "\n";
-  }
-}
 
 /**
  * @brief A method to convert an entered magnitude on the richter scale (R) to the magnitude in moment notation (M)
@@ -281,7 +259,6 @@ int main(int argc, char** argv) {
   // Compute the size of a single cell
   RealType cellSizeX = (scenario->getBoundaryPos(BoundaryEdge::Right) - scenario->getBoundaryPos(BoundaryEdge::Left)) / numberOfGridCellsX;
   RealType cellSizeY = (scenario->getBoundaryPos(BoundaryEdge::Top) - scenario->getBoundaryPos(BoundaryEdge::Bottom)) / numberOfGridCellsY;
-  std::cout << "Cell size: " << cellSizeX << " x " << cellSizeY << std::endl;
 
   std::pair<RealType, RealType> epicenter{epicenterX, epicenterY};
   std::pair<RealType, RealType> destination{destinationX, destinationY};

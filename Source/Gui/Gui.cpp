@@ -25,12 +25,6 @@ Gui::Gui::Gui(const Tools::Float2D<RealType>& b, int width, int height) :
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  // scale width and height so that the window fits on the screen
-  while (width >= 1920 || height >= 1080) {
-    width /= 1.2;
-    height /= 1.2;
-  }
-  std::cout << "width: " << width << " height: " << height << std::endl;
   // Open a window and create its OpenGL context
   window = glfwCreateWindow(1500, 700, "SWE", NULL, NULL);
   if (window == NULL) {
@@ -86,11 +80,6 @@ Gui::Gui::Gui(const Tools::Float2D<RealType>& b, int width, int height) :
   glUniform1f(widthLoc, static_cast<GLfloat>(b.getCols()));
   glUniform1f(heightLoc, static_cast<GLfloat>(b.getRows()));
 
-  // print point size
-  std::pair<int, int> windowSize;
-  glfwGetWindowSize(window, &windowSize.first, &windowSize.second);
-  float pointSize = std::fmin(windowSize.first / (float)b_.getCols(), windowSize.second / (float)b_.getRows());
-  std::cout << "point size: " << pointSize << std::endl;
 
   // setup color uniforms
   minColorLoc = glGetUniformLocation(programID, "minColor");
@@ -280,8 +269,6 @@ std::pair<std::pair<int, int>, std::pair<int, int>> Gui::Gui::getStartEnd(const 
 
 
   unsigned long dataSize = static_cast<unsigned long>(h.getSize()) * sizeof(GLfloat);
-  std::cout << "dataSize: " << dataSize<< " " << b_.getCols() << " " << b_.getRows() << std::endl;
-  std::cout << "h size: " << h.getSize() << " " << h.getCols() << " " << h.getRows() << std::endl;
 
   int x = b_.getCols();
   int y = b_.getRows();
