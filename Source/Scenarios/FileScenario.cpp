@@ -83,15 +83,21 @@ inline RealType Scenarios::FileScenario::getWaterHeight(const RealType x, const 
   //add tsunami wave
   if (abs(x - epicenterX * dx_) < 5 * dx_ && abs(y - epicenterY * dy_) < 5 * dy_)
   {
-
-    //print test
-    std::cout << "Starting: " << getStartingWaveHeight() << std::endl;
-    std::cout << "Bathymetrie: " << getBathymetry(x, y) << std::endl;
-
     result += getStartingWaveHeight() * 1/(1 + ((abs(x - epicenterX * dx_)/dy_) * (abs(y - epicenterY * dy_)/dx_)));
   }
   return result;
 }
+
+bool Scenarios::FileScenario::checkIfEpicenterIsOnWater(const RealType x, const RealType y) const
+{
+  std::cout << "Bathymetry in Question: " << (RealType)getBathymetry(x,y) << " at " << x << ";" << y << std::endl;
+  if ((RealType)getBathymetry(x, y) > 0.0)
+  {
+    return false;
+  }
+  return true;
+}
+
 RealType Scenarios::FileScenario::getBoundaryPos(const BoundaryEdge edge) const {
   if (edge == BoundaryEdge::Left) {
     return 0;

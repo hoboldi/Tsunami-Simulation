@@ -243,6 +243,14 @@ int epicenterY = 0;
       */
       auto fileScenario = new Scenarios::FileScenario("GEBCO_2023_sub_ice_topo.nc", numberOfGridCellsX, numberOfGridCellsY, 0, epicenterX, epicenterY, magnitude);
       scenario = fileScenario;
+      /*
+      if(!fileScenario->checkIfEpicenterIsOnWater(epicenterX, epicenterY))
+      {
+        std::cout << "Test here " << fileScenario->getBathymetry(epicenterX, epicenterY) << std::endl;
+        std::cout << "Epicenter set on land, aborting calculation! Restart and make sure you set it on water." << std::endl;
+        return 6;
+      }
+      */
       warningSystem = new Tools::WarningSystem(destinationX,destinationY,threshold);
       warningSystem.setThreshold(threshold);
     }

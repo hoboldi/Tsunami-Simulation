@@ -31,6 +31,16 @@ namespace Scenarios {
       */
       RealType getMaxWaveHeight() const;
 
+      /**
+       * @brief A method used to check if the epicenter provided is higher than the sea level (Bathymetrie > 0)
+       * If yes, we assume that the epicenter has been set on land and therefore cancel the operation since no Tsunami can be calculated
+       * 
+       * @param x [in] The x-coordinate (Longitude) of the epicenter
+       * @param y [in] The y-coordinate (Lattitude) of the epicenter
+       * @return bool [out] true if epicenter is on water (Bathymetry <= 0) and false if on land
+       */
+      bool checkIfEpicenterIsOnWater(RealType x, RealType y) const;
+
     private:
       RealType epicenterX;
       RealType epicenterY;
