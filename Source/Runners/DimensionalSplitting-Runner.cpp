@@ -116,8 +116,7 @@ int main(int argc, char** argv) {
   args.addOption("number-of-checkpoints", 'n', "Number of checkpoints to write output files");
   args.addOption("simulation-time", 't', "Simulation time in seconds");
   args.addOption(
-    "boundary-conditions",
-    'b',
+    "boundary-conditions", 'y',
     "Set Boundary Conditions represented by an 4 digit Integer of 1s and 2s. (1: Outflow, 2: Wall).\n First Digit: Left Boundary\n Second Digit: Right Boundary\n Third Digit: Bottom Boundary\n Fourth Digit: Top Boundary"
   );
   args.addOption("checkpoint-file", 'c', "Checkpoint file to read initial values from");
@@ -202,6 +201,8 @@ int main(int argc, char** argv) {
       break;
     }
 
+    //print destination and epicenter
+    std::cout << "EpicenterX: " << epicenterX << " EpicenterY: " << epicenterY << " DestinationX: " << destinationX << " DestinationY: " << destinationY << std::endl;
     // Error message if the user choose wrong coordinates
     if (destinationY > 90 || destinationY < -90 || epicenterY > 90 || epicenterY < -90 || destinationX > 180 || destinationX < -180 || epicenterX > 180 || epicenterX < -180) {
       std::cout << "Error, the latitude or longitude coordinates were false chosen";

@@ -327,6 +327,7 @@ void Blocks::ReducedDimSplittingBlock::shiftData() {
   // shift bathymetry half of nx to the right and roll the rest to the left
   for (int j = 0; j < ny_; ++j) {
     b_[0][j] = b_[nx_ / 2][j];
+    b_[nx_ / 2][j] = -1000;
   }
   for (int i = 1; i < nx_ / 2; i++) {
     for (int j = 0; j < ny_; ++j) {
@@ -336,10 +337,10 @@ void Blocks::ReducedDimSplittingBlock::shiftData() {
     }
   }
 
-
   // shift h_ half of nx to the right and roll the rest to the left
   for (int j = 0; j < ny_; ++j) {
     h_[0][j] = h_[nx_ / 2][j];
+    h_[nx_ / 2][j] = 1000;
   }
   for (int i = 1; i < nx_ / 2; i++) {
     for (int j = 0; j < ny_; ++j) {
