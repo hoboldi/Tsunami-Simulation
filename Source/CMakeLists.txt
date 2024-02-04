@@ -3,6 +3,8 @@ display_header("Creating Makefile of ${META_PROJECT_NAME}")
 
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "*")
 list(FILTER SOURCES EXCLUDE REGEX ".*Runner\\.cpp$")
+# exclude everything in Gui/
+list(FILTER SOURCES EXCLUDE REGEX ".*Gui/.*")
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 target_sources(${META_PROJECT_NAME} PRIVATE ${SOURCES})
 target_include_directories(${META_PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -114,6 +116,8 @@ if(ENABLE_GUI)
     find_package(GLEW REQUIRED)
     find_package(glfw3 REQUIRED)
     include_directories(Gui/imgui Gui/imgui/backends)
+    target_sources(${META_PROJECT_NAME} PRIVATE Gui/Gui.cpp Gui/Gui.h)
+    target_sources(${META_PROJECT_NAME} PRIVATE Gui/imgui/imgui.cpp Gui/imgui/imgui_draw.cpp Gui/imgui/imgui_widgets.cpp Gui/imgui/imgui_tables.cpp Gui/imgui/backends/imgui_impl_glfw.cpp Gui/imgui/backends/imgui_impl_opengl3.cpp)
     # only add imgui glfw and glew to the target
     target_link_libraries(${META_PROJECT_NAME} PUBLIC OpenGL::GL GLEW::GLEW glfw)
 endif()

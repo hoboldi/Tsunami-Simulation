@@ -9,48 +9,49 @@ Scenarios::FileScenario::FileScenario(const std::string& bathymetry, int numCell
   reader_(bathymetry),
   offsetX_(offsetX),
   numCellsX(numCellsX),
-  numCellsY(numCellsY)
-{
-  xDim = static_cast<double>(reader_.getYDim());
-  yDim = static_cast<double>(reader_.getXDim());
-  dx_ = 40075000 / numCellsX;
-  dy_ = 12742000 / numCellsY;
+  numCellsY(numCellsY) {
+  xDim             = static_cast<double>(reader_.getYDim());
+  yDim             = static_cast<double>(reader_.getXDim());
+  dx_              = 40075000 / numCellsX;
+  dy_              = 12742000 / numCellsY;
   this->epicenterX = epicenterX;
   this->epicenterY = epicenterY;
-  this->magnitude = magnitude;
+  this->magnitude  = magnitude;
 }
 
-RealType Scenarios::FileScenario::getStartingWaveHeight() const
-{
-    RealType maxHeight = getMaxWaveHeight();
-    // We use the equation found here: https://en.wikipedia.org/wiki/Green%27s_law#:~:text=In%20fluid%20dynamics%2C%20Green's%20law,gradually%20varying%20depth%20and%20width.
-    // H1 * foruth root of h1 = H2 * fourth root of h2
-    // H1 and H2 are the wave heights in 2 places, h1 and h2 being the corresponding water heights
-    // Since we only try and calculate until a water height of 50m, we use that as the value for h1, and h2 being tha depth in the epicenter-cell
-    RealType startingHeight = (maxHeight * std::pow(50, 1.0/4)) / std::pow(-1 * getBathymetry(epicenterX * dx_, epicenterY * dy_), 1.0/4); //TODO
+RealType Scenarios::FileScenario::getStartingWaveHeight() const {
+  RealType maxHeight = getMaxWaveHeight();
+  // We use the equation found here: https://en.wikipedia.org/wiki/Green%27s_law#:~:text=In%20fluid%20dynamics%2C%20Green's%20law,gradually%20varying%20depth%20and%20width.
+  // H1 * foruth root of h1 = H2 * fourth root of h2
+  // H1 and H2 are the wave heights in 2 places, h1 and h2 being the corresponding water heights
+  // Since we only try and calculate until a water height of 50m, we use that as the value for h1, and h2 being tha depth in the epicenter-cell
+  RealType startingHeight = (maxHeight * std::pow(50, 1.0 / 4)) / std::pow(-1 * getBathymetry(epicenterX * dx_, epicenterY * dy_), 1.0 / 4); // TODO
 
-    return startingHeight;
+  return startingHeight;
 }
 
-RealType Scenarios::FileScenario::getMaxWaveHeight() const
-{
-    if (magnitude < 6.51)
-    {
-        return 0;
-    }
-    else
-    {
-        return (7.6875 * magnitude) - 50.0417;
-    }
+RealType Scenarios::FileScenario::getMaxWaveHeight() const {
+  if (magnitude < 6.51) {
+    return 0;
+  } else {
+    return (7.6875 * magnitude) - 50.0417;
+  }
 }
+
+int count_lines_skipped = 0;
 
 inline RealType Scenarios::FileScenario::getBathymetry(const RealType x, const RealType y) const {
-    if(x < 0 || x > 40075000 || y < 0 || y > 12742000){
-        return 0;
-    }
-    int   y_index = offsetX_ + (x/40075000) * xDim;
-    y_index %= static_cast<int>(xDim);
-    int   x_index = (y / 12742000) * yDim;
+  RealType y_conv = (y * yDim / 12742000);
+  RealType x_conv = (x * xDim / 40075000);
+
+  if (x_conv < 0 || x_conv > xDim || y_conv < 0 || y_conv > yDim) {
+    count_lines_skipped++;
+    std::cout << "Skipped: " << count_lines_skipped << std::endl;
+    return 0;
+  }
+  int y_index = static_cast<int>(offsetX_ + x_conv);
+  y_index %= static_cast<int>(xDim);
+  int    x_index = static_cast<int>(y_conv);
   double val     = reader_.readUnbuffered(x_index, y_index);
   if (val < 20 && val >= 0) {
     return 20;
@@ -62,18 +63,18 @@ inline RealType Scenarios::FileScenario::getBathymetry(const RealType x, const R
 }
 
 inline RealType Scenarios::FileScenario::getWaterHeight(const RealType x, const RealType y) const {
-  RealType y_conv = (y / 12742000) * yDim;
-  RealType x_conv = (x / 40075000) * xDim;
-  if(x_conv < 0 || x_conv > xDim || y_conv < 0 || y_conv > yDim){
+  RealType y_conv = (y * yDim / 12742000);
+  RealType x_conv = (x * xDim / 40075000);
+  if (x_conv < 0 || x_conv > xDim || y_conv < 0 || y_conv > yDim) {
     return 0;
   }
-  //print values x, y and epicenter
-  //std::cout << "x: " << x_conv << " y: " << y_conv << " epicenterX: " << epicenterX  << " epicenterY: " << epicenterY << std::endl;
+  // print values x, y and epicenter
+  // std::cout << "x: " << x_conv << " y: " << y_conv << " epicenterX: " << epicenterX  << " epicenterY: " << epicenterY << std::endl;
 
 
-  int   y_index = offsetX_ + x_conv;
+  int y_index = static_cast<int>(offsetX_ + x_conv);
   y_index %= static_cast<int>(xDim);
-  int   x_index = y_conv;
+  int    x_index = static_cast<int>(y_conv);
   double val     = reader_.readUnbuffered(x_index, y_index);
 
   RealType result = 0;

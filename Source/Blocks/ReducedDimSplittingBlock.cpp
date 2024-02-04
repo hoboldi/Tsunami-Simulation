@@ -1,7 +1,9 @@
 #include "ReducedDimSplittingBlock.h"
 
+#include <cfloat>
 #include <chrono>
 #include <csignal>
+#include <iostream>
 #include <queue>
 #include <unordered_set>
 Blocks::ReducedDimSplittingBlock::ReducedDimSplittingBlock(int nx, int ny, RealType dx, RealType dy):
@@ -28,7 +30,7 @@ struct CompareCell {
   bool operator()(const Cell* a, const Cell* b) const { return a->TotalCost() > b->TotalCost(); }
 };
 std::pair<int, int> Cell::goal;
-
+#ifdef ENABLE_GUI
 void Blocks::ReducedDimSplittingBlock::findSearchArea(Gui::Gui& gui) {
   // if the x-distance between start and end cell is bigger than nx/2, shift the data and get a pacific focused map
   if (abs(startCell_.first - endCell_.first) > nx_ / 2) {
@@ -115,6 +117,7 @@ void Blocks::ReducedDimSplittingBlock::findSearchArea(Gui::Gui& gui) {
   topCorner_.first     = std::min(nx_ - 1, maxX + offset);
   topCorner_.second    = std::min(ny_ - 1, maxY + offset);
 }
+#endif
 void Blocks::ReducedDimSplittingBlock::findSearchArea() {
   // if the x-distance between start and end cell is bigger than nx/2, shift the data and get a pacific focused map
   if (abs(startCell_.first - endCell_.first) > nx_ / 2) {

@@ -5,7 +5,9 @@
 #include "Blocks/DimensionalSplitting.h"
 #include "Blocks/ReducedDimSplittingBlock.h"
 #include "BoundaryEdge.hpp"
+#ifdef ENABLE_GUI
 #include "Gui/Gui.h"
+#endif
 #include "Readers/NetCDFReader.h"
 #include "Scenarios/ArtificialTsunamiScenario.h"
 #include "Scenarios/CheckpointScenario.h"
