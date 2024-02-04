@@ -457,7 +457,7 @@ int main(int argc, char** argv) {
       );
 
       // Update the Warning System with the new WaterHeight
-      if (warningSystem.update(waveBlock->getWaterHeight()[destinationX][destinationY])) {
+      if (warningSystem.update(waveBlock->getWaterHeight()[destinationX][destinationY],simulationTime)) {
         goto endSimulation;
       }
 

@@ -87,11 +87,6 @@ inline RealType Scenarios::FileScenario::getWaterHeight(const RealType x, const 
   //add tsunami wave
   if (abs(x_conv/xDim * numCellsX  - epicenterX) < 5  && abs(y_conv /yDim * numCellsY - epicenterY ) < 5 )
   {
-
-    //print test
-    std::cout << "Starting: " << getStartingWaveHeight()<< "   " << x / 40075000 << "   " << y / 12742000<< std::endl;
-    std::cout << "Bathymetrie: " << getBathymetry(x, y) << std::endl;
-
     result += getStartingWaveHeight() * 1/(1 + ((abs(x_conv/xDim * numCellsX - epicenterX)) * (abs(y_conv /yDim * numCellsY - epicenterY))));
   }
   return result;

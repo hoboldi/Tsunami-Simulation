@@ -43,6 +43,8 @@ namespace Tools {
  class WarningSystem {
  private:
 
+   double biggestDifference = 0;
+   double biggestTime = 0;
    int destinationX; /**< X-coordinate of the warning system's destination. */
    int destinationY; /**< Y-coordinate of the warning system's destination. */
    double originalLevel; /**< Original water level used as a reference for warnings. */
@@ -98,7 +100,7 @@ namespace Tools {
          * @param waterHeight The current water height to be checked against the threshold and original level.
          * @return True if the warning was already triggered and water level is safe again.
     */
-   bool update(double waterHeight);
+   bool update(double waterHeight, double time);
  };
 
 } // namespace Tools
