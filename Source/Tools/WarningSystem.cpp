@@ -39,9 +39,7 @@ Tools::WarningSystem::WarningSystem(int destinationX, int destinationY) {
 }
 
 void Tools::WarningSystem::setOriginalLevel(double newLevel) {
-  if(used) {
-    originalLevel = newLevel;
-  }
+  originalLevel = newLevel;
 }
 
 void Tools::WarningSystem::setThreshold(double newThreshold) {
