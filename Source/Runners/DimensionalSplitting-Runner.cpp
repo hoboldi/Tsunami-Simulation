@@ -227,15 +227,15 @@ int main(int argc, char** argv) {
 
     switch (scenarioID) {
     case 1:
-      epicenterX = 150;
+      epicenterX = 142;
       epicenterY = 60;
       destinationX = 140;
       destinationY = 60;
       break;
     case 2:
-      epicenterX = -90;
+      epicenterX = -74;
       epicenterY = -28;
-      destinationX = -72;
+      destinationX = -71;
       destinationY = -28;
       break;
     case 3:
