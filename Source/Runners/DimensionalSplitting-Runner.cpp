@@ -58,6 +58,7 @@ RealType richterToMagnitude(RealType richter)
   return (energy - 5.24) / 1.44;
 }
 
+
 /**
  * @brief This method is used to convert the human entered coordinates in longitude (geographic coordinates) to their equivalent used on our map
  * The P(0,0) for us is in the bottom left, the max Point in the top right
@@ -88,8 +89,10 @@ RealType convertEnteredXtoMappedX(RealType maxX, RealType enteredX)
     std::cout << "Invalid coordinates! The longitude x goes only from -180° (West) to 180° (East)! Setting x value to 0" << std::endl;
     rx = 0;
   }
+  std::cout << "Converted " << enteredX << " to " << rx << std::endl;
   return rx;
 }
+
 
 /**
  * @brief This method is used to convert the human entered coordinates (geographic coordinates) into their equivalent used on our map
@@ -122,8 +125,10 @@ RealType convertEnteredYtoMappedY(RealType maxY, RealType enteredY)
     std::cout << "Invalid coordinates! The latitude y goes only from -90° (South) to 90° (North)! Setting y value to 0" << std::endl;
     rY = 0;
   }
+  std::cout << "Converted " << enteredY << " to " << rY << std::endl;
   return rY;
 }
+
 
 /**
  * @brief This method can be used to convert an array of sizes nx / ny to a coarsed version with the averaged values according to Sheet 4 Task 5
@@ -154,10 +159,10 @@ int main(int argc, char** argv) {
   args.addOption("coarse", 'k', "Parameter for the coarse output, averaging the next <param> cells");
   args.addOption("magnitude", 'm', "The moment-megnitude of the eartquake");
   args.addOption("richter-scale", 'r', "The magnitude on the richter scale, this should not be used as it will be subject to many approximation errors");
-  args.addOption("destinationLatitude", 'a', "The latitude coordinate of the destination city");
-  args.addOption("destinationLongitude", 'b', " The longitude coordinate of the destination city");
-  args.addOption("epicenterLatitude", 'e', "The latitude coordinate of the epicenter");
-  args.addOption("epicenterLongitude", 'f', "The longitude coordinate of the epicenter");
+  args.addOption("destinationLongitude", 'a', "The longitude coordinate of the destination city");
+  args.addOption("destinationLatitude", 'b', " The latitude coordinate of the destination city");
+  args.addOption("epicenterLongitude", 'e', "The longitude coordinate of the epicenter");
+  args.addOption("epicenterLatitude", 'f', "The latitude coordinate of the epicenter");
   args.addOption("limit", 'l', "The limit variable represents the critical water level change that, when surpassed, triggers a warning in the tsunami detection system");
   args.addOption("scenarios",'s',"The user can use a pre-chosen scenario. The given scenarios have ids 1 to 3");
 
@@ -182,8 +187,8 @@ int main(int argc, char** argv) {
   int         coarse             = args.getArgument<int>("coarse", 0);                 // Default is 0 if no coarse should be used
   RealType    magnitude          = args.getArgument<RealType>("magnitude", 7);
   RealType    richter            = args.getArgument<RealType>("richter-scale", 0);
-  int         destinationX       = args.getArgument<int>("destinationLatitude", 0);
-  int         destinationY       = args.getArgument<int>("destinationLongitude", 0);
+  int         destinationX       = args.getArgument<int>("destinationLongitude", 0);
+  int         destinationY       = args.getArgument<int>("destinationLatitude", 0);
   int         epicenterX         = args.getArgument<int>("epicenterLatitude", 0);
   int         epicenterY         = args.getArgument<int>("epicenterLongitude", 0);
   double      threshold          = args.getArgument<double>("limit", -1);
@@ -218,6 +223,29 @@ int main(int argc, char** argv) {
     {
       std::cout << "Magnitude too small, can't compute Tsunami wave" << std::endl;
       return 5;
+    }
+
+    switch (scenarioID) {
+    case 1:
+      epicenterX = 150;
+      epicenterY = 60;
+      destinationX = 140;
+      destinationY = 60;
+      break;
+    case 2:
+      epicenterX = -90;
+      epicenterY = -28;
+      destinationX = -72;
+      destinationY = -28;
+      break;
+    case 3:
+      epicenterX = 0;
+      epicenterY = 0;
+      destinationX = 5;
+      destinationY = 5;
+      break;
+    default:
+      break;
     }
 
     epicenterX = convertEnteredXtoMappedX(numberOfGridCellsX, epicenterX);
@@ -370,30 +398,6 @@ int main(int argc, char** argv) {
   std::cout << "found search area" << std::endl;
 #else
 
-  switch (scenarioID) {
-  case 1:
-    epicenterX = (double) numberOfGridCellsX / 6055.0 * 10000.0;
-    epicenterY = (double) numberOfGridCellsY / 8944.0 * 10000.0;
-    waveBlock->setStartCell(std::make_pair(epicenterX,epicenterY));
-    destinationX = (double)numberOfGridCellsX / 5972.0 * 10000.0;
-    destinationY = (double) numberOfGridCellsY / 8861.0 * 10000.0;
-    waveBlock->setEndCell(std::make_pair(destinationX,destinationY));
-    break;
-  case 2:
-    waveBlock->setStartCell(startEnd.first);
-    waveBlock->setEndCell(startEnd.second);
-    //TODO Change coordinates
-    break;
-  case 3:
-    waveBlock->setStartCell(startEnd.first);
-    waveBlock->setEndCell(startEnd.second);
-    //TODO Change coordinates
-    break;
-  default:
-    waveBlock->setStartCell(std::make_pair(epicenterX,epicenterY));
-    waveBlock->setEndCell(std::make_pair(destinationX,destinationY));
-    break;
-  }
   waveBlock->findSearchArea();
 #endif
 
