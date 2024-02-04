@@ -12,6 +12,7 @@ Scenarios::FileScenario::FileScenario(const std::string& bathymetry, int numCell
   numCellsY(numCellsY) {
   xDim             = static_cast<double>(reader_.getYDim());
   yDim             = static_cast<double>(reader_.getXDim());
+  std::cout << "xDim: " << xDim << " yDim: " << yDim << std::endl;
   dx_              = 40075000 / numCellsX;
   dy_              = 12742000 / numCellsY;
   this->epicenterX = epicenterX;
@@ -41,14 +42,9 @@ RealType Scenarios::FileScenario::getMaxWaveHeight() const {
 int count_lines_skipped = 0;
 
 inline RealType Scenarios::FileScenario::getBathymetry(const RealType x, const RealType y) const {
-  RealType y_conv = (y * yDim / 12742000);
-  RealType x_conv = (x * xDim / 40075000);
+  RealType y_conv = (y / 12742000) * yDim;
+  RealType x_conv = (x / 40075000) * xDim;
 
-  if (x_conv < 0 || x_conv > xDim || y_conv < 0 || y_conv > yDim) {
-    count_lines_skipped++;
-    std::cout << "Skipped: " << count_lines_skipped << std::endl;
-    return 0;
-  }
   int y_index = static_cast<int>(offsetX_ + x_conv);
   y_index %= static_cast<int>(xDim);
   int    x_index = static_cast<int>(y_conv);
@@ -63,13 +59,11 @@ inline RealType Scenarios::FileScenario::getBathymetry(const RealType x, const R
 }
 
 inline RealType Scenarios::FileScenario::getWaterHeight(const RealType x, const RealType y) const {
-  RealType y_conv = (y * yDim / 12742000);
-  RealType x_conv = (x * xDim / 40075000);
-  if (x_conv < 0 || x_conv > xDim || y_conv < 0 || y_conv > yDim) {
-    return 0;
-  }
-  // print values x, y and epicenter
-  // std::cout << "x: " << x_conv << " y: " << y_conv << " epicenterX: " << epicenterX  << " epicenterY: " << epicenterY << std::endl;
+
+  RealType y_conv = (y / 12742000) * yDim;
+  RealType x_conv = (x / 40075000) * xDim;
+
+
 
 
   int y_index = static_cast<int>(offsetX_ + x_conv);

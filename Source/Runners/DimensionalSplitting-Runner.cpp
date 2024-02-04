@@ -281,6 +281,7 @@ int main(int argc, char** argv) {
   // Compute the size of a single cell
   RealType cellSizeX = (scenario->getBoundaryPos(BoundaryEdge::Right) - scenario->getBoundaryPos(BoundaryEdge::Left)) / numberOfGridCellsX;
   RealType cellSizeY = (scenario->getBoundaryPos(BoundaryEdge::Top) - scenario->getBoundaryPos(BoundaryEdge::Bottom)) / numberOfGridCellsY;
+  std::cout << "Cell size: " << cellSizeX << " x " << cellSizeY << std::endl;
 
   std::pair<RealType, RealType> epicenter{epicenterX, epicenterY};
   std::pair<RealType, RealType> destination{destinationX, destinationY};
