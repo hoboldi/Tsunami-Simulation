@@ -52,8 +52,7 @@ void printFloat2D(const Tools::Float2D<RealType>& array, int dimX, int dimY) {
  * @param richter [in] The magnitude on the richter scale
  * @return moment [out] The magnitude on the moment-magnitude scale
  */
-RealType richterToMagnitude(RealType richter)
-{
+RealType richterToMagnitude(RealType richter) {
   RealType energy = 11.8 + (1.5 * richter);
   return (energy - 5.24) / 1.44;
 }
@@ -68,28 +67,22 @@ RealType richterToMagnitude(RealType richter)
  * @param enteredX [in] the x entered by the user
  * @return rx [out] the x we computed, used for our future calculations
  */
-RealType convertEnteredXtoMappedX(RealType maxX, RealType enteredX)
-{
+RealType convertEnteredXtoMappedX(RealType maxX, RealType enteredX) {
   // We set the start to the middle of our map, which is also the base-case for entered x = 0
   RealType rx = maxX / 2;
-  //Which means that the value is in westwards direction, so in the first half of our map
-  if (enteredX < 0 && enteredX >= -180)
-  {
+  // Which means that the value is in westwards direction, so in the first half of our map
+  if (enteredX < 0 && enteredX >= -180) {
     RealType movingFactor = maxX / 360;
     rx -= movingFactor * enteredX * (-1);
   }
-  //Right at the middle
-  else if (enteredX > 0 && enteredX <= 180)
-  {
+  // Right at the middle
+  else if (enteredX > 0 && enteredX <= 180) {
     RealType movingFactor = maxX / 360;
     rx += movingFactor * enteredX;
-  }
-  else if (enteredX != 0)
-  {
+  } else if (enteredX != 0) {
     std::cout << "Invalid coordinates! The longitude x goes only from -180° (West) to 180° (East)! Setting x value to 0" << std::endl;
     rx = 0;
   }
-  std::cout << "Converted " << enteredX << " to " << rx << std::endl;
   return rx;
 }
 
@@ -104,31 +97,24 @@ RealType convertEnteredXtoMappedX(RealType maxX, RealType enteredX)
  * @param enteredY [in] the x entered by the user
  * @return rY [out] the x we computed, used for our future calculations
  */
-RealType convertEnteredYtoMappedY(RealType maxY, RealType enteredY)
-{
+RealType convertEnteredYtoMappedY(RealType maxY, RealType enteredY) {
   // We set the start to the middle of our map, which is also the base-case for entered x = 0
   RealType rY = maxY / 2;
-  //Which means that the value is in southwards direction, so in the bottom half of our map
-  if (enteredY < 0 && enteredY >= -90)
-  {
+  // Which means that the value is in southwards direction, so in the bottom half of our map
+  if (enteredY < 0 && enteredY >= -90) {
     RealType movingFactor = maxY / 180;
     rY -= movingFactor * enteredY * (-1);
   }
-  //Right at the middle
-  else if (enteredY > 0 && enteredY <= 180)
-  {
+  // Right at the middle
+  else if (enteredY > 0 && enteredY <= 180) {
     RealType movingFactor = maxY / 360;
     rY += movingFactor * enteredY;
-  }
-  else if (enteredY != 0)
-  {
+  } else if (enteredY != 0) {
     std::cout << "Invalid coordinates! The latitude y goes only from -90° (South) to 90° (North)! Setting y value to 0" << std::endl;
     rY = 0;
   }
-  std::cout << "Converted " << enteredY << " to " << rY << std::endl;
   return rY;
 }
-
 
 /**
  * @brief This method can be used to convert an array of sizes nx / ny to a coarsed version with the averaged values according to Sheet 4 Task 5
@@ -164,7 +150,8 @@ int main(int argc, char** argv) {
   args.addOption("epicenterLongitude", 'e', "The longitude coordinate of the epicenter");
   args.addOption("epicenterLatitude", 'f', "The latitude coordinate of the epicenter");
   args.addOption("limit", 'l', "The limit variable represents the critical water level change that, when surpassed, triggers a warning in the tsunami detection system");
-  args.addOption("scenarios",'s',"The user can use a pre-chosen scenario. The given scenarios have ids 1 to 3");
+  args.addOption("scenarios", 's', "The user can use a pre-chosen scenario. The given scenarios have ids 1 to 3");
+  args.addOption("GUICoordinates", 'g', "The user can use the GUI to enter the coordinates of the epicenter and the destination city. 0: No, 1: Yes");
 
   Tools::Args::Result ret = args.parse(argc, argv);
   if (ret == Tools::Args::Result::Help) {
@@ -193,54 +180,49 @@ int main(int argc, char** argv) {
   int         epicenterY         = args.getArgument<int>("epicenterLongitude", 0);
   double      threshold          = args.getArgument<double>("limit", -1);
   int         scenarioID         = args.getArgument<int>("scenarios",0);
+  bool        guiCoordinates     = args.getArgument<bool>("GUICoordinates", false);
 
 
-  //Error message if the user choose wrong coordinates
-  if(destinationX > 90  || destinationX < -90 || epicenterX > 90 || epicenterX < -90 || destinationY > 180 || destinationY < -180 || epicenterY > 180 || epicenterY < -180)
-  {
+  // Error message if the user choose wrong coordinates
+  if (destinationX > 90 || destinationX < -90 || epicenterX > 90 || epicenterX < -90 || destinationY > 180 || destinationY < -180 || epicenterY > 180 || epicenterY < -180) {
     std::cout << "Error, the latitude or longitude coordinates were false chosen";
   }
 
 
-  //Error message if the user wants to use the WorldScenario, but forgets a value
-  if (epicenterX != 0 || epicenterY != 0 || destinationX != 0 || destinationY != 0 || magnitude != 0 || richter != 0)
-  {
-      if (magnitude == 0 && richter == 0)
-      {
-        std::cout << "Error, no magnitude entered in neither format. Please use the -m option to enter your desired moment-megnitude!";
-        return 5;
-      }
-      if (magnitude == 0 && richter != 0)
-      {
-        magnitude = richterToMagnitude(richter);
-      }
+  // Error message if the user wants to use the WorldScenario, but forgets a value
+  if (epicenterX != 0 || epicenterY != 0 || destinationX != 0 || destinationY != 0 || magnitude != 0 || richter != 0) {
+    if (magnitude == 0 && richter == 0) {
+      std::cout << "Error, no magnitude entered in neither format. Please use the -m option to enter your desired moment-megnitude!";
+      return 7;
+    }
+    if (magnitude == 0 && richter != 0) {
+      magnitude = richterToMagnitude(richter);
+    }
   }
 
 
-  if (magnitude != 0)
-  {
-    if (magnitude < 6.51)
-    {
+  if (magnitude != 0) {
+    if (magnitude < 6.51) {
       std::cout << "Magnitude too small, can't compute Tsunami wave" << std::endl;
       return 5;
     }
 
     switch (scenarioID) {
     case 1:
-      epicenterX = 142;
-      epicenterY = 60;
+      epicenterX   = 142;
+      epicenterY   = 60;
       destinationX = 140;
       destinationY = 60;
       break;
     case 2:
-      epicenterX = -74;
-      epicenterY = -28;
+      epicenterX   = -74;
+      epicenterY   = -28;
       destinationX = -71;
       destinationY = -28;
       break;
     case 3:
-      epicenterX = 0;
-      epicenterY = 0;
+      epicenterX   = 0;
+      epicenterY   = 0;
       destinationX = 5;
       destinationY = 5;
       break;
@@ -248,12 +230,12 @@ int main(int argc, char** argv) {
       break;
     }
 
-    epicenterX = convertEnteredXtoMappedX(numberOfGridCellsX, epicenterX);
-    epicenterY = convertEnteredYtoMappedY(numberOfGridCellsY, epicenterY);
+    epicenterX   = convertEnteredXtoMappedX(numberOfGridCellsX, epicenterX);
+    epicenterY   = convertEnteredYtoMappedY(numberOfGridCellsY, epicenterY);
     destinationX = convertEnteredXtoMappedX(numberOfGridCellsX, destinationX);
     destinationY = convertEnteredYtoMappedY(numberOfGridCellsY, destinationY);
 
-    //print the values for the user to see
+    // print the values for the user to see
     std::cout << "EpicenterX: " << epicenterX << " EpicenterY: " << epicenterY << " DestinationX: " << destinationX << " DestinationY: " << destinationY << std::endl;
   }
 
@@ -268,10 +250,9 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.printNumberOfCells(numberOfGridCellsX, numberOfGridCellsY);
   Scenarios::Scenario* scenario;
 
-
   if (checkpointFile.empty()) {
     auto fileScenario = new Scenarios::FileScenario("GEBCO_2023_sub_ice_topo.nc", numberOfGridCellsX, numberOfGridCellsY, 0, epicenterX, epicenterY, magnitude);
-    scenario = fileScenario;
+    scenario          = fileScenario;
   } else {
     scenario = new Scenarios::CheckpointScenario(checkpointFile);
   }
@@ -302,10 +283,37 @@ int main(int argc, char** argv) {
   std::pair<RealType, RealType> epicenter{epicenterX, epicenterY};
   std::pair<RealType, RealType> destination{destinationX, destinationY};
 
-  auto waveBlock = new Blocks::ReducedDimSplittingBlock(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY,epicenter, destination);
+  auto waveBlock = new Blocks::ReducedDimSplittingBlock(numberOfGridCellsX, numberOfGridCellsY, cellSizeX, cellSizeY);
   Tools::Logger::logger.printString("Init Waveblock");
   waveBlock->initialiseScenario(0, 0, *scenario);
   Tools::Logger::logger.printString("Init finished");
+
+#if defined(ENABLE_GUI)
+  Gui::Gui gui = Gui::Gui(waveBlock->getBathymetry(), scenario->getBoundaryPos(BoundaryEdge::Right), scenario->getBoundaryPos(BoundaryEdge::Top));
+  if (guiCoordinates) {
+    auto startEnd = gui.getStartEnd(waveBlock->getWaterHeight());
+    epicenterX    = startEnd.first.first;
+    epicenterY    = startEnd.first.second;
+    destinationX  = startEnd.second.first;
+    destinationY  = startEnd.second.second;
+    epicenter     = {epicenterX, epicenterY};
+    destination   = {destinationX, destinationY};
+    waveBlock->setStartCell(epicenter);
+    waveBlock->setEndCell(destination);
+
+    Tools::Logger::logger.printString("Init Waveblock");
+    scenario->setEpicenter(epicenterX, epicenterY);
+    waveBlock->initialiseScenario(0, 0, *scenario);
+    Tools::Logger::logger.printString("Init finished");
+    gui.update(waveBlock->getWaterHeight(), 0);
+  } else {
+    waveBlock->setStartCell(epicenter);
+    waveBlock->setEndCell(destination);
+  }
+#else
+  waveBlock->setStartCell(epicenter);
+  waveBlock->setEndCell(destination);
+#endif
 
   double* checkPoints = new double[numberOfCheckPoints + 1];
 
@@ -385,24 +393,14 @@ int main(int argc, char** argv) {
   Tools::Logger::logger.initWallClockTime(wallClockTime);
 
 
-
 #if defined(ENABLE_GUI)
-  Gui::Gui gui = Gui::Gui(waveBlock->getBathymetry(), scenario->getBoundaryPos(BoundaryEdge::Right), scenario->getBoundaryPos(BoundaryEdge::Top));
-  auto startEnd = gui.getStartEnd(waveBlock->getWaterHeight());
-
-  //TODO Warning system if GUI is used
-  waveBlock->setStartCell(startEnd.first);
-  waveBlock->setEndCell(startEnd.second);
-  std::cout << "Start: " << std::endl;
   waveBlock->findSearchArea(gui);
-  std::cout << "found search area" << std::endl;
 #else
-
   waveBlock->findSearchArea();
 #endif
 
-  Tools::WarningSystem warningSystem{destinationX,destinationY};
-  if(threshold == -1) {
+  Tools::WarningSystem warningSystem{destinationX, destinationY};
+  if (threshold == -1) {
     warningSystem.setThreshold(threshold);
     warningSystem.setOriginalLevel(0);
     warningSystem.setUsed(false);
@@ -445,7 +443,7 @@ int main(int argc, char** argv) {
 #endif
 
 #if defined(ENABLE_GUI)
-      gui.update(waveBlock->getWaterHeight(), simulationTime+maxTimeStepWidth);
+      gui.update(waveBlock->getWaterHeight(), simulationTime + maxTimeStepWidth);
 #endif
 
       // Update the cpu time in the logger
@@ -458,8 +456,8 @@ int main(int argc, char** argv) {
         simulationTime, "[" + std::to_string(iterations) + "]: Simulation with max. global dt " + std::to_string(maxTimeStepWidth) + " at time"
       );
 
-      //Update the Warning System with the new WaterHeight
-      if(warningSystem.update(waveBlock->getWaterHeight()[destinationX][destinationY])){
+      // Update the Warning System with the new WaterHeight
+      if (warningSystem.update(waveBlock->getWaterHeight()[destinationX][destinationY])) {
         goto endSimulation;
       }
 
@@ -485,7 +483,7 @@ int main(int argc, char** argv) {
       writer.writeTimeStep(waveBlock->getWaterHeight(), waveBlock->getDischargeHu(), waveBlock->getDischargeHv(), simulationTime);
     }
   }
-  endSimulation:
+endSimulation:
   progressBar.clear();
   Tools::Logger::logger.printStatisticsMessage();
   Tools::Logger::logger.printTime("CPU", "CPU Time");

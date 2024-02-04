@@ -4,25 +4,23 @@
 #include <csignal>
 #include <queue>
 #include <unordered_set>
-Blocks::ReducedDimSplittingBlock::ReducedDimSplittingBlock(int nx, int ny, RealType dx, RealType dy, std::pair<int, int> startCell, std::pair<int, int> endCell):
-  DimensionalSplitting(nx, ny, dx, dy),
-  startCell_(startCell),
-  endCell_(endCell) {}
+Blocks::ReducedDimSplittingBlock::ReducedDimSplittingBlock(int nx, int ny, RealType dx, RealType dy):
+  DimensionalSplitting(nx, ny, dx, dy) {}
 
 
 struct Cell {
   static std::pair<int, int> goal;
-  int   x, y;
-  double cost;   // g(n) - cost from start to this node
+  int                        x, y;
+  double                     cost; // g(n) - cost from start to this node
 
   Cell(int x, int y, float cost):
     x(x),
     y(y),
-    cost(cost){}
+    cost(cost) {}
 
   double TotalCost() const {
     // Heuristic: straight-line distance to goal
-    return cost * 0.1 + std::sqrt(std::pow(x - goal.first, 2) +std::pow(y - goal.second,2));
+    return cost * 0.1 + std::sqrt(std::pow(x - goal.first, 2) + std::pow(y - goal.second, 2));
   }
 };
 
@@ -32,11 +30,11 @@ struct CompareCell {
 std::pair<int, int> Cell::goal;
 
 void Blocks::ReducedDimSplittingBlock::findSearchArea(Gui::Gui& gui) {
-  //if the x-distance between start and end cell is bigger than nx/2, shift the data and get a pacific focused map
-  if(abs(startCell_.first - endCell_.first) > nx_ / 2) {
+  // if the x-distance between start and end cell is bigger than nx/2, shift the data and get a pacific focused map
+  if (abs(startCell_.first - endCell_.first) > nx_ / 2) {
     shiftData();
     startCell_.first = (startCell_.first + nx_ / 2) % nx_;
-    endCell_.first = (endCell_.first + nx_ / 2) % nx_;
+    endCell_.first   = (endCell_.first + nx_ / 2) % nx_;
     gui.setBathymetry(b_);
     gui.update(h_, 0.0);
   }
@@ -94,11 +92,11 @@ void Blocks::ReducedDimSplittingBlock::findSearchArea(Gui::Gui& gui) {
 
         int newX = current->x + dx;
         int newY = current->y + dy;
-        if(newX < 0 || newX >= nx_ || newY < 0 || newY >= ny_)
+        if (newX < 0 || newX >= nx_ || newY < 0 || newY >= ny_)
           continue; // Skip out of bounds cells
 
         // Check for valid cell, no obstacle, and not visited
-        if (b_[newX][newY] < 0 && heightView[newX][newY] != FLT_MAX ) {
+        if (b_[newX][newY] < 0 && heightView[newX][newY] != FLT_MAX) {
 
           float newCost = current->cost + 1; // Assuming uniform cost
           openSet.push(new Cell(newX, newY, newCost));
@@ -107,8 +105,8 @@ void Blocks::ReducedDimSplittingBlock::findSearchArea(Gui::Gui& gui) {
     }
   }
 
-  //calculate offset depending on the size of the search area (the bigger the search area, the smaller the offset)
-  int offset = 40 - std::log(std::max(maxX - minX, maxY - minY)) ;
+  // calculate offset depending on the size of the search area (the bigger the search area, the smaller the offset)
+  int offset = 40 - std::log(std::max(maxX - minX, maxY - minY));
   std::cout << "offset: " << offset << std::endl;
 
   // Set search area
@@ -118,11 +116,11 @@ void Blocks::ReducedDimSplittingBlock::findSearchArea(Gui::Gui& gui) {
   topCorner_.second    = std::min(ny_ - 1, maxY + offset);
 }
 void Blocks::ReducedDimSplittingBlock::findSearchArea() {
-  //if the x-distance between start and end cell is bigger than nx/2, shift the data and get a pacific focused map
-  if(abs(startCell_.first - endCell_.first) > nx_ / 2) {
+  // if the x-distance between start and end cell is bigger than nx/2, shift the data and get a pacific focused map
+  if (abs(startCell_.first - endCell_.first) > nx_ / 2) {
     shiftData();
     startCell_.first = (startCell_.first + nx_ / 2) % nx_;
-    endCell_.first = (endCell_.first + nx_ / 2) % nx_;
+    endCell_.first   = (endCell_.first + nx_ / 2) % nx_;
   }
 
   Tools::Float2D<RealType> heightView(h_, false);
@@ -176,7 +174,7 @@ void Blocks::ReducedDimSplittingBlock::findSearchArea() {
         int newY = current->y + dy;
 
         // Check for valid cell, no obstacle, and not visited
-        if (b_[newX][newY] < 0 && heightView[newX][newY] != FLT_MAX ) {
+        if (b_[newX][newY] < 0 && heightView[newX][newY] != FLT_MAX) {
 
           float newCost = current->cost + 1; // Assuming uniform cost
           openSet.push(new Cell(newX, newY, newCost));
@@ -185,8 +183,8 @@ void Blocks::ReducedDimSplittingBlock::findSearchArea() {
     }
   }
 
-  //calculate offset depending on the size of the search area (the bigger the search area, the smaller the offset)
-  int offset = 40 - std::log(std::max(maxX - minX, maxY - minY)) ;
+  // calculate offset depending on the size of the search area (the bigger the search area, the smaller the offset)
+  int offset = 40 - std::log(std::max(maxX - minX, maxY - minY));
   std::cout << "offset: " << offset << std::endl;
 
   // Set search area
@@ -240,17 +238,17 @@ void Blocks::ReducedDimSplittingBlock::computeNumericalFluxes() {
   }
 
   /** Calculate the net-updates for the y-stride by iterating over the cells on the y-stride
-     * Cells on the boundary are ghost cells and are not updated, but one net update is needed for the neighbouring cell.
-     * Layout
-     * Q0,4 Q1,4 Q2,4 Q3,4 Q4,4
-     *      --------------
-     * Q0,3 Q1,3 Q2,3 Q3,3 Q4,3
-     *      --------------
-     * Q0,2 Q1,2 Q2,2 Q3,2 Q4,2
-     *      --------------
-     * Q0,1 Q1,1 Q2,1 Q3,1 Q4,1
-     *      --------------       Qi,j
-     * Q0,0 Q1,0 Q2,0 Q3,0 Q4,0  updates = --------------
+   * Cells on the boundary are ghost cells and are not updated, but one net update is needed for the neighbouring cell.
+   * Layout
+   * Q0,4 Q1,4 Q2,4 Q3,4 Q4,4
+   *      --------------
+   * Q0,3 Q1,3 Q2,3 Q3,3 Q4,3
+   *      --------------
+   * Q0,2 Q1,2 Q2,2 Q3,2 Q4,2
+   *      --------------
+   * Q0,1 Q1,1 Q2,1 Q3,1 Q4,1
+   *      --------------       Qi,j
+   * Q0,0 Q1,0 Q2,0 Q3,0 Q4,0  updates = --------------
    */
 
 #if defined(ENABLE_OPENMP)
@@ -319,37 +317,33 @@ void Blocks::ReducedDimSplittingBlock::updateUnknowns(RealType dt) {
     }
   }
 }
-void Blocks::ReducedDimSplittingBlock::setStartCell(std::pair<int, int> startCell) {
-  startCell_ = startCell;
-}
+void Blocks::ReducedDimSplittingBlock::setStartCell(std::pair<int, int> startCell) { startCell_ = startCell; }
 
-void Blocks::ReducedDimSplittingBlock::setEndCell(std::pair<int, int> endCell) {
-  endCell_ = endCell;
-}
+void Blocks::ReducedDimSplittingBlock::setEndCell(std::pair<int, int> endCell) { endCell_ = endCell; }
 void Blocks::ReducedDimSplittingBlock::shiftData() {
   // shift bathymetry half of nx to the right and roll the rest to the left
   for (int j = 0; j < ny_; ++j) {
     b_[0][j] = b_[nx_ / 2][j];
   }
-  for(int i = 1; i < nx_ / 2; i++) {
+  for (int i = 1; i < nx_ / 2; i++) {
     for (int j = 0; j < ny_; ++j) {
-      double tmp = b_[i][j];
-      b_[i][j] = b_[i + nx_ / 2][j];
+      double tmp         = b_[i][j];
+      b_[i][j]           = b_[i + nx_ / 2][j];
       b_[i + nx_ / 2][j] = tmp;
     }
   }
 
 
   // shift h_ half of nx to the right and roll the rest to the left
-  for(int j = 0; j < ny_; ++j) {
+  for (int j = 0; j < ny_; ++j) {
     h_[0][j] = h_[nx_ / 2][j];
   }
-  for(int i = 1; i < nx_ / 2; i++) {
+  for (int i = 1; i < nx_ / 2; i++) {
     for (int j = 0; j < ny_; ++j) {
-      double tmp = h_[i][j];
-      h_[i][j] = h_[i + nx_ / 2][j];
+      double tmp         = h_[i][j];
+      h_[i][j]           = h_[i + nx_ / 2][j];
       h_[i + nx_ / 2][j] = tmp;
     }
   }
-
 }
+

@@ -61,7 +61,8 @@ namespace Scenarios {
     [[nodiscard]] virtual RealType getBoundaryPos(BoundaryEdge edge) const;
     void                           setBoundaryType(int type);
     BoundaryType                   boundaryType;
-
+    virtual void setEpicenter(RealType x, RealType y) {
+    }
   protected:
     BoundaryType boundaryTypeLeft;
     BoundaryType boundaryTypeRight;

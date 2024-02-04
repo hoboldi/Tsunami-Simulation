@@ -31,6 +31,15 @@ namespace Scenarios {
       */
       RealType getMaxWaveHeight() const;
 
+      void setEpicenter(RealType x, RealType y) override{
+        epicenterX = x;
+        epicenterY = y;
+      }
+
+      void setMagnitude(RealType magnitude) {
+        this->magnitude = magnitude;
+      }
+
     private:
       RealType epicenterX;
       RealType epicenterY;

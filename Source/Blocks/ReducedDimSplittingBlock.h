@@ -8,7 +8,7 @@
 namespace Blocks {
   class ReducedDimSplittingBlock : public DimensionalSplitting {
   public:
-    ReducedDimSplittingBlock(int nx, int ny, RealType dx, RealType dy, std::pair<int, int> startCell, std::pair<int, int> endCell);
+    ReducedDimSplittingBlock(int nx, int ny, RealType dx, RealType dy);
     ~ReducedDimSplittingBlock() override = default;
 #if defined(ENABLE_GUI)
     /**
