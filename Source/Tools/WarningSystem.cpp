@@ -54,14 +54,14 @@ void Tools::WarningSystem::setUsed(bool newUsed) {
 
 bool Tools::WarningSystem::update(double waterHeight, double time) {
   if(used) {
+    if(biggestDifference < std::abs(originalLevel - waterHeight)) {
+      biggestDifference = std::abs(originalLevel - waterHeight);
+      biggestTime = time;
+    }
     if(std::abs(originalLevel - waterHeight) >= threshold) {
       Tools::Logger::logger.printAlarm(std::abs(originalLevel - waterHeight));
       alarmed = true;
     } else {
-      if(biggestDifference < std::abs(originalLevel - waterHeight)) {
-        biggestDifference = std::abs(originalLevel - waterHeight);
-        biggestTime = time;
-      }
       Tools::Logger::logger.printSafeLevel(std::abs(originalLevel - waterHeight));
     }
     if(alarmed && std::abs(originalLevel - waterHeight) < threshold) {
