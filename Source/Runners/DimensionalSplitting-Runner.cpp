@@ -133,8 +133,7 @@ RealType convertEnteredYtoMappedY(RealType maxY, RealType enteredY) {
  */
 int main(int argc, char** argv) {
   Tools::Args args;
-  args.addOption("grid-size-x", 'x', "Number of cells in x direction");
-  args.addOption("grid-size-y", 'y', "Number of cells in y direction");
+  args.addOption("grid-size", 'x', "Number of cells in x and y direction");
   args.addOption("output-basepath", 'o', "Output base file name");
   args.addOption("number-of-checkpoints", 'n', "Number of checkpoints to write output files");
   args.addOption("simulation-time", 't', "Simulation time in seconds");
@@ -166,8 +165,8 @@ int main(int argc, char** argv) {
   // Create the scenario
 
 
-  int         numberOfGridCellsX = args.getArgument<int>("grid-size-x", 100);
-  int         numberOfGridCellsY = args.getArgument<int>("grid-size-y", 100);
+  int         numberOfGridCellsX = args.getArgument<int>("grid-size", 100);
+  int         numberOfGridCellsY = numberOfGridCellsX;
   std::string baseName           = args.getArgument<std::string>("output-basepath", "SWE");
   int numberOfCheckPoints = args.getArgument<int>("number-of-checkpoints", 20); //! Number of checkpoints for visualization (at each checkpoint in time, an output file is written).
   double      endSimulationTime  = args.getArgument<double>("simulation-time", 1000);
