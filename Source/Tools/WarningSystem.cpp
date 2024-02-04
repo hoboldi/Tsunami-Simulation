@@ -28,16 +28,14 @@
 
 #include "WarningSystem.h"
 
-Tools::WarningSystem::WarningSystem(bool used) {
-  this->used = used;
+Tools::WarningSystem::WarningSystem(){
+  this->alarmed = false;
 }
 
-Tools::WarningSystem::WarningSystem(int destinationX, int destinationY, double threshold) {
+Tools::WarningSystem::WarningSystem(int destinationX, int destinationY) {
   this->destinationX = destinationX;
   this->destinationY = destinationY;
-  this->originalLevel = 0;
-  this->threshold = threshold;
-  this->used = true;
+  this->alarmed = false;
 }
 
 void Tools::WarningSystem::setOriginalLevel(double newLevel) {
@@ -50,12 +48,23 @@ void Tools::WarningSystem::setThreshold(double newThreshold) {
   this->threshold = newThreshold;
 }
 
-void Tools::WarningSystem::update(double waterHeight) {
+void Tools::WarningSystem::setUsed(bool newUsed) {
+  this->used = newUsed;
+}
+
+bool Tools::WarningSystem::update(double waterHeight) {
   if(used) {
     if(std::abs(originalLevel - waterHeight) >= threshold) {
       Tools::Logger::logger.printAlarm(std::abs(originalLevel - waterHeight));
+      alarmed = true;
     } else {
       Tools::Logger::logger.printSafeLevel(std::abs(originalLevel - waterHeight));
     }
+    if(alarmed && std::abs(originalLevel - waterHeight) < threshold) {
+      std::cout << "The water level is back to normal" << std::endl;
+      return true;
+    }
   }
+  return false;
 }
+
