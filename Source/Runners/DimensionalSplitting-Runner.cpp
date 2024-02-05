@@ -184,18 +184,27 @@ int main(int argc, char** argv) {
       epicenterY   = 60;
       destinationX = 140;
       destinationY = 60;
+      threshold = 0.1;
+      magnitude = 9;
+      guiCoordinates = false;
       break;
     case 2:
       epicenterX   = -74;
       epicenterY   = -28;
       destinationX = -71;
       destinationY = -28;
+      threshold = 0.1;
+      magnitude = 9;
+      guiCoordinates = false;
       break;
     case 3:
       epicenterX   = 0;
       epicenterY   = 0;
       destinationX = 5;
       destinationY = 5;
+      threshold = 0.1;
+      magnitude = 9;
+      guiCoordinates = false;
       break;
     default:
       break;
