@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
   args.addOption("epicenterLongitude", 'e', "The longitude coordinate of the epicenter");
   args.addOption("epicenterLatitude", 'f', "The latitude coordinate of the epicenter");
   args.addOption("limit", 'l', "The limit variable represents the critical water level change that, when surpassed, triggers a warning in the tsunami detection system");
-  args.addOption("scenarios", 's', "The user can use a pre-chosen scenario. The given scenarios have ids 1 to 3");
+  args.addOption("scenarios", 's', "The user can use a pre-chosen scenario. The given scenarios have ids 1 to 3. These should be used with grid-sizes >= 1000.");
   args.addOption("GUICoordinates", 'g', "The user can use the GUI to enter the coordinates of the epicenter and the destination city. 0: No, 1: Yes");
 
   Tools::Args::Result ret = args.parse(argc, argv);
